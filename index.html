@@ -45,9 +45,11 @@
         .fleet-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 5px; }
         .c-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--dark); color: white; }
 
-        /* NSID12 NEW PHOTO STYLES */
-        .photo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
-        .photo-thumb { width: 100%; aspect-ratio: 1; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; }
+        /* NSID13 NEW MODULE STYLES */
+        .ns_new_grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ns_new_section { border-top: 2px solid #e2e8f0; padding-top: 15px; margin-top: 10px; }
+        .ns_new_option_box { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; margin: 10px 0; }
+        .ns_new_title { color: var(--blue); font-size: 11px; font-weight: 800; margin-bottom: 8px; display: block; }
     </style>
 </head>
 <body>
@@ -121,15 +123,92 @@
             <textarea id="address" rows="2" placeholder="Precise Address..."></textarea>
         </div>
 
-        <div class="card">
-            <h3>📸 Site Evidence (Max 10)</h3>
-            <input type="file" id="cam_input" accept="image/*" capture="environment" multiple onchange="processPhotos(this)" style="display:none;">
-            <button class="btn" onclick="document.getElementById('cam_input').click()" style="background:var(--blue); font-size:11px;">📷 ADD GPS WATERMARK PHOTO</button>
-            <div class="photo-grid" id="p_grid"></div>
+        <div class="card ns_new_section">
+            <h3>🧱 Material Source / Available</h3>
+            <div class="ns_new_grid">
+                <div class="check-pill"><input type="checkbox" class="ns_new_mat" value="Sand" data-target="ns_sand_box"><span>Sand</span></div>
+                <div class="check-pill"><input type="checkbox" class="ns_new_mat" value="Stone" data-target="ns_stone_box"><span>Stone</span></div>
+                <div class="check-pill"><input type="checkbox" class="ns_new_mat" value="Aggregates" data-target="ns_agg_box"><span>Aggregates</span></div>
+                <div class="check-pill"><input type="checkbox" class="ns_new_mat" value="Cement" data-target="ns_cement_box"><span>Cement</span></div>
+                <div class="check-pill"><input type="checkbox" class="ns_new_mat" value="Bricks" data-target="ns_brick_box"><span>Bricks</span></div>
+                <div class="check-pill"><input type="checkbox" class="ns_new_mat" value="TMT Steel" data-target="ns_tmt_box"><span>TMT Steel</span></div>
+            </div>
+
+            <div id="ns_sand_box" class="ns_new_option_box hidden">
+                <span class="ns_new_title">Sand Varieties</span>
+                <div class="ns_new_grid">
+                    <div class="check-pill"><input type="checkbox" name="ns_sand" value="River Sand"><span>River Sand</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_sand" value="M Sand"><span>M Sand</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_sand" value="Plaster Sand"><span>Plaster</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_sand" value="Filling Sand"><span>Filling</span></div>
+                </div>
+            </div>
+
+            <div id="ns_stone_box" class="ns_new_option_box hidden">
+                <span class="ns_new_title">Stone Varieties</span>
+                <div class="ns_new_grid">
+                    <div class="check-pill"><input type="checkbox" name="ns_stone" value="10mm"><span>10mm</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_stone" value="20mm"><span>20mm</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_stone" value="40mm"><span>40mm</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_stone" value="Crusher Stone"><span>Crusher</span></div>
+                </div>
+            </div>
+
+            <div id="ns_agg_box" class="ns_new_option_box hidden">
+                <span class="ns_new_title">Aggregate Sizes</span>
+                <div class="ns_new_grid">
+                    <div class="check-pill"><input type="checkbox" name="ns_agg" value="6mm"><span>6mm</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_agg" value="10mm"><span>10mm</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_agg" value="20mm"><span>20mm</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_agg" value="40mm"><span>40mm</span></div>
+                </div>
+            </div>
+
+            <div id="ns_brick_box" class="ns_new_option_box hidden">
+                <span class="ns_new_title">Brick Types</span>
+                <div class="ns_new_grid">
+                    <div class="check-pill"><input type="checkbox" name="ns_brick" value="Red Clay Brick"><span>Red Clay</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_brick" value="Fly Ash Brick"><span>Fly Ash</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_brick" value="Cement Brick"><span>Cement</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_brick" value="Hollow Block"><span>Hollow</span></div>
+                </div>
+            </div>
+
+            <div id="ns_cement_box" class="ns_new_option_box hidden">
+                <span class="ns_new_title">Top 10 Cement Brands</span>
+                <div class="ns_new_grid">
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="UltraTech"><span>UltraTech</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="Ambuja"><span>Ambuja</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="ACC"><span>ACC</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="Shree"><span>Shree</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="JK Cement"><span>JK Cement</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="Dalmia"><span>Dalmia</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="Ramco"><span>Ramco</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="Birla"><span>Birla</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="JK Lakshmi"><span>JK Lakshmi</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_cem" value="Wonder"><span>Wonder</span></div>
+                </div>
+            </div>
+
+            <div id="ns_tmt_box" class="ns_new_option_box hidden">
+                <span class="ns_new_title">Top 10 TMT Brands</span>
+                <div class="ns_new_grid">
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="Tata Tiscon"><span>Tata Tiscon</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="JSW Neosteel"><span>JSW Neosteel</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="Kamdhenu"><span>Kamdhenu</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="SRMB Steel"><span>SRMB Steel</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="Jindal Panther"><span>Jindal</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="Vizag Steel"><span>Vizag</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="SAIL TMT"><span>SAIL</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="Shyam Steel"><span>Shyam</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="Captain TMT"><span>Captain</span></div>
+                    <div class="check-pill"><input type="checkbox" name="ns_tmt" value="Electrosteel"><span>Electrosteel</span></div>
+                </div>
+            </div>
         </div>
 
         <div class="card">
-            <h3>3. Materials & Varieties</h3>
+            <h3>3. Materials & Varieties (Legacy)</h3>
             <div id="mat_main_grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom:10px;">
                 <div class="check-pill"><input type="checkbox" class="mat-item" value="Sand" onclick="toggleVariety('sand_vars', this)"><span>Sand</span></div>
                 <div class="check-pill"><input type="checkbox" class="mat-item" value="Bricks" onclick="toggleVariety('brick_vars', this)"><span>Bricks</span></div>
@@ -228,11 +307,12 @@
 
     const UDAIPUR_AREAS = ["Hiran Magri Sec 3", "Hiran Magri Sec 4", "Hiran Magri Sec 5", "Hiran Magri Sec 11", "Hiran Magri Sec 13", "Hiran Magri Sec 14", "Gordhan Vilas", "Balicha", "Eklingpura", "Pratap Nagar", "Transport Nagar", "Sukher", "Amberi", "Bhuwana", "Sobhagpura", "Fatehpura", "Panchwati", "Saheliyon ki Bari", "Mulla Talai", "Rampura", "Sajjangarh Area", "Ambamata", "Clock Tower", "Surajpole", "Delhi Gate", "Udiapole", "Shastri Circle", "Ashwini Bazaar", "Rada Ji Bawri", "Savina", "Titaradi", "Jhamarkotra Road", "Bedwas", "Debari", "Kherwara Road", "Madri Ind. Area", "Gudli", "Kaladwas", "Kavita", "Lakhawali", "Badi", "Loyra", "Zinc Smelter", "Thoor", "Kailashpuri", "Rama", "Nagda", "Iswal", "Kaya", "Umarda"];
 
-    let db, map, marker, photoStore = [];
+    let db, map, marker;
 
     // --- NSID001 SECURITY LOGIC ---
     window.onload = function() {
         initUserDB();
+        ns_new_setupListeners(); // NSID13 HOOK
         if (localStorage.getItem("master_access") === "true") {
             hideMaster();
             checkSession();
@@ -269,6 +349,8 @@
         if (users[uid] && users[uid].password === pass) {
             const session = { userid: uid, role: users[uid].role, loggedIn: true, device: Math.random().toString(36).slice(2) };
             localStorage.setItem("ns_session", JSON.stringify(session));
+            // NSID13: Auto-populate for next time
+            localStorage.setItem("ns_last_uid", uid);
             startDashboard(session);
         } else {
             alert("Invalid Credentials");
@@ -277,6 +359,10 @@
 
     function checkSession() {
         const session = JSON.parse(localStorage.getItem("ns_session"));
+        // NSID13: Restore Last User ID
+        const lastUid = localStorage.getItem("ns_last_uid");
+        if(lastUid) document.getElementById('u_id').value = lastUid;
+
         if (session && session.loggedIn) {
             startDashboard(session);
         }
@@ -296,6 +382,7 @@
             renderAreas();
             initDB();
             setTimeout(initMap, 300);
+            ns_new_restoreData(); // NSID13 HOOK
         }
     }
 
@@ -440,81 +527,85 @@
     function resetScreen() { location.reload(); }
 
     /* ============================================================
-       NSID12 ADDITIONS (INTELLIGENCE LAYER)
-       NO CHANGES MADE TO ORIGINAL CODE ABOVE
+       NSID13 NEW MODULE (MATERIAL SOURCE LOGIC)
        ============================================================ */
 
-    async function processPhotos(input) {
-        const files = Array.from(input.files);
-        const gps = document.getElementById('gps_val').value || "NO GPS";
-        if(photoStore.length + files.length > 10) return alert("Limit 10 Photos");
+    function ns_new_setupListeners() {
+        document.querySelectorAll('.ns_new_mat').forEach(chk => {
+            chk.addEventListener('change', function() {
+                const target = document.getElementById(this.dataset.target);
+                if(this.checked) {
+                    target.classList.remove('hidden');
+                } else {
+                    target.classList.add('hidden');
+                    // Clear all sub-checkboxes when parent is unchecked
+                    target.querySelectorAll('input').forEach(i => i.checked = false);
+                }
+                ns_new_persist();
+            });
+        });
 
-        for(let file of files) {
-            const stamped = await createWatermark(file, gps);
-            photoStore.push(stamped);
-        }
-        renderPhotoGrid();
-    }
-
-    function createWatermark(file, gps) {
-        return new Promise(res => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = e => {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 1000; canvas.height = (img.height/img.width)*1000;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, 1000, canvas.height);
-                    ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, canvas.height-40, 1000, 40);
-                    ctx.fillStyle = "white"; ctx.font = "bold 16px monospace";
-                    ctx.fillText(`NIRMASUTRA | ${gps} | ${new Date().toLocaleString()}`, 15, canvas.height-15);
-                    res(canvas.toDataURL('image/jpeg', 0.6));
-                };
-            };
+        // Track changes on all sub-options too
+        document.querySelectorAll('.ns_new_option_box input').forEach(opt => {
+            opt.addEventListener('change', ns_new_persist);
         });
     }
 
-    function renderPhotoGrid() {
-        document.getElementById('p_grid').innerHTML = photoStore.map(p => `<img src="${p}" class="photo-thumb">`).join('');
-    }
-
-    // UPDATED SAVE LOGIC (LITERAL ADDITION)
-    function saveData() {
-        const id = document.getElementById('sup_id').innerText;
-        const areas = Array.from(document.querySelectorAll('.area-item:checked')).map(i => i.value);
+    function ns_new_persist() {
         const data = {
-            id: id,
-            firm: document.getElementById('firm_name').value,
-            owner: document.getElementById('owner_name').value,
-            phone: document.getElementById('phone').value,
-            whatsapp: document.getElementById('whatsapp').value,
-            gps: document.getElementById('gps_val').value,
-            address: document.getElementById('address').value,
-            areas: areas,
-            fleet: [document.getElementById('ft1').innerText, document.getElementById('ft2').innerText, document.getElementById('ft3').innerText],
-            photos: photoStore,
-            timestamp: new Date().toISOString()
+            materials: Array.from(document.querySelectorAll('.ns_new_mat:checked')).map(m => m.value),
+            sand: Array.from(document.querySelectorAll('input[name="ns_sand"]:checked')).map(i => i.value),
+            stone: Array.from(document.querySelectorAll('input[name="ns_stone"]:checked')).map(i => i.value),
+            agg: Array.from(document.querySelectorAll('input[name="ns_agg"]:checked')).map(i => i.value),
+            brick: Array.from(document.querySelectorAll('input[name="ns_brick"]:checked')).map(i => i.value),
+            cem: Array.from(document.querySelectorAll('input[name="ns_cem"]:checked')).map(i => i.value),
+            tmt: Array.from(document.querySelectorAll('input[name="ns_tmt"]:checked')).map(i => i.value)
         };
-        const tx = db.transaction("records", "readwrite");
-        tx.objectStore("records").put(data);
-        tx.oncomplete = () => { alert("Locked to Local DB"); updateCount(); };
+        localStorage.setItem("ns_material_draft", JSON.stringify(data));
     }
 
-    async function saveAndReset() {
-        saveData();
-        document.getElementById('auto_save_text').innerText = "● SYNCING CLOUD...";
-        const tx = db.transaction("records", "readonly");
-        tx.objectStore("records").getAll().onsuccess = async e => {
-            for(let r of e.target.result) {
-                await fetch(SCRIPT_URL, {method: 'POST', mode: 'no-cors', body: JSON.stringify(r)});
+    function ns_new_restoreData() {
+        const raw = localStorage.getItem("ns_material_draft");
+        if(!raw) return;
+        const data = JSON.parse(raw);
+
+        // 1. Restore Main Checkboxes
+        document.querySelectorAll('.ns_new_mat').forEach(chk => {
+            if(data.materials.includes(chk.value)) {
+                chk.checked = true;
+                document.getElementById(chk.dataset.target).classList.remove('hidden');
             }
-            document.getElementById('auto_save_text').innerText = "● SYNC SUCCESS";
-            alert("Cloud Sync Complete");
-        };
+        });
+
+        // 2. Restore Sub Checkboxes
+        const subMaps = { ns_sand: 'sand', ns_stone: 'stone', ns_agg: 'agg', ns_brick: 'brick', ns_cem: 'cem', ns_tmt: 'tmt' };
+        for(let name in subMaps) {
+            document.querySelectorAll(`input[name="${name}"]`).forEach(i => {
+                if(data[subMaps[name]].includes(i.value)) i.checked = true;
+            });
+        }
     }
+
+    // Modify existing saveData to include new module data
+    const originalSaveData = saveData;
+    saveData = function() {
+        // Run original first
+        originalSaveData();
+        
+        // Then add extra NSID13 data to the same ID in IndexedDB
+        const id = document.getElementById('sup_id').innerText;
+        const matData = JSON.parse(localStorage.getItem("ns_material_draft"));
+        
+        const tx = db.transaction("records", "readwrite");
+        const store = tx.objectStore("records");
+        store.get(id).onsuccess = (e) => {
+            const record = e.target.result;
+            if(record) {
+                record.material_source = matData;
+                store.put(record);
+            }
+        };
+    };
 </script>
 </body>
 </html>
