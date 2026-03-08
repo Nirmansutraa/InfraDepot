@@ -1,54 +1,60 @@
-/* NIRMASUTRA INFRA-DEPOT | SELF-UPDATING SERVICE WORKER 
-  Version: 14.2
-  Updated: 2026-03-08
+/* NIRMASUTRA INFRA-DEPOT BI-SYSTEM 
+   SERVICE WORKER PROTOCOL: NSIDBS03
+   LAST UPDATED: 2026-03-08
 */
 
-const CACHE_NAME = 'ns-infra-v14.2'; 
+const CACHE_NAME = 'nsidbs-v03-enterprise';
+
+// Resources to be cached for offline availability
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+    './',
+    './index.html',
+    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
 ];
 
-// 1. INSTALL: Force the new worker to install immediately
+// INSTALL: Pre-cache all essential system files
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing New Version...');
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-  // Bypass the "waiting" room - take over immediately
-  self.skipWaiting();
-});
-
-// 2. ACTIVATE: Kill old caches and claim control of all tabs
-self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating & Purging Old Caches...');
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
+    self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('NSIDBS03: System files locked in cache');
+            return cache.addAll(ASSETS_TO_CACHE);
         })
-      );
-    })
-  );
-  // Immediate control of the page without a manual refresh
-  self.clients.claim();
+    );
 });
 
-// 3. FETCH: Network-First Strategy (Try internet, fallback to cache)
-// This ensures you always get the latest code if online
+// ACTIVATE: The "Version Purge" logic
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cache) => {
+                    if (cache !== CACHE_NAME) {
+                        console.log('NSIDBS: Purging Legacy Version Cache:', cache);
+                        return caches.delete(cache);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
+});
+
+// FETCH: Intercept requests and serve from cache if offline
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
-  );
+    // Skip cross-origin requests for maps (OSM tiles) to avoid CORS bloat,
+    // only cache the core library files.
+    event.respondWith(
+        caches.match(event.request).then((response) => {
+            return response || fetch(event.request).catch(() => {
+                // Return offline fallback if network fails
+                if (event.request.mode === 'navigate') {
+                    return caches.match('./index.html');
+                }
+            });
+        })
+    );
 });
