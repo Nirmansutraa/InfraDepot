@@ -2,768 +2,429 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="NSID Intelligence">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="description" content="NirmaSutra Enterprise Intelligence Terminal">
-
-    <title>NirmaSutra Intelligence Network | NSIDBS06</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NirmaSutra InfraDepot | Enterprise v3.0</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        /**
-         * NIRMASUTRA DESIGN SYSTEM (NDS) V6.0
-         * COMPREHENSIVE STYLE ARCHITECTURE
-         */
-        :root {
-            /* Color Palette - Core */
-            --orange: #ff6a00;
-            --orange-hover: #e65f00;
-            --orange-glow: rgba(255, 106, 0, 0.35);
-            --dark: #0f172a;
-            --dark-alt: #1e293b;
-            --darker: #020617;
-            
-            /* Status Colors */
-            --green: #10b981;
-            --green-soft: rgba(16, 185, 129, 0.1);
-            --red: #ef4444;
-            --red-soft: rgba(239, 68, 68, 0.1);
-            --blue: #3b82f6;
-            --blue-soft: rgba(59, 130, 246, 0.1);
-            
-            /* UI Elements */
-            --slate: #64748b;
-            --bg: #f8fafc;
-            --white: #ffffff;
-            --border: #e2e8f0;
-            --glass: rgba(255, 255, 255, 0.04);
-            
-            /* Shadows & Depth */
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            --radius-xl: 35px;
-            --radius-lg: 24px;
-            --radius-md: 16px;
-        }
-
-        /* --- CSS NORMALIZATION --- */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: #1e293b;
-            line-height: 1.5;
-            overflow-x: hidden;
-            overscroll-behavior-y: contain;
-        }
-
-        /* --- AUTHENTICATION LAYER --- */
-        .auth-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: var(--dark);
-            z-index: 100000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 25px;
-            transition: opacity 0.6s ease, visibility 0.6s;
-        }
-
-        .auth-panel {
-            width: 100%;
-            max-width: 440px;
-            background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            padding: 60px 35px;
-            border-radius: 50px;
-            text-align: center;
-            color: var(--white);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .auth-branding h1 {
-            font-size: 38px;
-            font-weight: 900;
-            color: var(--orange);
-            letter-spacing: -1.5px;
-            margin-bottom: 5px;
-        }
-
-        .auth-branding p {
-            font-size: 11px;
-            letter-spacing: 5px;
-            color: var(--slate);
-            text-transform: uppercase;
-            margin-bottom: 45px;
-            font-weight: 700;
-        }
-
-        .form-group {
-            position: relative;
-            width: 100%;
-            margin-bottom: 24px;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 22px;
-            border-radius: 22px;
-            border: 2px solid #334155;
-            background-color: var(--darker);
-            color: var(--white);
-            font-size: 16px;
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .input-field:focus {
-            border-color: var(--orange);
-            outline: none;
-            box-shadow: 0 0 0 4px var(--orange-glow);
-        }
-
-        .visibility-toggle {
-            position: absolute;
-            right: 22px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--slate);
-            font-size: 20px;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 22px;
-            border: none;
-            border-radius: 22px;
-            background-color: var(--orange);
-            color: var(--white);
-            font-weight: 900;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            cursor: pointer;
-            transition: transform 0.2s, background-color 0.3s;
-            box-shadow: 0 12px 24px var(--orange-glow);
-        }
-
-        .btn-primary:active {
-            transform: scale(0.97);
-        }
-
-        /* --- DASHBOARD ARCHITECTURE --- */
-        #pwa_layout {
-            display: none;
-            max-width: 800px;
-            margin: 0 auto;
-            padding-bottom: 160px;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .app-bar {
-            background-color: var(--dark);
-            padding: 75px 25px 40px;
-            border-bottom-left-radius: 50px;
-            border-bottom-right-radius: 50px;
-            color: var(--white);
-        }
-
-        .header-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .operator-info h2 {
-            font-size: 30px;
-            font-weight: 900;
-            margin-top: 5px;
-        }
-
-        .operator-info small {
-            color: var(--slate);
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
-
-        .hud-display {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 35px;
-        }
-
-        .hud-item {
-            background-color: rgba(255, 255, 255, 0.07);
-            padding: 20px 10px;
-            border-radius: 26px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .hud-item b {
-            display: block;
-            font-size: 24px;
-            font-weight: 900;
-        }
-
-        .hud-item span {
-            font-size: 9px;
-            color: var(--slate);
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .section-header {
-            padding: 40px 25px 15px;
-            font-size: 13px;
-            font-weight: 900;
-            color: var(--slate);
-            text-transform: uppercase;
-            letter-spacing: 2.5px;
-        }
-
-        .data-card {
-            background-color: var(--white);
-            margin: 0 22px 22px;
-            padding: 30px;
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border);
-        }
-
-        .nsid-display {
-            background-color: var(--darker);
-            color: var(--green);
-            padding: 28px;
-            border-radius: 22px;
-            text-align: center;
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
-            font-size: 28px;
-            font-weight: 900;
-            margin-bottom: 25px;
-            border: 2px solid var(--dark-alt);
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        /* --- MAP & GEODATA --- */
-        #map_engine {
-            height: 380px;
-            width: 100%;
-            border-radius: 32px;
-            border: 6px solid var(--white);
-            box-shadow: var(--shadow-md);
-            margin-bottom: 25px;
-            z-index: 10;
-        }
-
-        .geo-output {
-            width: 100%;
-            margin-top: 15px;
-            padding: 20px;
-            border-radius: 22px;
-            border: 1px solid var(--border);
-            background-color: var(--bg);
-            font-size: 14px;
-            font-weight: 500;
-            resize: none;
-            color: var(--dark-alt);
-        }
-
-        /* --- MEDIA ASSETS --- */
-        .asset-shelf {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding-bottom: 15px;
-            scrollbar-width: none; /* Firefox */
-        }
-
-        .asset-shelf::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
-        }
-
-        .asset-item {
-            min-width: 160px;
-            height: 160px;
-            border-radius: 28px;
-            object-fit: cover;
-            border: 4px solid var(--white);
-            box-shadow: var(--shadow-md);
-            transition: transform 0.3s;
-        }
-
-        .asset-item:active {
-            transform: scale(0.95);
-        }
-
-        /* --- UTILITY DOCK --- */
-        .action-dock {
-            position: fixed;
-            bottom: 35px;
-            left: 20px;
-            right: 20px;
-            background-color: var(--dark);
-            padding: 22px;
-            border-radius: 40px;
-            display: flex;
-            gap: 15px;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
-            z-index: 9999;
-        }
-
-        .dock-item {
-            flex: 1;
-            padding: 22px;
-            border: none;
-            border-radius: 24px;
-            font-weight: 900;
-            color: var(--white);
-            text-transform: uppercase;
-            font-size: 13px;
-            letter-spacing: 1px;
-            cursor: pointer;
-        }
-
-        /* --- UTILITIES --- */
-        .hidden { display: none !important; }
-        .bg-blue { background-color: var(--blue); }
-        .bg-green { background-color: var(--green); }
-        .bg-red { background-color: var(--red); }
+        :root { --orange: #ff6a00; --bg: #f1f5f9; --green: #10b981; --dark: #0f172a; --slate: #64748b; --red: #ef4444; --blue: #3b82f6; --gold: #ffd700; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; }
         
-        .shake-err { 
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; 
-            border-color: var(--red) !important;
-        }
+        #app_root { display: none; max-width: 600px; margin: auto; flex-direction: column; gap: 15px; padding-bottom: 80px; }
+        
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        h3 { margin: 0 0 12px 0; color: var(--dark); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-left: 4px solid var(--orange); padding-left: 8px; }
+        label { font-size: 10px; font-weight: 700; color: var(--slate); display: block; margin-bottom: 4px; text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; transition: 0.3s; }
+        
+        #login_zone { display: flex; flex-direction: column; gap: 10px; }
+        #data_entry_zone, #admin_zone { display: none; flex-direction: column; gap: 15px; }
+        .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .stat-card { background: var(--dark); color: white; padding: 8px; border-radius: 8px; text-align: center; font-size: 10px; }
+        .stat-card b { font-size: 14px; color: var(--orange); }
+        
+        .area-scroll { height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fafafa; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .check-pill { display: flex; align-items: center; background: white; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11px; }
+        .check-pill input { width: 16px; height: 16px; margin-right: 8px; margin-bottom: 0; }
+        
+        .action-bar { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: white; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 1000; }
+        .sync-indicator { font-size: 9px; color: var(--green); text-align: center; margin-bottom: 5px; font-weight: bold; }
+        
+        .pass-wrap { position: relative; width: 100%; }
+        .eye-btn { position: absolute; right: 10px; top: 10px; background: none; border: none; cursor: pointer; font-size: 18px; }
 
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
+        /* Multi-Fleet Styling */
+        .fleet-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+        .fleet-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .counter-ctrl { display: flex; align-items: center; gap: 12px; }
+        .c-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--dark); color: white; cursor: pointer; font-weight: bold; }
+        .c-val { font-family: monospace; font-weight: bold; font-size: 16px; min-width: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="gate_system" class="auth-container">
-        <div class="auth-panel">
-            <div class="auth-branding">
-                <h1>NIRMASUTRA</h1>
-                <p>Enterprise Master Gateway</p>
-            </div>
-            
-            <div class="form-group">
-                <input type="password" id="m_input" class="input-field" placeholder="ENTER MASTER KEY" autocomplete="off">
-                <button class="visibility-toggle" onclick="togglePass('m_input')">👁️</button>
-            </div>
-
-            <button class="btn-primary" onclick="validateMaster()">INITIALIZE SYSTEM</button>
-            <p id="m_msg" style="color:var(--red); font-size:12px; margin-top:20px; font-weight:800; min-height:1.2em;"></p>
+<div id="app_root">
+    
+    <div id="login_zone" class="card">
+        <h3>🔑 Authentication Portal</h3>
+        <select id="staff_id_input">
+            <option value="">-- Choose Profile --</option>
+            <option value="ADMIN">MASTER ADMIN</option>
+            <option value="NSID001">NSID001</option>
+            <option value="NSID002">NSID002</option>
+            <option value="NSID003">NSID003</option>
+            <option value="NSID004">NSID004</option>
+            <option value="NSID005">NSID005</option>
+        </select>
+        <div class="pass-wrap">
+            <input type="password" id="staff_pass_input" placeholder="Enter Password">
+            <button class="eye-btn" onclick="togglePass()">👁️</button>
         </div>
+        <button class="btn" onclick="handleLogin()" style="background: var(--dark);">ACCESS SYSTEM</button>
     </div>
 
-    <div id="gate_operator" class="auth-container hidden">
-        <div class="auth-panel">
-            <div class="auth-branding">
-                <h1>OPERATOR</h1>
-                <p>Identity Verification</p>
-            </div>
-            
-            <div class="form-group">
-                <input type="text" id="op_id" class="input-field" placeholder="USER ID (e.g. NSID001)" autocomplete="username">
-            </div>
-
-            <div class="form-group">
-                <input type="password" id="op_pass" class="input-field" placeholder="SECURITY PASSWORD" autocomplete="current-password">
-                <button class="visibility-toggle" onclick="togglePass('op_pass')">👁️</button>
-            </div>
-
-            <button class="btn-primary bg-blue" onclick="validateOperator()">OPEN SESSION</button>
-            <p id="op_msg" style="color:var(--red); font-size:12px; margin-top:20px; font-weight:800; min-height:1.2em;"></p>
-        </div>
-    </div>
-
-    <main id="pwa_layout">
-        <header class="app-bar">
-            <div class="header-flex">
-                <div class="operator-info">
-                    <small>System Operator</small>
-                    <h2 id="op_name_display">NSID---</h2>
-                </div>
-                <button class="bg-red" onclick="terminateSession()" style="border:none; color:white; padding:12px 20px; border-radius:18px; font-size:10px; font-weight:900; cursor:pointer;">SIGN OUT</button>
-            </div>
-
-            <div class="hud-display">
-                <div class="hud-item">
-                    <b id="hud_queue">0</b>
-                    <span>Local Records</span>
-                </div>
-                <div class="hud-item">
-                    <b id="hud_media">0</b>
-                    <span>Assets</span>
-                </div>
-                <div class="hud-item">
-                    <b id="hud_gps" style="color:var(--red);">OFF</b>
-                    <span>GPS Status</span>
-                </div>
-            </div>
-        </header>
-
-        <h3 class="section-header">01 / Entity Profile</h3>
-        <section class="data-card">
-            <div id="nsid_badge" class="nsid-display">NS-GEN-0000</div>
-            
-            <div style="margin-bottom:20px;">
-                <label style="font-size:10px; font-weight:900; color:var(--slate); text-transform:uppercase; margin-bottom:10px; display:block;">Business Legal Title</label>
-                <input type="text" id="input_firm" oninput="generateDynamicID()" class="input-field" style="background:var(--bg); color:var(--darker); text-align:left;" placeholder="Enter firm name...">
-            </div>
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                <div>
-                    <label style="font-size:10px; font-weight:900; color:var(--slate); margin-bottom:10px; display:block;">Owner Name</label>
-                    <input type="text" id="input_owner" class="input-field" style="background:var(--bg); color:var(--darker); text-align:left; padding:15px; font-size:14px;">
-                </div>
-                <div>
-                    <label style="font-size:10px; font-weight:900; color:var(--slate); margin-bottom:10px; display:block;">Contact No.</label>
-                    <input type="tel" id="input_phone" class="input-field" style="background:var(--bg); color:var(--darker); text-align:left; padding:15px; font-size:14px;">
-                </div>
-            </div>
-        </section>
-
-        <h3 class="section-header">02 / Geospatial Intelligence</h3>
-        <section class="data-card">
-            <div id="map_engine"></div>
-            <button class="btn-primary" style="background-color:var(--dark);" onclick="acquireLocation()">📍 SYNC PRECISION COORDINATES</button>
-            <textarea id="output_address" rows="3" class="geo-output" placeholder="Verification address will be auto-resolved upon GPS lock..."></textarea>
-        </section>
-
-        <h3 class="section-header">03 / Visual Evidence</h3>
-        <section class="data-card">
-            <div class="asset-shelf" id="shelf_display">
-                </div>
-            
-            <input type="file" id="camera_trigger" accept="image/*" capture="environment" class="hidden" onchange="captureAsset(this)">
-            <button class="btn-primary bg-blue" onclick="document.getElementById('camera_trigger').click()">📷 LAUNCH FIELD CAMERA</button>
-        </section>
-
-        <h3 class="section-header">04 / Data Governance</h3>
-        <section class="data-card" style="text-align:center; background-color:var(--blue-soft);">
-            <p style="font-size:11px; font-weight:800; color:var(--blue); margin-bottom:15px;">XLSX REPORT GENERATOR</p>
-            <button class="btn-primary bg-blue" onclick="exportToExcel()" style="padding:15px; font-size:12px;">📥 EXPORT LOCAL DATABASE</button>
-        </section>
-
-        <nav class="action-dock">
-            <button class="dock-item bg-blue" onclick="commitToVault()">💾 COMMIT</button>
-            <button class="dock-item bg-green" onclick="pushToCloud()">🚀 SYNC CLOUD</button>
-        </nav>
-    </main>
-
-    <script>
-        /**
-         * NIRMASUTRA ENGINE NSIDBS06
-         * PRODUCTION GRADE JAVASCRIPT
-         */
+    <div id="data_entry_zone">
         
-        // --- SYSTEM CONFIGURATION ---
-        const CONFIG = {
-            MASTER_KEY: "Life4life@nsid",
-            DB_NAME: "NS_INTEL_VAULT",
-            DB_VERSION: 25,
-            OPERATOR_REGISTRY: {
-                "NSID001": "Life4life@01",
-                "NSID002": "Life4life@02",
-                "NSID003": "Life4life@03",
-                "NSID004": "Life4life@04",
-                "NSID005": "Life4life@05"
-            },
-            DEFAULT_LOC: [24.5854, 73.7125] // Rajasthan / Udaipur Hub
-        };
+        <div class="card">
+            <div class="dash-grid">
+                <div class="stat-card"><small>Entries</small><br><b id="count_all">0</b></div>
+                <div class="stat-card"><small>GPS</small><br><b id="count_gps">No</b></div>
+                <div class="stat-card"><small>Draft</small><br><b id="draft_status">Saved</b></div>
+                <div class="stat-card" style="background:var(--blue);"><small>Session</small><br><b id="user_display">--</b></div>
+            </div>
+        </div>
 
-        // --- GLOBAL STATE ---
-        let storage, map, marker, capturedMedia = [];
+        <div class="card">
+            <h3>1. Business Entity Intelligence</h3>
+            <div id="sup_id" style="background:#0f172a; color:#22c55e; font-family:monospace; font-size:18px; text-align:center; padding:10px; border-radius:8px; margin-bottom:10px;">NS-ID-AUTO</div>
+            <label>Verification Status</label>
+            <select id="ver_status">
+                <option value="Not Verified">🔴 Not Verified</option>
+                <option value="Field Visit Verified">🟠 Field Visit Verified</option>
+                <option value="Digitally Verified">🟢 Digitally Verified</option>
+            </select>
+            <label>Firm & Owner Details</label>
+            <input type="text" id="firm_name" placeholder="Full Firm Name" oninput="updateID()">
+            <input type="text" id="owner_name" placeholder="Owner Name">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <input type="tel" id="phone" placeholder="Owner Phone" oninput="autoWA('phone','whatsapp')">
+                <input type="tel" id="whatsapp" placeholder="Owner WhatsApp">
+            </div>
 
-        /**
-         * INITIALIZATION: Database Bootstrapper
-         */
-        const initSystem = () => {
-            const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
+            <label style="margin-top:10px;">Staff / Manager Details (Secondary)</label>
+            <input type="text" id="staff_contact_name" placeholder="Staff Name">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <input type="tel" id="staff_phone" placeholder="Staff Phone" oninput="autoWA('staff_phone','staff_whatsapp')">
+                <input type="tel" id="staff_whatsapp" placeholder="Staff WhatsApp">
+            </div>
+            </div>
 
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains("intel_records")) {
-                    db.createObjectStore("intel_records", { keyPath: "id", autoIncrement: true });
-                }
-            };
+        <div class="card">
+            <h3>2. Business Location (GPS)</h3>
+            <div id="map" style="height:160px; border-radius:10px; margin-bottom:10px;"></div>
+            <button class="btn" style="background:var(--dark); font-size:11px;" onclick="getGPS()">📍 FETCH PRECISE LOCATION</button>
+            <input type="hidden" id="gps_val">
+            <label>Manual/GPS Address</label>
+            <textarea id="address" rows="3" placeholder="Detailed Business Address..."></textarea>
+        </div>
 
-            request.onsuccess = (event) => {
-                storage = event.target.result;
-                updateHUD();
-                console.log("NSID Engine: Storage Online");
-            };
+        <div class="card">
+            <h3>3. Material Availability & Brands</h3>
+            <div id="mat_checks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="check-pill"><input type="checkbox" class="mat-item" value="Sand"><span>Sand</span></div>
+                <div class="check-pill"><input type="checkbox" class="mat-item" value="Aggregates"><span>Aggregates</span></div>
+                <div class="check-pill"><input type="checkbox" class="mat-item" value="Bricks"><span>Bricks</span></div>
+                <div class="check-pill"><input type="checkbox" class="mat-item" value="Grit"><span>Grit</span></div>
+            </div>
+            
+            <label style="margin-top:10px;">Sand Variety</label>
+            <select id="sand_type">
+                <option value="None">-- Select Sand --</option>
+                <option value="River Sand">River Sand</option>
+                <option value="M-Sand">M-Sand (Crushed)</option>
+                <option value="Plaster Sand">Plaster Sand</option>
+            </select>
 
-            request.onerror = (err) => console.error("Database Error:", err);
-        };
+            <label>Cement Brands (Top 10)</label>
+            <select id="cement_brand">
+                <option value="None">-- Select Brand --</option>
+                <option value="UltraTech">UltraTech Cement</option>
+                <option value="Ambuja">Ambuja Cement</option>
+                <option value="ACC">ACC Limited</option>
+                <option value="Shree">Shree Cement</option>
+                <option value="Dalmia">Dalmia Bharat</option>
+                <option value="Birla">Birla Corporation</option>
+                <option value="JK Lakshmi">JK Lakshmi Cement</option>
+                <option value="Ramco">Ramco Cements</option>
+                <option value="Orient">Orient Cement</option>
+                <option value="Wonder">Wonder Cement</option>
+            </select>
 
-        /**
-         * SECURITY: Master Gateway Validation
-         */
-        function validateMaster() {
-            const val = document.getElementById('m_input').value.trim();
-            const msg = document.getElementById('m_msg');
-            const field = document.getElementById('m_input');
+            <label>TMT Steel Brands (Top 10)</label>
+            <select id="tmt_brand">
+                <option value="None">-- Select Brand --</option>
+                <option value="Tata Tiscon">Tata Tiscon</option>
+                <option value="JSW Neosteel">JSW Neosteel</option>
+                <option value="SAIL">SAIL TMT</option>
+                <option value="Vizag Steel">Vizag Steel</option>
+                <option value="Jindal Panther">Jindal Panther</option>
+                <option value="Kamdhenu">Kamdhenu Next</option>
+                <option value="Shyam Steel">Shyam Steel</option>
+                <option value="SRMB">SRMB TMT</option>
+                <option value="Rathi">Rathi Shaktiman</option>
+                <option value="Electrosteel">Electrosteel</option>
+            </select>
+            </div>
 
-            if (val === CONFIG.MASTER_KEY) {
-                sessionStorage.setItem('gate_1_clear', 'true');
-                document.getElementById('gate_system').classList.add('hidden');
-                document.getElementById('gate_operator').classList.remove('hidden');
+        <div class="card">
+            <h3>4. Supply Network Area</h3>
+            <div class="check-pill" style="margin-bottom:10px; background:var(--dark); color:white; width:100%;">
+                <input type="checkbox" id="area_udaipur" onchange="toggleWholeUdaipur()"> <span>SELECT WHOLE UDAIPUR NETWORK</span>
+            </div>
+            <div class="area-scroll" id="area_grid"></div>
+        </div>
+
+        <div class="card">
+            <h3>5. Transportation Fleet</h3>
+            <div class="fleet-grid">
+                <div class="fleet-row">
+                    <span>🚜 Tractor</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_tractor',-1)">-</button>
+                        <span class="c-val" id="v_tractor">0</span>
+                        <button class="c-btn" onclick="adj('v_tractor',1)">+</button>
+                    </div>
+                </div>
+                <div class="fleet-row">
+                    <span>🚛 Mini Truck</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_mtruck',-1)">-</button>
+                        <span class="c-val" id="v_mtruck">0</span>
+                        <button class="c-btn" onclick="adj('v_mtruck',1)">+</button>
+                    </div>
+                </div>
+                <div class="fleet-row">
+                    <span>🚚 Mini Dumper</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_mdumper',-1)">-</button>
+                        <span class="c-val" id="v_mdumper">0</span>
+                        <button class="c-btn" onclick="adj('v_mdumper',1)">+</button>
+                    </div>
+                </div>
+                <div class="fleet-row">
+                    <span>🏗️ Dumper</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_dumper',-1)">-</button>
+                        <span class="c-val" id="v_dumper">0</span>
+                        <button class="c-btn" onclick="adj('v_dumper',1)">+</button>
+                    </div>
+                </div>
+                <div class="fleet-row">
+                    <span>🛣️ Trailer</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_trailer',-1)">-</button>
+                        <span class="c-val" id="v_trailer">0</span>
+                        <button class="c-btn" onclick="adj('v_trailer',1)">+</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+        <div class="card" style="border: 2px solid var(--green);">
+            <h3>6. Data Center & Cloud Sync</h3>
+            <div class="sync-indicator" id="auto_save_text">● System Online</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <button class="btn" onclick="saveAndReset()" style="background: var(--blue); padding: 10px;">💾 SAVE DATA</button>
+                <button class="btn" onclick="saveAndReset()" style="background: var(--green); padding: 10px;">🚀 SUBMIT DATA</button>
+            </div>
+            <button class="btn" onclick="resetScreen()" style="background: var(--dark); margin-top:10px; height:40px;">➕ NEXT ENTRY</button>
+        </div>
+
+        <div class="action-bar">
+            <div style="font-size: 10px; color: var(--slate); padding-left: 10px;">Active Profile: <b id="footer_user">--</b></div>
+            <button class="btn" onclick="location.reload()" style="background:var(--red); padding: 8px;">LOGOUT</button>
+        </div>
+    </div>
+
+    <div id="admin_zone">
+        <div class="card" style="background:var(--dark); color:white;">
+            <h3>👑 Command Center</h3>
+        </div>
+        <div id="admin_content" class="card">ADMIN VIEW LOADED</div>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyi81jA2H036vY-f-nSj4P44PzE0eE-yW72tT3o_KogC7GIdzE6X6_hRshqVvG5V15N/exec";
+    const MASTER_KEY = "Life4life@nsid";
+    const DEFAULTS = { "ADMIN": "Admin@NS2026", "NSID001": "Nirma@001", "NSID002": "Nirma@002", "NSID003": "Nirma@003", "NSID004": "Nirma@004", "NSID005": "Nirma@005" };
+    
+    const UDAIPUR_AREAS = ["Hiran Magri Sec 3", "Hiran Magri Sec 4", "Hiran Magri Sec 5", "Hiran Magri Sec 11", "Hiran Magri Sec 13", "Hiran Magri Sec 14", "Gordhan Vilas", "Balicha", "Eklingpura", "Pratap Nagar", "Transport Nagar", "Sukher", "Amberi", "Bhuwana", "Sobhagpura", "Fatehpura", "Panchwati", "Saheliyon ki Bari", "Mulla Talai", "Rampura", "Sajjangarh Area", "Ambamata", "Clock Tower", "Surajpole", "Delhi Gate", "Udiapole", "Shastri Circle", "Ashwini Bazaar", "Rada Ji Bawri", "Savina", "Titaradi", "Jhamarkotra Road", "Bedwas", "Debari", "Kherwara Road", "Madri Ind. Area", "Gudli", "Kaladwas", "Kavita", "Lakhawali", "Badi", "Loyra", "Zinc Smelter", "Thoor", "Kailashpuri", "Rama", "Nagda", "Iswal", "Kaya", "Umarda"];
+
+    let db, map, marker;
+
+    window.onload = function() {
+        if (sessionStorage.getItem("nirma_gate") === "true") {
+            setupApp();
+        } else {
+            let pass = prompt("🔒 MASTER ACCESS:");
+            if (pass === MASTER_KEY) {
+                sessionStorage.setItem("nirma_gate", "true");
+                setupApp();
+            } else { window.location.reload(); }
+        }
+    };
+
+    function setupApp() {
+        document.getElementById('app_root').style.display = 'flex';
+        renderAreas();
+        initDB();
+        startAutoSave();
+    }
+
+    function togglePass() {
+        const p = document.getElementById('staff_pass_input');
+        p.type = p.type === "password" ? "text" : "password";
+    }
+
+    function renderAreas() {
+        const grid = document.getElementById('area_grid');
+        if(grid) {
+            grid.innerHTML = UDAIPUR_AREAS.map(a => `
+                <div class="check-pill"><input type="checkbox" class="area-item" value="${a}"><span>${a}</span></div>
+            `).join('');
+        }
+    }
+
+    function initDB() {
+        const req = indexedDB.open("InfraDepot_V3", 1);
+        req.onupgradeneeded = e => { e.target.result.createObjectStore("records", { keyPath: "id" }); };
+        req.onsuccess = e => { db = e.target.result; updateCount(); };
+    }
+
+    function handleLogin() {
+        const id = document.getElementById('staff_id_input').value;
+        const pass = document.getElementById('staff_pass_input').value;
+        if (id && pass === DEFAULTS[id]) {
+            document.getElementById('login_zone').style.display = 'none';
+            document.getElementById('user_display').innerText = id;
+            document.getElementById('footer_user').innerText = id;
+            if (id === "ADMIN") {
+                document.getElementById('admin_zone').style.display = 'flex';
             } else {
-                field.classList.add('shake-err');
-                msg.innerText = "CRITICAL ERROR: INVALID MASTER KEY";
-                setTimeout(() => {
-                    field.classList.remove('shake-err');
-                    msg.innerText = "";
-                }, 2000);
+                document.getElementById('data_entry_zone').style.display = 'flex';
+                setTimeout(() => { initMap(); updateID(); }, 150);
             }
-        }
+        } else { alert("❌ Wrong Password."); }
+    }
 
-        /**
-         * SECURITY: Operator Identity Validation
-         */
-        function validateOperator() {
-            const uid = document.getElementById('op_id').value.trim();
-            const upass = document.getElementById('op_pass').value.trim();
-            const msg = document.getElementById('op_msg');
-            const field = document.getElementById('op_pass');
-
-            if (CONFIG.OPERATOR_REGISTRY[uid] === upass) {
-                sessionStorage.setItem('gate_2_clear', uid);
-                bootDashboard(uid);
-            } else {
-                field.classList.add('shake-err');
-                msg.innerText = "IDENTITY DENIED: CHECK ID/PASS";
-                setTimeout(() => {
-                    field.classList.remove('shake-err');
-                    msg.innerText = "";
-                }, 2000);
+    function startAutoSave() {
+        setInterval(() => {
+            if (document.getElementById('firm_name').value) {
+                localStorage.setItem("NS_DRAFT", JSON.stringify(getCurrentData()));
+                document.getElementById('auto_save_text').innerText = "● Auto-Synced: " + new Date().toLocaleTimeString();
+                document.getElementById('draft_status').innerText = "YES";
             }
-        }
+        }, 10000);
+    }
 
-        /**
-         * UI: Launch Main Interface
-         */
-        function bootDashboard(uid) {
-            document.getElementById('gate_operator').classList.add('hidden');
-            document.getElementById('pwa_layout').style.display = 'block';
-            document.getElementById('op_name_display').innerText = uid;
-            
-            // Map Initialization (Deferred for DOM rendering)
-            setTimeout(() => {
-                map = L.map('map_engine').setView(CONFIG.DEFAULT_LOC, 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap'
-                }).addTo(map);
-            }, 400);
-        }
+    function getCurrentData() {
+        const selectedAreas = Array.from(document.querySelectorAll('.area-item:checked')).map(i => i.value).join(", ");
+        const selectedMats = Array.from(document.querySelectorAll('.mat-item:checked')).map(i => i.value).join(", ");
+        
+        // Fleet Data Aggregation
+        const fleetData = `T:${document.getElementById('v_tractor').innerText}, MT:${document.getElementById('v_mtruck').innerText}, MD:${document.getElementById('v_mdumper').innerText}, D:${document.getElementById('v_dumper').innerText}, TR:${document.getElementById('v_trailer').innerText}`;
 
-        /**
-         * GEOSPATIAL: Precision GPS Locking
-         */
-        function acquireLocation() {
-            const gpsLabel = document.getElementById('hud_gps');
-            const addrBox = document.getElementById('output_address');
-
-            if (!navigator.geolocation) {
-                alert("GPS Protocol Not Supported");
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    
-                    if (marker) map.removeLayer(marker);
-                    marker = L.marker([latitude, longitude]).addTo(map);
-                    map.setView([latitude, longitude], 17);
-
-                    gpsLabel.innerText = "LOCK";
-                    gpsLabel.style.color = "var(--green)";
-
-                    // Reverse Geocoding via Nominatim
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            addrBox.value = data.display_name;
-                        });
-                },
-                (err) => {
-                    alert("GPS Signal Lost: " + err.message);
-                },
-                { enableHighAccuracy: true }
-            );
-        }
-
-        /**
-         * LOGISTICS: Auto-ID Generator
-         */
-        function generateDynamicID() {
-            const name = document.getElementById('input_firm').value;
-            const prefix = name.length >= 3 ? name.substring(0, 3).toUpperCase() : "GEN";
-            const nonce = Math.floor(1000 + Math.random() * 9000);
-            document.getElementById('nsid_badge').innerText = `NS-${prefix}-${nonce}`;
-        }
-
-        /**
-         * MEDIA: Field Camera Handler
-         */
-        function captureAsset(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    capturedMedia.push(e.target.result);
-                    renderShelf();
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function renderShelf() {
-            const shelf = document.getElementById('shelf_display');
-            shelf.innerHTML = capturedMedia.map(src => `<img src="${src}" class="asset-item">`).join('');
-            document.getElementById('hud_media').innerText = capturedMedia.length;
-        }
-
-        /**
-         * PERSISTENCE: Database Commitment
-         */
-        function commitToVault() {
-            const firm = document.getElementById('input_firm').value.trim();
-            
-            if (!firm) {
-                alert("CRITICAL: Entity Profile Incomplete (Firm Name Required)");
-                return;
-            }
-
-            const transaction = storage.transaction("intel_records", "readwrite");
-            const store = transaction.objectStore("intel_records");
-
-            const record = {
-                nsid: document.getElementById('nsid_badge').innerText,
-                firm_name: firm,
-                owner: document.getElementById('input_owner').value,
-                phone: document.getElementById('input_phone').value,
-                address: document.getElementById('output_address').value,
-                media_count: capturedMedia.length,
-                timestamp: new Date().toLocaleString()
-            };
-
-            const request = store.add(record);
-
-            request.onsuccess = () => {
-                alert("INTEL COMMITTED TO VAULT");
-                location.reload();
-            };
-        }
-
-        /**
-         * DATA GOVERNANCE: Excel Export Logic
-         */
-        function exportToExcel() {
-            const transaction = storage.transaction("intel_records", "readonly");
-            const store = transaction.objectStore("intel_records");
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                const results = request.result;
-                if (results.length === 0) {
-                    alert("No local records found for export.");
-                    return;
-                }
-
-                const sheet = XLSX.utils.json_to_sheet(results);
-                const book = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(book, sheet, "Intelligence_Records");
-                XLSX.writeFile(book, `NSID_Records_${new Date().toISOString().slice(0,10)}.xlsx`);
-            };
-        }
-
-        /**
-         * UTILITY: System Helpers
-         */
-        function updateHUD() {
-            const transaction = storage.transaction("intel_records", "readonly");
-            const store = transaction.objectStore("intel_records");
-            const countRequest = store.count();
-            
-            countRequest.onsuccess = () => {
-                document.getElementById('hud_queue').innerText = countRequest.result;
-            };
-        }
-
-        function togglePass(id) {
-            const el = document.getElementById(id);
-            el.type = el.type === "password" ? "text" : "password";
-        }
-
-        function terminateSession() {
-            if (confirm("Confirm Session Termination? Unsaved data will be lost.")) {
-                sessionStorage.clear();
-                location.reload();
-            }
-        }
-
-        function pushToCloud() {
-            alert("Secure Uplink Initiated... Handshaking with InfraDepot Mainframe.");
-        }
-
-        // --- LIFECYCLE BOOT ---
-        window.onload = () => {
-            initSystem();
-            
-            // Session Recovery
-            const s1 = sessionStorage.getItem('gate_1_clear');
-            const s2 = sessionStorage.getItem('gate_2_clear');
-            
-            if (s1 === 'true' && s2) {
-                document.getElementById('gate_system').classList.add('hidden');
-                bootDashboard(s2);
-            }
+        return {
+            id: document.getElementById('sup_id').innerText,
+            staff: document.getElementById('staff_id_input').value,
+            firm: document.getElementById('firm_name').value,
+            owner: document.getElementById('owner_name').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            secondary_name: document.getElementById('staff_contact_name').value,
+            secondary_wa: document.getElementById('staff_whatsapp').value,
+            address: document.getElementById('address').value,
+            gps: document.getElementById('gps_val').value,
+            materials: `${selectedMats} | Sand:${document.getElementById('sand_type').value}`,
+            cement: document.getElementById('cement_brand').value,
+            tmt: document.getElementById('tmt_brand').value,
+            areas: selectedAreas,
+            status: document.getElementById('ver_status').value,
+            fleet: fleetData,
+            timestamp: new Date().toISOString()
         };
+    }
 
-    </script>
+    async function saveAndReset() {
+        const data = getCurrentData();
+        if(!data.firm) return alert("Firm Name Required");
+        document.getElementById('auto_save_text').innerText = "● CLOUD UPLOADING...";
+        try {
+            const tx = db.transaction("records", "readwrite");
+            tx.objectStore("records").put(data);
+            let fd = new URLSearchParams();
+            for (let k in data) fd.append(k, data[k]);
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
+            alert("✅ Cloud Sync Success");
+            updateCount();
+        } catch (e) {
+            alert("⚠️ Cloud Busy: Saved to Local DB");
+        }
+    }
+
+    function resetScreen() {
+        document.getElementById('firm_name').value = "";
+        document.getElementById('owner_name').value = "";
+        document.getElementById('phone').value = "";
+        document.getElementById('whatsapp').value = "";
+        document.getElementById('staff_contact_name').value = "";
+        document.getElementById('staff_phone').value = "";
+        document.getElementById('staff_whatsapp').value = "";
+        document.getElementById('address').value = "";
+        document.querySelectorAll('.area-item, .mat-item').forEach(i => i.checked = false);
+        document.getElementById('area_udaipur').checked = false;
+        
+        // Reset Fleet Counters
+        ['v_tractor', 'v_mtruck', 'v_mdumper', 'v_dumper', 'v_trailer'].forEach(id => {
+            document.getElementById(id).innerText = "0";
+        });
+
+        document.getElementById('gps_val').value = "";
+        document.getElementById('count_gps').innerText = "No";
+        updateID();
+        window.scrollTo(0,0);
+        alert("Form Cleared for Next Entry");
+    }
+
+    function initMap() { 
+        if (!map) {
+            map = L.map('map').setView([24.5854, 73.7125], 13); 
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
+        }
+        setTimeout(() => map.invalidateSize(), 200);
+    }
+    
+    function updateID() { document.getElementById('sup_id').innerText = "NS-" + Date.now().toString().slice(-6); }
+    function autoWA(p, w) { document.getElementById(w).value = document.getElementById(p).value; }
+    function toggleWholeUdaipur() {
+        const check = document.getElementById('area_udaipur').checked;
+        document.querySelectorAll('.area-item').forEach(i => i.checked = check);
+    }
+    
+    function getGPS() { 
+        document.getElementById('auto_save_text').innerText = "● FETCHING GPS...";
+        navigator.geolocation.getCurrentPosition(async p => { 
+            const lat = p.coords.latitude, lon = p.coords.longitude;
+            document.getElementById('gps_val').value = `${lat},${lon}`;
+            document.getElementById('count_gps').innerText = "Locked";
+            if(marker) map.removeLayer(marker);
+            marker = L.marker([lat, lon]).addTo(map);
+            map.setView([lat, lon], 15);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const d = await res.json();
+            document.getElementById('address').value = d.display_name;
+            document.getElementById('auto_save_text').innerText = "● Location Fixed";
+        }, () => alert("Enable GPS to fetch location")); 
+    }
+    
+    function adj(id, val) {
+        let el = document.getElementById(id);
+        let curr = parseInt(el.innerText);
+        if (curr + val >= 0) el.innerText = curr + val;
+    }
+    
+    function updateCount() {
+        if(!db) return;
+        const tx = db.transaction("records", "readonly");
+        tx.objectStore("records").getAll().onsuccess = e => {
+            document.getElementById('count_all').innerText = e.target.result.length;
+        };
+    }
+</script>
 </body>
 </html>
+
