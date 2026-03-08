@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nirmansutra InfraDepot</title>
+    <title>Nirmansutra InfraDepot | Secure Intel</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ff6a00">
@@ -13,6 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/otplib/12.0.1/otplib-browser.js"></script>
 
     <style>
         :root { --orange: #ff6a00; --bg: #f1f5f9; --green: #10b981; --dark: #0f172a; --slate: #64748b; --red: #ef4444; --blue: #3b82f6; }
@@ -37,12 +38,15 @@
         .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-save { background: var(--green); color: white; }
         .btn-sync { background: var(--blue); color: white; }
+        .btn:disabled { background: #cbd5e1 !important; cursor: not-allowed; opacity: 0.7; }
         #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.9); z-index: 10000; color: white; flex-direction: column; align-items: center; justify-content: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--orange); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         #preview_zone { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
         .thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
         .id-box { background: #0f172a; color: #22c55e; font-family: monospace; font-size: 20px; text-align: center; padding: 15px; border-radius: 8px; font-weight: bold; }
+        /* 🔐 Addition: Hide app by default */
+        #app_root { display: none; }
     </style>
 </head>
 <body>
@@ -50,11 +54,6 @@
 <div id="loader"><div class="spinner"></div><p id="loader_text">Securing Data...</p></div>
 
 <div class="container" id="app_root">
-    <div id="pwa_install_banner" style="display:none; background:var(--dark); color:white; padding:15px; border-radius:12px; align-items:center; justify-content:space-between; border-bottom: 4px solid var(--orange);">
-        <div style="font-size:11px;"><b>Install InfraDepot?</b><br>Works offline on your home screen.</div>
-        <button onclick="triggerPWAInstall()" style="background:var(--orange); color:white; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:11px;">INSTALL</button>
-    </div>
-
     <div class="card">
         <h3>📊 Field Intelligence Dashboard</h3>
         <div class="dash-grid">
@@ -65,6 +64,15 @@
             <div class="stat-card"><small>Agg</small><b id="count_A">0</b></div>
             <div class="stat-card"><small>Brick</small><b id="count_B">0</b></div>
         </div>
+    </div>
+
+    <div class="card" style="border: 2px solid var(--blue);">
+        <h3>🔑 Staff Authentication (TOTP)</h3>
+        <label>Staff ID</label>
+        <input type="text" id="staff_id_input" placeholder="NSID001" oninput="validateTOTP()">
+        <label>6-Digit Authenticator Code</label>
+        <input type="number" id="otp_input" placeholder="000000" oninput="validateTOTP()">
+        <p id="auth_msg" style="font-size: 10px; color: var(--red); font-weight: bold; margin: 0;">WAITING: Enter current Authenticator Code</p>
     </div>
 
     <div class="card">
@@ -125,8 +133,8 @@
 
     <div class="card">
         <h3>7. Data Operations</h3>
-        <button class="btn btn-save" onclick="saveSupplier()">💾 SAVE SUPPLIER (LOCAL)</button>
-        <button class="btn btn-sync" onclick="syncMasterToDrive()">🚀 SYNC MASTER TO DRIVE</button>
+        <button class="btn btn-save" id="save_btn" onclick="saveSupplier()" disabled>💾 SAVE SUPPLIER (LOCAL)</button>
+        <button class="btn btn-sync" id="sync_btn" onclick="syncMasterToDrive()" disabled>🚀 SYNC MASTER TO DRIVE</button>
         <button class="btn" style="background:#cbd5e1; color:var(--dark);" onclick="location.reload()">➕ NEXT BLANK ENTRY</button>
     </div>
 
@@ -137,6 +145,60 @@
 </div>
 
 <script>
+    // --- ⚙️ Addition: SECURITY CONFIG ---
+    const _0xM = "Life4life@nsid";
+    const STAFF_SECRETS = {
+        "NSID001": "N1RM4SUTR4ST4FF01",
+        "NSID002": "N1RM4SUTR4ST4FF02",
+        "NSID003": "N1RM4SUTR4ST4FF03",
+        "NSID004": "N1RM4SUTR4ST4FF04",
+        "NSID005": "N1RM4SUTR4ST4FF05"
+    };
+
+    // --- 🛡️ Addition: MASTER GATEKEEPER ---
+    window.onload = function() {
+        if (sessionStorage.getItem("nirma_authorized") !== "true") {
+            let attempt = prompt("🔒 NIRMANSUTRA ACCESS KEY:");
+            if (attempt === _0xM) {
+                sessionStorage.setItem("nirma_authorized", "true");
+                document.getElementById('app_root').style.display = 'flex';
+                if(typeof db !== 'undefined') initApp();
+            } else {
+                alert("Access Denied.");
+                window.location.href = "https://google.com";
+            }
+        } else {
+            document.getElementById('app_root').style.display = 'flex';
+        }
+    };
+
+    // --- 🛡️ Addition: TOTP VALIDATION ---
+    function validateTOTP() {
+        const id = document.getElementById('staff_id_input').value.toUpperCase().trim();
+        const token = document.getElementById('otp_input').value.trim();
+        const sBtn = document.getElementById('save_btn');
+        const yBtn = document.getElementById('sync_btn');
+        const msg = document.getElementById('auth_msg');
+
+        if (STAFF_SECRETS[id] && token.length === 6) {
+            const isValid = otplib.authenticator.check(token, STAFF_SECRETS[id]);
+            if (isValid) {
+                sBtn.disabled = false; yBtn.disabled = false;
+                msg.innerText = "✅ IDENTITY VERIFIED: " + id;
+                msg.style.color = "var(--green)";
+            } else {
+                sBtn.disabled = true; yBtn.disabled = true;
+                msg.innerText = "❌ EXPIRED OR INVALID CODE";
+                msg.style.color = "var(--red)";
+            }
+        } else {
+            sBtn.disabled = true; yBtn.disabled = true;
+            msg.innerText = "WAITING: Enter 6-Digit Code";
+            msg.style.color = "var(--slate)";
+        }
+    }
+
+    // --- REUSED BASE CODE FUNCTIONS ---
     const mData = {
         sand: ["River Sand", "Crushed Sand", "M Sand", "P Sand"],
         cement: ["UltraTech", "JK Lakshmi", "Ambuja", "ACC"],
@@ -146,8 +208,6 @@
     };
     const fleetList = ["Tractor", "Mini Truck", "Truck", "Dumper", "Trailer"];
     let db, map, marker, activePhotos = [];
-    
-    // --- UPDATED CLOUD CONFIG ---
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1Q8O14RGZLdLn-AtEeRXBbhBZaZrEN6yP5Dvi8O3R4WAHPGIi4g2Mq31N3ywWuc0P/exec"; 
 
     const request = indexedDB.open("InfraDepotDB", 1);
@@ -155,7 +215,10 @@
         db = e.target.result;
         if (!db.objectStoreNames.contains("suppliers")) db.createObjectStore("suppliers", { keyPath: "supplier_id" });
     };
-    request.onsuccess = e => { db = e.target.result; initApp(); };
+    request.onsuccess = e => { 
+        db = e.target.result; 
+        if(sessionStorage.getItem("nirma_authorized") === "true") initApp(); 
+    };
 
     function initApp() {
         Object.keys(mData).forEach(k => {
@@ -165,18 +228,22 @@
             <div class="counter-card"><b>${f}</b>
                 <div class="stepper"><button onclick="adj(${i},-1)">-</button><input type="text" id="f_qty_${i}" value="0"><button onclick="adj(${i},1)">+</button></div>
             </div>`).join('');
-        map = L.map('map').setView([24.5854, 73.7125], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        if(!map) {
+            map = L.map('map').setView([24.5854, 73.7125], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        }
         loadFromDB();
         updateID();
     }
 
     function saveSupplier() {
         const firm = document.getElementById('firm_name').value;
+        const staff = document.getElementById('staff_id_input').value.toUpperCase();
         if(!firm) return alert("Firm Name Required");
         document.getElementById('loader').style.display = 'flex';
         const record = {
             supplier_id: document.getElementById('sup_id').innerText,
+            staff_logged: staff,
             firm_name: firm,
             owner_name: document.getElementById('owner_name').value,
             phone: document.getElementById('phone').value,
@@ -200,7 +267,7 @@
         tx.objectStore("suppliers").getAll().onsuccess = e => {
             const data = e.target.result;
             document.getElementById('count_all').innerText = data.length;
-            document.getElementById('history_list').innerHTML = data.reverse().map(s => `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${s.firm_name}</b><br><small>${s.supplier_id}</small></div>`).join('');
+            document.getElementById('history_list').innerHTML = data.reverse().map(s => `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${s.firm_name}</b><br><small>${s.supplier_id} | ${s.staff_logged}</small></div>`).join('');
         };
     }
 
@@ -210,20 +277,18 @@
         tx.objectStore("suppliers").getAll().onsuccess = async (e) => {
             const allData = e.target.result;
             try {
-                const response = await fetch(APPS_SCRIPT_URL, {
+                await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(allData)
                 });
-                alert("Sync Signal Sent to Google Sheet!");
+                alert("Master Sync Successful!");
             } catch (err) { alert("Sync Error. Check Internet."); }
             finally { document.getElementById('loader').style.display = 'none'; }
         };
     }
 
-    function updateID() { 
-        document.getElementById('sup_id').innerText = "NS-" + Date.now().toString().slice(-6); 
-    }
+    function updateID() { document.getElementById('sup_id').innerText = "NS-" + Date.now().toString().slice(-6); }
     function toggleBox(id) { 
         const char = id==='sand'?'S':id.charAt(0).toUpperCase();
         document.getElementById('box_'+id).style.display = document.getElementById('chk_'+char).checked ? 'block' : 'none';
@@ -248,21 +313,6 @@
                 document.getElementById('preview_zone').appendChild(img);
             };
             reader.readAsDataURL(file);
-        });
-    }
-
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; document.getElementById('pwa_install_banner').style.display = 'flex'; });
-    async function triggerPWAInstall() {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') document.getElementById('pwa_install_banner').style.display = 'none';
-        }
-    }
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Error', err));
         });
     }
 </script>
