@@ -12,7 +12,10 @@
     <style>
         :root { --orange: #ff6a00; --bg: #f1f5f9; --green: #10b981; --dark: #0f172a; --slate: #64748b; --red: #ef4444; --blue: #3b82f6; --gold: #ffd700; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; }
-        .container { max-width: 600px; margin: auto; display: none; flex-direction: column; gap: 15px; padding-bottom: 80px; }
+        
+        /* Fixed: Changed display to 'none' by ID instead of class to avoid rendering conflicts */
+        #app_root { display: none; max-width: 600px; margin: auto; flex-direction: column; gap: 15px; padding-bottom: 80px; }
+        
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         h3 { margin: 0 0 12px 0; color: var(--dark); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-left: 4px solid var(--orange); padding-left: 8px; }
         label { font-size: 10px; font-weight: 700; color: var(--slate); display: block; margin-bottom: 4px; text-transform: uppercase; }
@@ -39,7 +42,7 @@
 </head>
 <body>
 
-<div class="container" id="app_root">
+<div id="app_root">
     
     <div id="login_zone" class="card">
         <h3>🔑 Authentication Portal</h3>
@@ -143,22 +146,28 @@
 
     let db, map, marker;
 
-    window.onload = () => {
-        const gate = sessionStorage.getItem("nirma_gate");
-        if (gate === "true") {
+    // --- REVISED INITIALIZATION ---
+    window.onload = function() {
+        if (sessionStorage.getItem("nirma_gate") === "true") {
             setupApp();
         } else {
-            let a = prompt("🔒 MASTER ACCESS:");
-            if (a === MASTER_KEY) { 
-                sessionStorage.setItem("nirma_gate", "true"); 
-                setupApp(); 
-            } else { window.location.href = "https://google.com"; }
+            let pass = prompt("🔒 MASTER ACCESS:");
+            if (pass === MASTER_KEY) {
+                sessionStorage.setItem("nirma_gate", "true");
+                setupApp();
+            } else {
+                alert("Unauthorized");
+                window.location.reload();
+            }
         }
     };
 
     function setupApp() {
+        // Force element to be visible and display as flex
         const root = document.getElementById('app_root');
-        root.style.display = 'flex'; // Ensure flex for column layout
+        root.style.display = 'flex';
+        
+        // Initialize dynamic components
         renderAreas();
         initDB();
         startAutoSave();
@@ -166,10 +175,11 @@
 
     function renderAreas() {
         const grid = document.getElementById('area_grid');
-        if(!grid) return;
-        grid.innerHTML = UDAIPUR_AREAS.map(a => `
-            <div class="check-pill"><input type="checkbox" class="area-item" value="${a}"><span>${a}</span></div>
-        `).join('');
+        if(grid) {
+            grid.innerHTML = UDAIPUR_AREAS.map(a => `
+                <div class="check-pill"><input type="checkbox" class="area-item" value="${a}"><span>${a}</span></div>
+            `).join('');
+        }
     }
 
     function initDB() {
@@ -189,8 +199,11 @@
                 switchTab('logs');
             } else {
                 document.getElementById('data_entry_zone').style.display = 'flex';
-                initMap();
-                updateID();
+                // Delay map init slightly to ensure container is fully visible
+                setTimeout(() => {
+                    initMap();
+                    updateID();
+                }, 100);
             }
         } else { alert("Wrong Credentials"); }
     }
@@ -277,16 +290,21 @@
             document.getElementById('log_list').innerHTML = logs.map(l => `
                 <div style="padding:10px; border-bottom:1px solid #eee; font-size:12px;">
                     <b>${l.firm}</b> [${l.id}]<br>
-                    Staff: ${l.staff} | Area: ${l.status}
+                    Staff: ${l.staff} | Status: ${l.status}
                 </div>
             `).join('');
         };
     }
 
     function initMap() { 
-        map = L.map('map').setView([24.5854, 73.7125], 13); 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
+        if (!map) {
+            map = L.map('map').setView([24.5854, 73.7125], 13); 
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
+        }
+        // Force refresh to fix blank tile issue
+        setTimeout(() => map.invalidateSize(), 200);
     }
+    
     function updateID() { document.getElementById('sup_id').innerText = "NS-" + Date.now().toString().slice(-6); }
     function autoWA(p, w) { document.getElementById(w).value = document.getElementById(p).value; }
     function toggleWholeUdaipur() {
@@ -312,6 +330,7 @@
         if (curr + val >= 0) el.innerText = curr + val;
     }
     function updateCount() {
+        if(!db) return;
         const tx = db.transaction("records", "readonly");
         tx.objectStore("records").getAll().onsuccess = e => {
             document.getElementById('count_all').innerText = e.target.result.length;
