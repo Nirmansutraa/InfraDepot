@@ -12,19 +12,19 @@
     <style>
         :root { --orange: #ff6a00; --bg: #f1f5f9; --green: #10b981; --dark: #0f172a; --slate: #64748b; --red: #ef4444; --blue: #3b82f6; --gold: #ffd700; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; }
-        .container { max-width: 600px; margin: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
+        .container { max-width: 600px; margin: auto; display: none; flex-direction: column; gap: 15px; padding-bottom: 80px; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         h3 { margin: 0 0 12px 0; color: var(--dark); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-left: 4px solid var(--orange); padding-left: 8px; }
         label { font-size: 10px; font-weight: 700; color: var(--slate); display: block; margin-bottom: 4px; text-transform: uppercase; }
         input, textarea, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; transition: 0.3s; }
         
-        #app_root, #login_zone, #data_entry_zone, #admin_zone { display: none; flex-direction: column; gap: 15px; }
+        #login_zone { display: flex; flex-direction: column; gap: 10px; }
+        #data_entry_zone, #admin_zone { display: none; flex-direction: column; gap: 15px; }
         .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
         .stat-card { background: var(--dark); color: white; padding: 8px; border-radius: 8px; text-align: center; font-size: 10px; }
         .stat-card b { font-size: 14px; color: var(--orange); }
         
-        /* Area Grid - 50 Items Scrollable */
         .area-scroll { height: 250px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; background: #fafafa; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
         .check-pill { display: flex; align-items: center; background: white; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11px; }
         .check-pill input { width: 16px; height: 16px; margin-right: 8px; margin-bottom: 0; }
@@ -32,7 +32,6 @@
         .action-bar { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: white; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 1000; }
         .sync-indicator { font-size: 9px; color: var(--green); text-align: center; margin-bottom: 5px; font-weight: bold; }
         
-        /* Admin Specific */
         .admin-tab { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
         .tab-btn { padding: 8px 15px; background: #e2e8f0; border: none; border-radius: 20px; font-size: 10px; font-weight: bold; cursor: pointer; white-space: nowrap; }
         .tab-btn.active { background: var(--orange); color: white; }
@@ -73,8 +72,7 @@
             <div class="check-pill" style="margin-bottom:10px; background:var(--dark); color:white; width:100%;">
                 <input type="checkbox" id="area_udaipur" onchange="toggleWholeUdaipur()"> <span>SELECT WHOLE UDAIPUR NETWORK</span>
             </div>
-            <div class="area-scroll" id="area_grid">
-                </div>
+            <div class="area-scroll" id="area_grid"></div>
         </div>
 
         <div class="card">
@@ -89,7 +87,7 @@
             <label>Firm & Owner</label>
             <input type="text" id="firm_name" placeholder="Firm Name" oninput="updateID()">
             <input type="text" id="owner_name" placeholder="Owner Name">
-            <div class="full-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <input type="tel" id="phone" placeholder="Primary Phone" oninput="autoWA('phone','whatsapp')">
                 <input type="tel" id="whatsapp" placeholder="WhatsApp">
             </div>
@@ -105,7 +103,7 @@
 
         <div class="card">
             <h3>4. Materials & Fleet</h3>
-            <div class="full-grid" id="mat_checks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;"></div>
+            <div id="mat_checks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;"></div>
             <div class="trans-row" style="margin-top:10px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <span style="font-size: 13px;">Tractor Fleet</span>
                 <div class="counter-ctrl" style="display: flex; align-items: center; gap: 10px;">
@@ -137,35 +135,30 @@
 </div>
 
 <script>
-    // ----- PROJECT CONFIGURATION -----
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyi81jA2H036vY-f-nSj4P44PzE0eE-yW72tT3o_KogC7GIdzE6X6_hRshqVvG5V15N/exec";
     const MASTER_KEY = "Life4life@nsid";
     const DEFAULTS = { "ADMIN": "Admin@NS2026", "NSID001": "Nirma@001", "NSID002": "Nirma@002", "NSID003": "Nirma@003", "NSID004": "Nirma@004", "NSID005": "Nirma@005" };
     
-    const UDAIPUR_AREAS = [
-        "Hiran Magri Sec 3", "Hiran Magri Sec 4", "Hiran Magri Sec 5", "Hiran Magri Sec 11", "Hiran Magri Sec 13", "Hiran Magri Sec 14",
-        "Gordhan Vilas", "Balicha", "Eklingpura", "Pratap Nagar", "Transport Nagar", "Sukher", "Amberi", "Bhuwana", "Sobhagpura",
-        "Fatehpura", "Panchwati", "Saheliyon ki Bari", "Mulla Talai", "Rampura", "Sajjangarh Area", "Ambamata", "Clock Tower",
-        "Surajpole", "Delhi Gate", "Udiapole", "Shastri Circle", "Ashwini Bazaar", "Rada Ji Bawri", "Savina", "Titaradi",
-        "Jhamarkotra Road", "Bedwas", "Debari", "Kherwara Road", "Madri Ind. Area", "Gudli", "Kaladwas", "Kavita", "Lakhawali",
-        "Badi", "Loyra", "Zinc Smelter", "Thoor", "Kailashpuri", "Rama", "Nagda", "Iswal", "Kaya", "Umarda"
-    ];
+    const UDAIPUR_AREAS = ["Hiran Magri Sec 3", "Hiran Magri Sec 4", "Hiran Magri Sec 5", "Hiran Magri Sec 11", "Hiran Magri Sec 13", "Hiran Magri Sec 14", "Gordhan Vilas", "Balicha", "Eklingpura", "Pratap Nagar", "Transport Nagar", "Sukher", "Amberi", "Bhuwana", "Sobhagpura", "Fatehpura", "Panchwati", "Saheliyon ki Bari", "Mulla Talai", "Rampura", "Sajjangarh Area", "Ambamata", "Clock Tower", "Surajpole", "Delhi Gate", "Udiapole", "Shastri Circle", "Ashwini Bazaar", "Rada Ji Bawri", "Savina", "Titaradi", "Jhamarkotra Road", "Bedwas", "Debari", "Kherwara Road", "Madri Ind. Area", "Gudli", "Kaladwas", "Kavita", "Lakhawali", "Badi", "Loyra", "Zinc Smelter", "Thoor", "Kailashpuri", "Rama", "Nagda", "Iswal", "Kaya", "Umarda"];
 
     let db, map, marker;
 
-    // --- INITIALIZATION ---
     window.onload = () => {
-        if (sessionStorage.getItem("nirma_gate") !== "true") {
+        const gate = sessionStorage.getItem("nirma_gate");
+        if (gate === "true") {
+            setupApp();
+        } else {
             let a = prompt("🔒 MASTER ACCESS:");
             if (a === MASTER_KEY) { 
                 sessionStorage.setItem("nirma_gate", "true"); 
                 setupApp(); 
             } else { window.location.href = "https://google.com"; }
-        } else { setupApp(); }
+        }
     };
 
     function setupApp() {
-        document.getElementById('app_root').style.display = 'block';
+        const root = document.getElementById('app_root');
+        root.style.display = 'flex'; // Ensure flex for column layout
         renderAreas();
         initDB();
         startAutoSave();
@@ -173,6 +166,7 @@
 
     function renderAreas() {
         const grid = document.getElementById('area_grid');
+        if(!grid) return;
         grid.innerHTML = UDAIPUR_AREAS.map(a => `
             <div class="check-pill"><input type="checkbox" class="area-item" value="${a}"><span>${a}</span></div>
         `).join('');
@@ -184,7 +178,6 @@
         req.onsuccess = e => { db = e.target.result; updateCount(); };
     }
 
-    // --- LOGIN & ACCESS ---
     function handleLogin() {
         const id = document.getElementById('staff_id_input').value;
         const pass = document.getElementById('staff_pass_input').value;
@@ -202,7 +195,6 @@
         } else { alert("Wrong Credentials"); }
     }
 
-    // --- AUTO-SAVE LOGIC ---
     function startAutoSave() {
         setInterval(() => {
             const firm = document.getElementById('firm_name').value;
@@ -231,26 +223,21 @@
         };
     }
 
-    // --- SUBMIT & RESET ---
     async function saveAndReset() {
         const data = getCurrentData();
         if(!data.firm) return alert("Firm Name Required");
-        
-        document.getElementById('auto_save_text').innerText = "● SYNCING TO CLOUD...";
-        
+        document.getElementById('auto_save_text').innerText = "● SYNCING...";
         try {
             const tx = db.transaction("records", "readwrite");
             tx.objectStore("records").put(data);
-
             let fd = new URLSearchParams();
             for (let k in data) fd.append(k, data[k]);
-            
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
-            alert("✅ Submitted Successfully");
+            alert("✅ Submitted");
             resetScreen();
             updateCount();
         } catch (e) {
-            alert("⚠️ Offline: Saved to Device");
+            alert("⚠️ Offline: Saved Locally");
             resetScreen();
         }
     }
@@ -268,20 +255,18 @@
         document.getElementById('draft_status').innerText = "EMPTY";
     }
 
-    // --- ADMIN PANEL FUNCTIONS ---
     function switchTab(tab) {
         const content = document.getElementById('admin_content');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        
         if (tab === 'logs') {
             content.innerHTML = "<h4>Live Feed</h4><div id='log_list'>Loading...</div>";
             renderLogs();
         } else if (tab === 'analytics') {
-            content.innerHTML = "<h4>Demand Analytics</h4><p>Tracking high-demand areas in Udaipur...</p>";
+            content.innerHTML = "<h4>Demand Analytics</h4><p>Tracking high-demand areas...</p>";
         } else if (tab === 'staff') {
-            content.innerHTML = "<h4>Staff Efficiency</h4><p>Monitoring submission rates per profile...</p>";
+            content.innerHTML = "<h4>Staff Efficiency</h4><p>Monitoring submission rates...</p>";
         } else if (tab === 'export') {
-            content.innerHTML = "<h4>Download Center</h4><button class='btn' style='background:var(--blue)' onclick='alert(\"Exporting...\")'>Export Master DB (XLSX)</button>";
+            content.innerHTML = "<h4>Download Center</h4><button class='btn' style='background:var(--blue)' onclick='alert(\"Exporting...\")'>Export XLSX</button>";
         }
     }
 
@@ -292,13 +277,12 @@
             document.getElementById('log_list').innerHTML = logs.map(l => `
                 <div style="padding:10px; border-bottom:1px solid #eee; font-size:12px;">
                     <b>${l.firm}</b> [${l.id}]<br>
-                    Staff: ${l.staff} | Area: ${l.status} | Time: ${new Date(l.timestamp).toLocaleTimeString()}
+                    Staff: ${l.staff} | Area: ${l.status}
                 </div>
             `).join('');
         };
     }
 
-    // --- BASE HELPERS ---
     function initMap() { 
         map = L.map('map').setView([24.5854, 73.7125], 13); 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
