@@ -36,6 +36,13 @@
         
         .pass-wrap { position: relative; width: 100%; }
         .eye-btn { position: absolute; right: 10px; top: 10px; background: none; border: none; cursor: pointer; font-size: 18px; }
+
+        /* Multi-Fleet Styling */
+        .fleet-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+        .fleet-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .counter-ctrl { display: flex; align-items: center; gap: 12px; }
+        .c-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--dark); color: white; cursor: pointer; font-weight: bold; }
+        .c-val { font-family: monospace; font-weight: bold; font-size: 16px; min-width: 20px; text-align: center; }
     </style>
 </head>
 <body>
@@ -84,31 +91,74 @@
             <input type="text" id="firm_name" placeholder="Full Firm Name" oninput="updateID()">
             <input type="text" id="owner_name" placeholder="Owner Name">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <input type="tel" id="phone" placeholder="Primary Phone" oninput="autoWA('phone','whatsapp')">
-                <input type="tel" id="whatsapp" placeholder="WhatsApp">
+                <input type="tel" id="phone" placeholder="Owner Phone" oninput="autoWA('phone','whatsapp')">
+                <input type="tel" id="whatsapp" placeholder="Owner WhatsApp">
             </div>
-        </div>
+
+            <label style="margin-top:10px;">Staff / Manager Details (Secondary)</label>
+            <input type="text" id="staff_contact_name" placeholder="Staff Name">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <input type="tel" id="staff_phone" placeholder="Staff Phone" oninput="autoWA('staff_phone','staff_whatsapp')">
+                <input type="tel" id="staff_whatsapp" placeholder="Staff WhatsApp">
+            </div>
+            </div>
 
         <div class="card">
             <h3>2. Business Location (GPS)</h3>
             <div id="map" style="height:160px; border-radius:10px; margin-bottom:10px;"></div>
             <button class="btn" style="background:var(--dark); font-size:11px;" onclick="getGPS()">📍 FETCH PRECISE LOCATION</button>
             <input type="hidden" id="gps_val">
-            <label>Auto-Fetched Address</label>
-            <textarea id="address" rows="3" placeholder="Click 'Fetch' to populate address via GPS..."></textarea>
+            <label>Manual/GPS Address</label>
+            <textarea id="address" rows="3" placeholder="Detailed Business Address..."></textarea>
         </div>
 
         <div class="card">
-            <h3>3. Material Availability</h3>
+            <h3>3. Material Availability & Brands</h3>
             <div id="mat_checks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="check-pill"><input type="checkbox" class="mat-item" value="Sand"><span>Sand</span></div>
-                <div class="check-pill"><input type="checkbox" class="mat-item" value="Grit"><span>Grit</span></div>
+                <div class="check-pill"><input type="checkbox" class="mat-item" value="Aggregates"><span>Aggregates</span></div>
                 <div class="check-pill"><input type="checkbox" class="mat-item" value="Bricks"><span>Bricks</span></div>
-                <div class="check-pill"><input type="checkbox" class="mat-item" value="Cement"><span>Cement</span></div>
-                <div class="check-pill"><input type="checkbox" class="mat-item" value="Stone"><span>Stone</span></div>
-                <div class="check-pill"><input type="checkbox" class="mat-item" value="Dust"><span>Dust</span></div>
+                <div class="check-pill"><input type="checkbox" class="mat-item" value="Grit"><span>Grit</span></div>
             </div>
-        </div>
+            
+            <label style="margin-top:10px;">Sand Variety</label>
+            <select id="sand_type">
+                <option value="None">-- Select Sand --</option>
+                <option value="River Sand">River Sand</option>
+                <option value="M-Sand">M-Sand (Crushed)</option>
+                <option value="Plaster Sand">Plaster Sand</option>
+            </select>
+
+            <label>Cement Brands (Top 10)</label>
+            <select id="cement_brand">
+                <option value="None">-- Select Brand --</option>
+                <option value="UltraTech">UltraTech Cement</option>
+                <option value="Ambuja">Ambuja Cement</option>
+                <option value="ACC">ACC Limited</option>
+                <option value="Shree">Shree Cement</option>
+                <option value="Dalmia">Dalmia Bharat</option>
+                <option value="Birla">Birla Corporation</option>
+                <option value="JK Lakshmi">JK Lakshmi Cement</option>
+                <option value="Ramco">Ramco Cements</option>
+                <option value="Orient">Orient Cement</option>
+                <option value="Wonder">Wonder Cement</option>
+            </select>
+
+            <label>TMT Steel Brands (Top 10)</label>
+            <select id="tmt_brand">
+                <option value="None">-- Select Brand --</option>
+                <option value="Tata Tiscon">Tata Tiscon</option>
+                <option value="JSW Neosteel">JSW Neosteel</option>
+                <option value="SAIL">SAIL TMT</option>
+                <option value="Vizag Steel">Vizag Steel</option>
+                <option value="Jindal Panther">Jindal Panther</option>
+                <option value="Kamdhenu">Kamdhenu Next</option>
+                <option value="Shyam Steel">Shyam Steel</option>
+                <option value="SRMB">SRMB TMT</option>
+                <option value="Rathi">Rathi Shaktiman</option>
+                <option value="Electrosteel">Electrosteel</option>
+            </select>
+            </div>
 
         <div class="card">
             <h3>4. Supply Network Area</h3>
@@ -120,23 +170,58 @@
 
         <div class="card">
             <h3>5. Transportation Fleet</h3>
-            <div class="trans-row" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <span style="font-size: 13px; font-weight: bold;">Tractor Fleet Count</span>
-                <div class="counter-ctrl" style="display: flex; align-items: center; gap: 10px;">
-                    <button class="c-btn" onclick="adj('v1',-1)" style="width: 35px; height: 35px; border-radius: 50%; border: none; background: var(--dark); color: white; cursor: pointer;">-</button>
-                    <span class="c-val" id="v1" style="font-family: monospace; font-weight: bold; font-size: 18px; width: 30px; text-align: center;">0</span>
-                    <button class="c-btn" onclick="adj('v1',1)" style="width: 35px; height: 35px; border-radius: 50%; border: none; background: var(--dark); color: white; cursor: pointer;">+</button>
+            <div class="fleet-grid">
+                <div class="fleet-row">
+                    <span>🚜 Tractor</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_tractor',-1)">-</button>
+                        <span class="c-val" id="v_tractor">0</span>
+                        <button class="c-btn" onclick="adj('v_tractor',1)">+</button>
+                    </div>
+                </div>
+                <div class="fleet-row">
+                    <span>🚛 Mini Truck</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_mtruck',-1)">-</button>
+                        <span class="c-val" id="v_mtruck">0</span>
+                        <button class="c-btn" onclick="adj('v_mtruck',1)">+</button>
+                    </div>
+                </div>
+                <div class="fleet-row">
+                    <span>🚚 Mini Dumper</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_mdumper',-1)">-</button>
+                        <span class="c-val" id="v_mdumper">0</span>
+                        <button class="c-btn" onclick="adj('v_mdumper',1)">+</button>
+                    </div>
+                </div>
+                <div class="fleet-row">
+                    <span>🏗️ Dumper</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_dumper',-1)">-</button>
+                        <span class="c-val" id="v_dumper">0</span>
+                        <button class="c-btn" onclick="adj('v_dumper',1)">+</button>
+                    </div>
+                </div>
+                <div class="fleet-row">
+                    <span>🛣️ Trailer</span>
+                    <div class="counter-ctrl">
+                        <button class="c-btn" onclick="adj('v_trailer',-1)">-</button>
+                        <span class="c-val" id="v_trailer">0</span>
+                        <button class="c-btn" onclick="adj('v_trailer',1)">+</button>
+                    </div>
                 </div>
             </div>
-        </div>
+            </div>
 
         <div class="card" style="border: 2px solid var(--green);">
             <h3>6. Data Center & Cloud Sync</h3>
             <div class="sync-indicator" id="auto_save_text">● System Online</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                <button class="btn" onclick="manualSave()" style="background: var(--blue); padding: 10px;">💾 SAVE DRAFT</button>
-                <button class="btn" onclick="saveAndReset()" style="background: var(--green); padding: 10px;">🚀 CLOUD SUBMIT</button>
+                <button class="btn" onclick="saveAndReset()" style="background: var(--blue); padding: 10px;">💾 SAVE DATA</button>
+                <button class="btn" onclick="saveAndReset()" style="background: var(--green); padding: 10px;">🚀 SUBMIT DATA</button>
             </div>
+            <button class="btn" onclick="resetScreen()" style="background: var(--dark); margin-top:10px; height:40px;">➕ NEXT ENTRY</button>
         </div>
 
         <div class="action-bar">
@@ -227,26 +312,29 @@
         }, 10000);
     }
 
-    function manualSave() {
-        localStorage.setItem("NS_DRAFT", JSON.stringify(getCurrentData()));
-        alert("💾 Draft Saved Locally");
-    }
-
     function getCurrentData() {
         const selectedAreas = Array.from(document.querySelectorAll('.area-item:checked')).map(i => i.value).join(", ");
         const selectedMats = Array.from(document.querySelectorAll('.mat-item:checked')).map(i => i.value).join(", ");
+        
+        // Fleet Data Aggregation
+        const fleetData = `T:${document.getElementById('v_tractor').innerText}, MT:${document.getElementById('v_mtruck').innerText}, MD:${document.getElementById('v_mdumper').innerText}, D:${document.getElementById('v_dumper').innerText}, TR:${document.getElementById('v_trailer').innerText}`;
+
         return {
             id: document.getElementById('sup_id').innerText,
             staff: document.getElementById('staff_id_input').value,
             firm: document.getElementById('firm_name').value,
             owner: document.getElementById('owner_name').value,
             whatsapp: document.getElementById('whatsapp').value,
+            secondary_name: document.getElementById('staff_contact_name').value,
+            secondary_wa: document.getElementById('staff_whatsapp').value,
             address: document.getElementById('address').value,
             gps: document.getElementById('gps_val').value,
-            materials: selectedMats,
+            materials: `${selectedMats} | Sand:${document.getElementById('sand_type').value}`,
+            cement: document.getElementById('cement_brand').value,
+            tmt: document.getElementById('tmt_brand').value,
             areas: selectedAreas,
             status: document.getElementById('ver_status').value,
-            fleet: document.getElementById('v1').innerText,
+            fleet: fleetData,
             timestamp: new Date().toISOString()
         };
     }
@@ -261,12 +349,10 @@
             let fd = new URLSearchParams();
             for (let k in data) fd.append(k, data[k]);
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: fd });
-            alert("✅ Data Successfully Cloud Synced");
-            resetScreen();
+            alert("✅ Cloud Sync Success");
             updateCount();
         } catch (e) {
-            alert("⚠️ Cloud Offline: Saved to Local DB");
-            resetScreen();
+            alert("⚠️ Cloud Busy: Saved to Local DB");
         }
     }
 
@@ -275,13 +361,23 @@
         document.getElementById('owner_name').value = "";
         document.getElementById('phone').value = "";
         document.getElementById('whatsapp').value = "";
+        document.getElementById('staff_contact_name').value = "";
+        document.getElementById('staff_phone').value = "";
+        document.getElementById('staff_whatsapp').value = "";
         document.getElementById('address').value = "";
         document.querySelectorAll('.area-item, .mat-item').forEach(i => i.checked = false);
         document.getElementById('area_udaipur').checked = false;
-        document.getElementById('v1').innerText = "0";
+        
+        // Reset Fleet Counters
+        ['v_tractor', 'v_mtruck', 'v_mdumper', 'v_dumper', 'v_trailer'].forEach(id => {
+            document.getElementById(id).innerText = "0";
+        });
+
         document.getElementById('gps_val').value = "";
         document.getElementById('count_gps').innerText = "No";
         updateID();
+        window.scrollTo(0,0);
+        alert("Form Cleared for Next Entry");
     }
 
     function initMap() { 
