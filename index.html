@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NirmaSutra InfraDepot | Enterprise v4.1</title>
+    <title>NirmaSutra InfraDepot | Enterprise v4.0</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -13,7 +13,9 @@
         :root { --orange: #ff6a00; --bg: #f1f5f9; --green: #10b981; --dark: #0f172a; --slate: #64748b; --red: #ef4444; --blue: #3b82f6; --gold: #ffd700; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; overflow-x: hidden; }
         
+        /* Master Gate UI */
         #master_gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 20px; box-sizing: border-box; }
+        
         #app_root { display: none; max-width: 600px; margin: auto; flex-direction: column; gap: 15px; padding-bottom: 80px; }
         
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -35,30 +37,47 @@
         .variety-box { background: #f8fafc; border: 1px dashed var(--blue); padding: 10px; border-radius: 8px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         
         .action-bar { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: white; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 1000; }
+        .sync-indicator { font-size: 9px; color: var(--green); text-align: center; margin-bottom: 5px; font-weight: bold; }
+        
+        .pass-wrap { position: relative; width: 100%; }
+        .eye-btn { position: absolute; right: 10px; top: 12px; background: none; border: none; cursor: pointer; font-size: 18px; }
+
         .fleet-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 5px; }
         .c-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--dark); color: white; }
-
-        /* Preview Modal */
-        #preview_modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index: 11000; display:none; padding:20px; box-sizing:border-box; overflow-y:auto; }
-        .preview-content { background:white; border-radius:15px; padding:20px; max-width:500px; margin:auto; }
-        .preview-item { border-bottom:1px solid #eee; padding:8px 0; font-size:13px; }
-        .preview-item b { color:var(--orange); font-size:10px; text-transform:uppercase; display:block; }
     </style>
 </head>
 <body>
 
 <div id="master_gate">
     <h2 style="color:var(--orange)">NirmaSutra InfraDepot</h2>
+    <p style="font-size:12px; margin-bottom:20px; color:#94a3b8;">SECURE ENTERPRISE ACCESS</p>
     <input type="password" id="m_pass" placeholder="Enter Master Password" style="max-width:300px; text-align:center;">
     <button class="btn" onclick="checkMaster()" style="background:var(--orange); max-width:300px;">UNLOCK SYSTEM</button>
+    <p id="m_err" style="color:var(--red); font-size:12px; margin-top:10px;"></p>
 </div>
 
 <div id="app_root">
+    
     <div id="login_zone" class="card">
         <h3>🔑 Staff Authentication</h3>
-        <input type="text" id="u_id" placeholder="User ID">
-        <input type="password" id="u_pass" placeholder="Password">
-        <button class="btn" onclick="handleLogin()" style="background: var(--dark);">LOGIN</button>
+        <input type="text" id="u_id" placeholder="User ID (e.g. NSID001)">
+        <div class="pass-wrap">
+            <input type="password" id="u_pass" placeholder="Password">
+            <button class="eye-btn" onclick="togglePass('u_pass')">👁️</button>
+        </div>
+        <button class="btn" onclick="handleLogin()" style="background: var(--dark);">LOGIN TO DASHBOARD</button>
+        <button class="btn" onclick="showReset()" style="background:none; color:var(--blue); font-size:12px;">Forgot Password?</button>
+    </div>
+
+    <div id="reset_zone" class="card hidden">
+        <h3>🔄 Password Recovery</h3>
+        <input type="text" id="reset_uid" placeholder="Enter User ID">
+        <button class="btn" onclick="generateOTP()" style="background:var(--blue);">SEND OTP VIA WHATSAPP</button>
+        <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+        <input type="number" id="reset_otp_input" placeholder="6-Digit OTP">
+        <input type="password" id="reset_new_pass" placeholder="New Password">
+        <button class="btn" onclick="verifyAndReset()" style="background:var(--green);">UPDATE PASSWORD</button>
+        <button class="btn" onclick="hideReset()" style="background:var(--slate);">BACK TO LOGIN</button>
     </div>
 
     <div id="data_entry_zone" class="hidden">
@@ -66,31 +85,46 @@
             <div class="dash-grid">
                 <div class="stat-card"><small>Entries</small><br><b id="count_all">0</b></div>
                 <div class="stat-card"><small>GPS</small><br><b id="count_gps">No</b></div>
-                <div class="stat-card"><small>Draft</small><br><b id="draft_status">OK</b></div>
+                <div class="stat-card"><small>Cloud</small><br><b id="draft_status">OK</b></div>
                 <div class="stat-card" style="background:var(--blue);"><small>User</small><br><b id="user_display">--</b></div>
             </div>
         </div>
 
         <div class="card">
-            <h3>1. Entity Intel</h3>
-            <div id="sup_id" style="background:#0f172a; color:#22c55e; font-family:monospace; font-size:18px; text-align:center; padding:10px; border-radius:8px; margin-bottom:10px;">NS-AUTO</div>
-            <input type="text" id="firm_name" placeholder="Firm Name" oninput="updateID()">
+            <h3>1. Business Intelligence</h3>
+            <div id="sup_id" style="background:#0f172a; color:#22c55e; font-family:monospace; font-size:18px; text-align:center; padding:10px; border-radius:8px; margin-bottom:10px;">NS-ID-AUTO</div>
+            <label>Firm Name</label>
+            <input type="text" id="firm_name" placeholder="Full Firm Name" oninput="updateID()">
+            <label>Owner Details</label>
             <input type="text" id="owner_name" placeholder="Owner Name">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <input type="tel" id="phone" placeholder="Phone">
+                <input type="tel" id="phone" placeholder="Phone" oninput="autoWA('phone','whatsapp')">
                 <input type="tel" id="whatsapp" placeholder="WhatsApp">
+            </div>
+            <label>Staff / Secondary Contact</label>
+            <input type="text" id="staff_name" placeholder="Staff Name (Optional)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <input type="tel" id="staff_phone" placeholder="Staff Phone">
+                <input type="tel" id="staff_whatsapp" placeholder="Staff WhatsApp">
             </div>
         </div>
 
         <div class="card">
-            <h3>2. Materials Intelligence</h3>
-            <label>Select Main Category</label>
+            <h3>2. Business Location</h3>
+            <div id="map" style="height:150px; border-radius:10px; margin-bottom:10px; border:1px solid #ddd;"></div>
+            <button class="btn" style="background:var(--dark); font-size:11px;" onclick="getGPS()">📍 LOCK GPS LOCATION</button>
+            <input type="hidden" id="gps_val">
+            <textarea id="address" rows="2" placeholder="Precise Address..."></textarea>
+        </div>
+
+        <div class="card">
+            <h3>3. Materials & Varieties</h3>
             <div id="mat_main_grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom:10px;">
                 <div class="check-pill"><input type="checkbox" class="mat-item" value="Sand" onclick="toggleVariety('sand_vars', this)"><span>Sand</span></div>
                 <div class="check-pill"><input type="checkbox" class="mat-item" value="Bricks" onclick="toggleVariety('brick_vars', this)"><span>Bricks</span></div>
                 <div class="check-pill"><input type="checkbox" class="mat-item" value="Aggregates" onclick="toggleVariety('agg_vars', this)"><span>Aggregates</span></div>
-                <div class="check-pill"><input type="checkbox" class="mat-item" value="Cement" onclick="toggleVariety('cem_brands_box', this)"><span>Cement</span></div>
-                <div class="check-pill"><input type="checkbox" class="mat-item" value="TMT" onclick="toggleVariety('tmt_brands_box', this)"><span>TMT Steel</span></div>
+                <div class="check-pill"><input type="checkbox" class="mat-item" value="Cement"><span>Cement</span></div>
+                <div class="check-pill"><input type="checkbox" class="mat-item" value="TMT"><span>TMT Steel</span></div>
             </div>
 
             <div id="sand_vars" class="variety-box hidden">
@@ -106,93 +140,254 @@
             </div>
 
             <div id="agg_vars" class="variety-box hidden">
-                <label style="grid-column: span 2;">Aggregate Sizes</label>
+                <label style="grid-column: span 2;">Aggregate Size</label>
                 <div class="check-pill"><input type="checkbox" class="sub-item" value="10mm"><span>10mm</span></div>
                 <div class="check-pill"><input type="checkbox" class="sub-item" value="20mm"><span>20mm</span></div>
+                <div class="check-pill"><input type="checkbox" class="sub-item" value="40mm"><span>40mm</span></div>
             </div>
 
-            <div id="cem_brands_box" class="variety-box hidden">
-                <label style="grid-column: span 2;">India Top 10 Cement</label>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="UltraTech"><span>UltraTech</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Ambuja"><span>Ambuja</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="ACC"><span>ACC</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Shree"><span>Shree</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Dalmia"><span>Dalmia</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="JK Lakshmi"><span>JK Lakshmi</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Ramco"><span>Ramco</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Birla"><span>Birla</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Orient"><span>Orient</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Wonder"><span>Wonder</span></div>
-            </div>
-
-            <div id="tmt_brands_box" class="variety-box hidden">
-                <label style="grid-column: span 2;">India Top 10 TMT</label>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Tata Tiscon"><span>Tata Tiscon</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="JSW Neosteel"><span>JSW</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="SAIL"><span>SAIL</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Vizag Steel"><span>Vizag</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Jindal Panther"><span>Jindal</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Kamdhenu"><span>Kamdhenu</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Shyam Steel"><span>Shyam</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="SRMB"><span>SRMB</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Rathi"><span>Rathi</span></div>
-                <div class="check-pill"><input type="checkbox" class="brand-item" value="Electrosteel"><span>Electrosteel</span></div>
-            </div>
+            <label>Top Cement Brands</label>
+            <select id="cem_brand">
+                <option value="None">-- Select --</option>
+                <option>UltraTech</option><option>Ambuja</option><option>ACC</option><option>Shree</option><option>JK Lakshmi</option>
+            </select>
         </div>
 
         <div class="card">
-            <h3>3. Logistics Fleet</h3>
-            <div class="fleet-row"><span>Tractor</span><div><button onclick="adj('f1',-1)" class="c-btn">-</button> <b id="f1">0</b> <button onclick="adj('f1',1)" class="c-btn">+</button></div></div>
-            <div class="fleet-row"><span>Mini Truck</span><div><button onclick="adj('f2',-1)" class="c-btn">-</button> <b id="f2">0</b> <button onclick="adj('f2',1)" class="c-btn">+</button></div></div>
-            <div class="fleet-row"><span>Mini Dumper</span><div><button onclick="adj('f3',-1)" class="c-btn">-</button> <b id="f3">0</b> <button onclick="adj('f3',1)" class="c-btn">+</button></div></div>
-            <div class="fleet-row"><span>Dumper</span><div><button onclick="adj('f4',-1)" class="c-btn">-</button> <b id="f4">0</b> <button onclick="adj('f4',1)" class="c-btn">+</button></div></div>
-            <div class="fleet-row"><span>Trailer</span><div><button onclick="adj('f5',-1)" class="c-btn">-</button> <b id="f5">0</b> <button onclick="adj('f5',1)" class="c-btn">+</button></div></div>
+            <h3>4. Supply Network</h3>
+            <div class="check-pill" style="margin-bottom:10px; background:var(--dark); color:white;">
+                <input type="checkbox" id="area_udaipur" onchange="toggleWholeUdaipur()"> <span>SELECT ALL UDAIPUR AREAS</span>
+            </div>
+            <div class="area-scroll" id="area_grid"></div>
         </div>
 
         <div class="card">
-            <h3>4. Data Centre</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="btn" onclick="saveDraft()" style="background:var(--blue);">💾 SAVE DRAFT</button>
-                <button class="btn" onclick="showPreview()" style="background:var(--gold); color:var(--dark);">👁️ PREVIEW</button>
+            <h3>5. Transportation Fleet</h3>
+            <div id="fleet_manager">
+                <div class="fleet-row"><span>Tractor</span><div><button onclick="adj('ft1',-1)" class="c-btn">-</button> <b id="ft1">0</b> <button onclick="adj('ft1',1)" class="c-btn">+</button></div></div>
+                <div class="fleet-row"><span>Mini Truck</span><div><button onclick="adj('ft2',-1)" class="c-btn">-</button> <b id="ft2">0</b> <button onclick="adj('ft2',1)" class="c-btn">+</button></div></div>
+                <div class="fleet-row"><span>Dumper</span><div><button onclick="adj('ft3',-1)" class="c-btn">-</button> <b id="ft3">0</b> <button onclick="adj('ft3',1)" class="c-btn">+</button></div></div>
             </div>
-            <button class="btn" onclick="saveAndReset()" style="background:var(--green); margin-top:5px;">🚀 CLOUD SUBMIT</button>
+        </div>
+
+        <div class="card" style="border: 2px solid var(--green);">
+            <h3>6. Data Center</h3>
+            <div class="sync-indicator" id="auto_save_text">● System Ready</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn" onclick="saveData()" style="background: var(--blue);">💾 SAVE DATA</button>
+                <button class="btn" onclick="saveAndReset()" style="background: var(--green);">🚀 SUBMIT CLOUD</button>
+            </div>
+            <button class="btn" onclick="resetScreen()" style="background:var(--dark); margin-top:10px;">➕ NEXT ENTRY</button>
         </div>
     </div>
-</div>
 
-<div id="preview_modal">
-    <div class="preview-content">
-        <h3>🔍 Intel Review</h3>
-        <div id="preview_data_body"></div>
-        <button class="btn" onclick="closePreview()" style="background:var(--dark); margin-top:15px;">CLOSE PREVIEW</button>
+    <div id="admin_zone" class="hidden">
+        <div class="card" style="background:var(--dark); color:white;">
+            <h3>👑 Admin Command Center</h3>
+            <p id="admin_stat">Loading stats...</p>
+        </div>
+        
+        <div class="card">
+            <h3>👤 User Management</h3>
+            <div id="user_list" style="margin-bottom:15px; font-size:12px;"></div>
+            <hr>
+            <label>Add New User</label>
+            <input type="text" id="new_uid" placeholder="User ID">
+            <input type="password" id="new_pass" placeholder="Password">
+            <button class="btn" onclick="addNewUser()" style="background:var(--orange);">CREATE ACCOUNT</button>
+        </div>
+    </div>
+
+    <div class="action-bar hidden" id="main_action_bar">
+        <div style="font-size: 10px; color: var(--slate); padding-left: 10px;">Active: <b id="footer_user">--</b></div>
+        <button class="btn" onclick="fullLogout()" style="background:var(--red); padding: 8px;">FULL EXIT</button>
     </div>
 </div>
 
 <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyi81jA2H036vY-f-nSj4P44PzE0eE-yW72tT3o_KogC7GIdzE6X6_hRshqVvG5V15N/exec";
     const MASTER_KEY = "Life4life@nsid";
-    const DEFAULTS = {"ADMIN":"Admin@NS2026", "NSID001":"Nirma@001", "NSID002":"Nirma@002"};
-    let db;
+    const DEFAULTS = {
+        "ADMIN": { password: "Admin@NS2026", role: "admin", phone: "9100000000" },
+        "NSID001": { password: "Nirma@001", role: "user", phone: "" },
+        "NSID002": { password: "Nirma@002", role: "user", phone: "" },
+        "NSID003": { password: "Nirma@003", role: "user", phone: "" }
+    };
 
-    function checkMaster() {
-        if(document.getElementById('m_pass').value === MASTER_KEY) {
-            document.getElementById('master_gate').style.display = 'none';
-            document.getElementById('app_root').style.display = 'flex';
+    const UDAIPUR_AREAS = ["Hiran Magri Sec 3", "Hiran Magri Sec 4", "Hiran Magri Sec 5", "Hiran Magri Sec 11", "Hiran Magri Sec 13", "Hiran Magri Sec 14", "Gordhan Vilas", "Balicha", "Eklingpura", "Pratap Nagar", "Transport Nagar", "Sukher", "Amberi", "Bhuwana", "Sobhagpura", "Fatehpura", "Panchwati", "Saheliyon ki Bari", "Mulla Talai", "Rampura", "Sajjangarh Area", "Ambamata", "Clock Tower", "Surajpole", "Delhi Gate", "Udiapole", "Shastri Circle", "Ashwini Bazaar", "Rada Ji Bawri", "Savina", "Titaradi", "Jhamarkotra Road", "Bedwas", "Debari", "Kherwara Road", "Madri Ind. Area", "Gudli", "Kaladwas", "Kavita", "Lakhawali", "Badi", "Loyra", "Zinc Smelter", "Thoor", "Kailashpuri", "Rama", "Nagda", "Iswal", "Kaya", "Umarda"];
+
+    let db, map, marker;
+
+    // --- SECURITY LOGIC ---
+    window.onload = function() {
+        initUserDB();
+        if (localStorage.getItem("master_access") === "true") {
+            hideMaster();
+            checkSession();
+        }
+    };
+
+    function initUserDB() {
+        if (!localStorage.getItem("users_db")) {
+            localStorage.setItem("users_db", JSON.stringify(DEFAULTS));
         }
     }
 
-    function handleLogin() {
-        const u = document.getElementById('u_id').value;
-        const p = document.getElementById('u_pass').value;
-        if(DEFAULTS[u] && DEFAULTS[u] === p) {
-            document.getElementById('login_zone').classList.add('hidden');
-            document.getElementById('data_entry_zone').classList.remove('hidden');
-            document.getElementById('user_display').innerText = u;
-            initDB();
-        } else { alert("Wrong Credentials"); }
+    function checkMaster() {
+        const p = document.getElementById('m_pass').value;
+        if (p === MASTER_KEY) {
+            localStorage.setItem("master_access", "true");
+            hideMaster();
+            checkSession();
+        } else {
+            document.getElementById('m_err').innerText = "Access Denied: Invalid Master Key";
+        }
     }
 
+    function hideMaster() {
+        document.getElementById('master_gate').style.display = 'none';
+        document.getElementById('app_root').style.display = 'flex';
+    }
+
+    function handleLogin() {
+        const uid = document.getElementById('u_id').value.toUpperCase();
+        const pass = document.getElementById('u_pass').value;
+        const users = JSON.parse(localStorage.getItem("users_db"));
+
+        if (users[uid] && users[uid].password === pass) {
+            const session = { userid: uid, role: users[uid].role, loggedIn: true, device: Math.random().toString(36).slice(2) };
+            localStorage.setItem("ns_session", JSON.stringify(session));
+            startDashboard(session);
+        } else {
+            alert("Invalid Credentials");
+        }
+    }
+
+    function checkSession() {
+        const session = JSON.parse(localStorage.getItem("ns_session"));
+        if (session && session.loggedIn) {
+            startDashboard(session);
+        }
+    }
+
+    function startDashboard(s) {
+        document.getElementById('login_zone').classList.add('hidden');
+        document.getElementById('main_action_bar').classList.remove('hidden');
+        document.getElementById('user_display').innerText = s.userid;
+        document.getElementById('footer_user').innerText = s.userid;
+        
+        if (s.role === 'admin') {
+            document.getElementById('admin_zone').classList.remove('hidden');
+            renderUserManagement();
+        } else {
+            document.getElementById('data_entry_zone').classList.remove('hidden');
+            renderAreas();
+            initDB();
+            setTimeout(initMap, 300);
+        }
+    }
+
+    // --- RECOVERY LOGIC ---
+    function showReset() { 
+        document.getElementById('login_zone').classList.add('hidden');
+        document.getElementById('reset_zone').classList.remove('hidden');
+    }
+    function hideReset() {
+        document.getElementById('reset_zone').classList.add('hidden');
+        document.getElementById('login_zone').classList.remove('hidden');
+    }
+
+    function generateOTP() {
+        const uid = document.getElementById('reset_uid').value.toUpperCase();
+        const users = JSON.parse(localStorage.getItem("users_db"));
+        if(!users[uid]) return alert("User Not Found");
+
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        const token = { otp: otp, expires: Date.now() + 600000 };
+        localStorage.setItem("reset_token_" + uid, JSON.stringify(token));
+
+        const msg = `Hello ${uid}, Your NirmaSutra Reset OTP is: ${otp}. Valid for 10 mins.`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        alert("OTP Sent to WhatsApp");
+    }
+
+    function verifyAndReset() {
+        const uid = document.getElementById('reset_uid').value.toUpperCase();
+        const otp = document.getElementById('reset_otp_input').value;
+        const newPass = document.getElementById('reset_new_pass').value;
+        const token = JSON.parse(localStorage.getItem("reset_token_" + uid));
+
+        if (token && token.otp == otp && Date.now() < token.expires) {
+            let users = JSON.parse(localStorage.getItem("users_db"));
+            users[uid].password = newPass;
+            localStorage.setItem("users_db", JSON.stringify(users));
+            localStorage.removeItem("reset_token_" + uid);
+            alert("Password Updated Successfully!");
+            hideReset();
+        } else {
+            alert("Invalid or Expired OTP");
+        }
+    }
+
+    // --- ADMIN USER MANAGEMENT ---
+    function renderUserManagement() {
+        const users = JSON.parse(localStorage.getItem("users_db"));
+        let html = '<table style="width:100%; text-align:left;"><tr><th>UID</th><th>Role</th><th>Action</th></tr>';
+        for (let uid in users) {
+            html += `<tr><td>${uid}</td><td>${users[uid].role}</td><td><button onclick="delUser('${uid}')" style="color:red; background:none; border:none;">Delete</button></td></tr>`;
+        }
+        document.getElementById('user_list').innerHTML = html + "</table>";
+    }
+
+    function addNewUser() {
+        const uid = document.getElementById('new_uid').value.toUpperCase();
+        const pass = document.getElementById('new_pass').value;
+        if(!uid || !pass) return;
+        let users = JSON.parse(localStorage.getItem("users_db"));
+        users[uid] = { password: pass, role: 'user', phone: '' };
+        localStorage.setItem("users_db", JSON.stringify(users));
+        renderUserManagement();
+        alert("User Created");
+    }
+
+    function delUser(uid) {
+        if(uid === 'ADMIN') return;
+        let users = JSON.parse(localStorage.getItem("users_db"));
+        delete users[uid];
+        localStorage.setItem("users_db", JSON.stringify(users));
+        renderUserManagement();
+    }
+
+    // --- DATA ENTRY FEATURES ---
     function toggleVariety(id, el) {
         document.getElementById(id).classList.toggle('hidden', !el.checked);
+    }
+
+    function renderAreas() {
+        document.getElementById('area_grid').innerHTML = UDAIPUR_AREAS.map(a => `
+            <div class="check-pill"><input type="checkbox" class="area-item" value="${a}"><span>${a}</span></div>
+        `).join('');
+    }
+
+    function initMap() {
+        if (!map) {
+            map = L.map('map').setView([24.5854, 73.7125], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        }
+    }
+
+    function getGPS() {
+        navigator.geolocation.getCurrentPosition(async p => {
+            const lat = p.coords.latitude, lon = p.coords.longitude;
+            document.getElementById('gps_val').value = `${lat},${lon}`;
+            if(marker) map.removeLayer(marker);
+            marker = L.marker([lat, lon]).addTo(map);
+            map.setView([lat, lon], 16);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const d = await res.json();
+            document.getElementById('address').value = d.display_name;
+            document.getElementById('count_gps').innerText = "Fixed";
+        });
     }
 
     function adj(id, v) {
@@ -201,27 +396,26 @@
         if(n >= 0) el.innerText = n;
     }
 
-    function showPreview() {
-        const data = {
-            "ID": document.getElementById('sup_id').innerText,
-            "Firm": document.getElementById('firm_name').value || "N/A",
-            "Owner": document.getElementById('owner_name').value || "N/A",
-            "Materials": Array.from(document.querySelectorAll('.mat-item:checked')).map(i => i.value).join(", "),
-            "Sub-Varieties": Array.from(document.querySelectorAll('.sub-item:checked')).map(i => i.value).join(", "),
-            "Brands": Array.from(document.querySelectorAll('.brand-item:checked')).map(i => i.value).join(", "),
-            "Logistics": `T:${document.getElementById('f1').innerText}, MT:${document.getElementById('f2').innerText}, MD:${document.getElementById('f3').innerText}, D:${document.getElementById('f4').innerText}, TR:${document.getElementById('f5').innerText}`
-        };
-        
-        let html = "";
-        for(let k in data) html += `<div class="preview-item"><b>${k}</b>${data[k]}</div>`;
-        document.getElementById('preview_data_body').innerHTML = html;
-        document.getElementById('preview_modal').style.display = 'flex';
+    function fullLogout() {
+        localStorage.removeItem("ns_session");
+        localStorage.removeItem("master_access");
+        location.reload();
     }
 
-    function closePreview() { document.getElementById('preview_modal').style.display = 'none'; }
+    function updateID() { document.getElementById('sup_id').innerText = "NS-" + Date.now().toString().slice(-6); }
+    function autoWA(p, w) { document.getElementById(w).value = document.getElementById(p).value; }
+    function togglePass(id) {
+        const x = document.getElementById(id);
+        x.type = x.type === "password" ? "text" : "password";
+    }
+
+    function toggleWholeUdaipur() {
+        const c = document.getElementById('area_udaipur').checked;
+        document.querySelectorAll('.area-item').forEach(i => i.checked = c);
+    }
 
     function initDB() {
-        const req = indexedDB.open("NS_V4_1", 1);
+        const req = indexedDB.open("NS_Infra_V4", 1);
         req.onupgradeneeded = e => e.target.result.createObjectStore("records", { keyPath: "id" });
         req.onsuccess = e => { db = e.target.result; updateCount(); };
     }
@@ -231,9 +425,7 @@
         tx.objectStore("records").getAll().onsuccess = e => document.getElementById('count_all').innerText = e.target.result.length;
     }
 
-    function saveDraft() { alert("Draft Saved Locally"); }
-    function updateID() { document.getElementById('sup_id').innerText = "NS-" + Date.now().toString().slice(-5); }
-    function saveAndReset() { alert("Data Synced to Cloud"); location.reload(); }
+    function resetScreen() { location.reload(); }
 </script>
 </body>
 </html>
