@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NirmaSutra InfraDepot | Official Intel</title>
+    <title>NirmaSutra InfraDepot | Auto-Sync Intel</title>
     
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#ff6a00">
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -21,15 +18,12 @@
         label { font-size: 10px; font-weight: 700; color: var(--slate); display: block; margin-bottom: 4px; text-transform: uppercase; }
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; }
-        .btn-save { background: var(--green); }
-        .btn-sync { background: var(--blue); }
+        .btn-save { background: var(--dark); border: 2px solid var(--green); }
         .id-box { background: #0f172a; color: #22c55e; font-family: monospace; font-size: 20px; text-align: center; padding: 15px; border-radius: 8px; font-weight: bold; }
         
-        /* 🛡️ SECURITY WRAPPER STYLES */
         #app_root { display: none; }
         #login_zone, #password_reset_zone, #admin_zone, #data_entry_zone { display: none; flex-direction: column; gap: 15px; }
 
-        /* 🏗️ BASE FEATURE STYLES */
         .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .stat-card { background: var(--dark); color: white; padding: 10px; border-radius: 8px; text-align: center; }
         .stat-card b { font-size: 16px; color: var(--orange); }
@@ -38,6 +32,9 @@
         .check-pill { display: flex; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .check-pill input { width: 18px; height: 18px; margin-right: 8px; margin-bottom: 0; }
         .thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 6px; }
+        
+        /* Auto-Sync Pulse */
+        .sync-pulse { font-size: 10px; color: var(--green); font-weight: bold; text-align: center; display: none; }
     </style>
 </head>
 <body>
@@ -46,44 +43,36 @@
     
     <div id="login_zone" class="card">
         <h3>🔑 Staff Authentication</h3>
-        <label>Staff ID</label>
-        <input type="text" id="staff_id_input" placeholder="NSID001">
-        <label>Password</label>
-        <input type="password" id="staff_pass_input" placeholder="••••••">
+        <input type="text" id="staff_id_input" placeholder="STAFF ID (NSID001)">
+        <input type="password" id="staff_pass_input" placeholder="PASSWORD">
         <button class="btn" onclick="handleLogin()" style="background: var(--dark);">Login & Unlock</button>
         <div style="display: flex; justify-content: space-between; margin-top: 15px;">
             <button onclick="requestReset()" style="background:none; border:none; color:var(--blue); font-size:10px; cursor:pointer; text-decoration:underline;">Forgot Password?</button>
             <button onclick="toggleAdmin()" style="background:none; border:none; color:var(--slate); font-size:10px; cursor:pointer; text-decoration:underline;">Admin Settings</button>
         </div>
-        <p id="auth_msg" style="font-size: 11px; color: var(--red); text-align: center; margin-top: 10px; font-weight: bold;"></p>
     </div>
 
     <div id="password_reset_zone" class="card" style="border: 2px solid var(--orange);">
-        <h3>🆕 First Login: Secure Your Account</h3>
-        <p style="font-size: 12px; color: var(--slate); margin-bottom: 15px;">You must change your default password to proceed.</p>
-        <label>New Password</label>
-        <input type="password" id="new_pass" placeholder="Enter New Password">
-        <label>Confirm Password</label>
-        <input type="password" id="confirm_pass" placeholder="••••••">
-        <button class="btn" onclick="saveNewPassword()" style="background: var(--orange);">Update & Unlock Form</button>
+        <h3>🆕 Security Update Required</h3>
+        <input type="password" id="new_pass" placeholder="New Password">
+        <input type="password" id="confirm_pass" placeholder="Confirm Password">
+        <button class="btn" onclick="saveNewPassword()" style="background: var(--orange);">Update & Unlock</button>
     </div>
 
     <div id="admin_zone" class="card" style="border: 2px solid var(--blue);">
         <h3>🛠️ Admin Control Panel</h3>
-        <label>Staff ID to Reset</label>
         <input type="text" id="reset_staff_id" placeholder="NSID001">
         <button class="btn" style="background: var(--blue);" onclick="adminResetStaff()">Reset to Default</button>
         <button class="btn" style="background: var(--slate); margin-top: 10px;" onclick="location.reload()">Back to Login</button>
     </div>
 
     <div id="data_entry_zone">
-        
         <div class="card">
-            <h3>📊 Intelligence Dashboard</h3>
+            <h3>📊 Dashboard</h3>
             <div class="dash-grid">
                 <div class="stat-card"><small>Entries</small><b id="count_all">0</b></div>
-                <div class="stat-card"><small>Sand</small><b id="count_S">0</b></div>
-                <div class="stat-card"><small>Cement</small><b id="count_C">0</b></div>
+                <div class="stat-card"><small>GPS</small><b id="count_gps">0</b></div>
+                <div class="stat-card"><small>Cloud</small><b id="count_sync" style="color:var(--green)">Online</b></div>
             </div>
         </div>
 
@@ -96,75 +85,80 @@
             <h3>2. Entity Information</h3>
             <label>Firm Name</label><input type="text" id="firm_name" oninput="updateID()">
             <label>Owner Name</label><input type="text" id="owner_name">
-            <label>Address</label><textarea id="address" rows="2"></textarea>
             <div class="full-grid">
                 <div><label>Phone</label><input type="tel" id="phone" oninput="autoWA()"></div>
                 <div><label>WhatsApp</label><input type="tel" id="whatsapp"></div>
             </div>
+            <label>Address</label><textarea id="address" rows="2"></textarea>
         </div>
 
         <div class="card">
-            <h3>3. GPS & Media Capture</h3>
+            <h3>3. Geo-Tagging & Photos</h3>
             <div id="map" style="height:180px; border-radius:10px; margin-bottom:10px;"></div>
             <button class="btn" style="background:var(--dark); margin-bottom:10px;" onclick="getGPS()">📍 CAPTURE LIVE GPS</button>
-            <input type="text" id="gps_val" readonly placeholder="Waiting for coordinates...">
+            <input type="text" id="gps_val" readonly placeholder="Waiting for GPS...">
             <input type="file" id="img_in" accept="image/*" capture="environment" multiple hidden onchange="handlePhotos(this)">
-            <div style="border:2px dashed var(--slate); padding:20px; text-align:center; border-radius:10px; cursor:pointer;" onclick="document.getElementById('img_in').click()">📸 TAP TO CAPTURE SITE PHOTOS</div>
+            <div style="border:2px dashed var(--slate); padding:20px; text-align:center; border-radius:10px; cursor:pointer;" onclick="document.getElementById('img_in').click()">📸 CAPTURE SITE PHOTOS</div>
             <div id="preview_zone" style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-top:10px;"></div>
         </div>
 
         <div class="card">
-            <h3>4. Materials & Intelligence</h3>
-            <div class="full-grid">
+            <h3>4. Materials Intelligence</h3>
+            <div class="full-grid" style="gap:10px;">
                 <div class="check-pill"><input type="checkbox" id="chk_S" onchange="toggleBox('sand')"><span>Sand</span></div>
                 <div class="check-pill"><input type="checkbox" id="chk_C" onchange="toggleBox('cement')"><span>Cement</span></div>
+                <div class="check-pill"><input type="checkbox" id="chk_B" onchange="toggleBox('bricks')"><span>Bricks</span></div>
+                <div class="check-pill"><input type="checkbox" id="chk_T" onchange="toggleBox('tmt')"><span>TMT</span></div>
+                <div class="check-pill"><input type="checkbox" id="chk_A" onchange="toggleBox('aggregate')"><span>Aggregate</span></div>
             </div>
             
-            <div id="box_sand" class="variety-container">
-                <label>Sand Variety Select</label>
-                <div id="v_sand" class="full-grid"></div>
-            </div>
+            <div id="box_sand" class="variety-container"><label>Sand Variety</label><div id="v_sand" class="full-grid"></div></div>
+            <div id="box_cement" class="variety-container"><label>Cement Brand</label><div id="v_cement" class="full-grid"></div></div>
+            <div id="box_bricks" class="variety-container"><label>Brick Type</label><div id="v_bricks" class="full-grid"></div></div>
+            <div id="box_tmt" class="variety-container"><label>TMT Brands</label><div id="v_tmt" class="full-grid"></div></div>
+            <div id="box_aggregate" class="variety-container"><label>Aggregate Sizes</label><div id="v_aggregate" class="full-grid"></div></div>
+        </div>
 
-            <div id="box_cement" class="variety-container">
-                <label>Cement Brand Select</label>
-                <div id="v_cement" class="full-grid"></div>
+        <div class="card">
+            <h3>5. Transportation</h3>
+            <select id="transport_status" onchange="toggleTransport()">
+                <option value="No">No Vehicles</option>
+                <option value="Yes">Has Own Vehicles</option>
+            </select>
+            <div id="transport_detail" style="display:none; margin-top:10px;">
+                <input type="number" id="fleet_count" placeholder="No. of vehicles">
+                <input type="text" id="fleet_types" placeholder="Hyva, Tractor, etc.">
             </div>
         </div>
 
         <div class="card">
-            <h3>5. Operations</h3>
-            <button class="btn btn-save" onclick="saveSupplier()">💾 SAVE TO LOCAL DB</button>
-            <button class="btn btn-sync" onclick="syncMasterToDrive()" style="margin-top:10px;">🚀 SYNC TO CLOUD</button>
+            <div id="sync_msg" class="sync-pulse">🚀 AUTO-SYNCING TO CLOUD...</div>
+            <button class="btn btn-save" id="final_submit_btn" onclick="saveAndAutoSync()">💾 SUBMIT DATA</button>
             <button class="btn" style="background:var(--slate); margin-top:10px;" onclick="location.reload()">🔒 SECURE LOGOUT</button>
-        </div>
-
-        <div class="card">
-            <h3>6. Local Entry History</h3>
-            <div id="history_list" style="max-height:150px; overflow-y:auto; font-size:11px;"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // --- 🔐 SECURITY CONFIG (Additions) ---
     const MASTER_KEY = "Life4life@nsid";
-    const ADMIN_WA = "91XXXXXXXXXX"; // Set your number here
-    const DEFAULTS = { "NSID001": "Nirma@001", "NSID002": "Nirma@002", "NSID003": "Nirma@003", "NSID004": "Nirma@004", "NSID005": "Nirma@005" };
+    const ADMIN_WA = "91XXXXXXXXXX"; 
+    const APPS_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; // ⬅️ PASTE URL HERE
 
-    // --- 🏗️ BASE DATA CONFIG (Original) ---
+    const DEFAULTS = { "NSID001": "Nirma@001", "NSID002": "Nirma@002", "NSID003": "Nirma@003", "NSID004": "Nirma@004", "NSID005": "Nirma@005" };
     const VARIETIES = {
-        sand: ["M-Sand", "P-Sand", "River Sand", "Crushed Sand", "Double Washed"],
-        cement: ["UltraTech", "Ambuja", "JK Lakshmi", "Wonder", "Binani", "Shree Cement", "JK Super", "ACC"]
+        sand: ["M-Sand", "P-Sand", "River Sand", "Crushed Sand"],
+        cement: ["UltraTech", "Ambuja", "JK Lakshmi", "Wonder", "JK Super", "ACC"],
+        bricks: ["Red Bricks", "AAC Blocks", "CLC Blocks", "Fly Ash"],
+        tmt: ["TATA Tiscon", "Jindal Neosteel", "Rathi", "Kamdhenu"],
+        aggregate: ["10mm", "20mm", "40mm", "Grit"]
     };
 
-    // --- 🛡️ SECURITY ENGINE ---
+    // --- GATEKEEPER ---
     window.onload = function() {
         if (sessionStorage.getItem("nirma_gate") !== "true") {
             let attempt = prompt("🔒 NIRMANSUTRA MASTER ACCESS:");
-            if (attempt === MASTER_KEY) {
-                sessionStorage.setItem("nirma_gate", "true");
-                showApp();
-            } else { window.location.href = "https://google.com"; }
+            if (attempt === MASTER_KEY) { sessionStorage.setItem("nirma_gate", "true"); showApp(); }
+            else { window.location.href = "https://google.com"; }
         } else { showApp(); }
     };
 
@@ -175,23 +169,23 @@
         renderVarieties();
     }
 
+    // --- SECURITY FUNCTIONS ---
     function handleLogin() {
         const id = document.getElementById('staff_id_input').value.toUpperCase().trim();
         const pass = document.getElementById('staff_pass_input').value.trim();
         const storedPass = localStorage.getItem("pass_" + id) || DEFAULTS[id];
-
         if (DEFAULTS[id] && pass === storedPass) {
             if (pass === DEFAULTS[id]) {
                 document.getElementById('login_zone').style.display = 'none';
                 document.getElementById('password_reset_zone').style.display = 'flex';
             } else { unlockForm(id); }
-        } else { alert("Authentication Failed"); }
+        } else { alert("Login Failed"); }
     }
 
     function saveNewPassword() {
         const id = document.getElementById('staff_id_input').value.toUpperCase().trim();
         const n1 = document.getElementById('new_pass').value.trim();
-        if (n1.length < 6) return alert("Min 6 Characters Required");
+        if (n1.length < 6) return alert("Min 6 Chars");
         localStorage.setItem("pass_" + id, n1);
         unlockForm(id);
     }
@@ -201,13 +195,12 @@
         document.getElementById('password_reset_zone').style.display = 'none';
         document.getElementById('admin_zone').style.display = 'none';
         document.getElementById('data_entry_zone').style.display = 'flex';
-        updateID();
-        initMap();
+        updateID(); initMap();
     }
 
     function requestReset() {
         const id = document.getElementById('staff_id_input').value.toUpperCase().trim();
-        window.open(`https://wa.me/${ADMIN_WA}?text=Request%20Reset%20for%20${id}`, '_blank');
+        window.open(`https://wa.me/${ADMIN_WA}?text=Reset%20${id}`, '_blank');
     }
 
     function toggleAdmin() {
@@ -218,10 +211,59 @@
     function adminResetStaff() {
         const id = document.getElementById('reset_staff_id').value.toUpperCase().trim();
         localStorage.removeItem("pass_" + id);
-        alert(id + " Reset to Default.");
+        alert(id + " reset.");
     }
 
-    // --- 🏗️ BASE ENGINE LOGIC (Retained from Finalized Version) ---
+    // --- AUTO-SYNC LOGIC ---
+    async function saveAndAutoSync() {
+        const firm = document.getElementById('firm_name').value;
+        if(!firm) return alert("Firm Name Required");
+
+        const submitBtn = document.getElementById('final_submit_btn');
+        const syncMsg = document.getElementById('sync_msg');
+
+        // Disable UI to prevent double submission
+        submitBtn.disabled = true;
+        submitBtn.innerText = "WAITING...";
+        syncMsg.style.display = "block";
+
+        const record = {
+            supplier_id: document.getElementById('sup_id').innerText,
+            staff: document.getElementById('staff_id_input').value.toUpperCase(),
+            firm_name: firm,
+            owner: document.getElementById('owner_name').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            gps: document.getElementById('gps_val').value,
+            varieties: Array.from(document.querySelectorAll('.var-item:checked')).map(i => i.value),
+            transport: document.getElementById('transport_status').value,
+            timestamp: new Date().toLocaleString()
+        };
+
+        // 1. Save Locally First (IndexedDB)
+        const tx = db.transaction("suppliers", "readwrite");
+        tx.objectStore("suppliers").put(record);
+
+        // 2. Immediate Background Sync to Google Sheets
+        try {
+            const response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(record)
+            });
+            
+            alert("✅ SUCCESS: Data Saved Locally & Synced to Cloud!");
+        } catch (err) {
+            alert("⚠️ SAVED LOCALLY: But Cloud Sync failed (Check Internet).");
+        } finally {
+            syncMsg.style.display = "none";
+            submitBtn.disabled = false;
+            submitBtn.innerText = "💾 SUBMIT DATA";
+            location.reload(); // Refresh for next entry
+        }
+    }
+
+    // --- BASE ENGINE ---
     let db, map, marker, photos = [];
     function initDB() {
         const req = indexedDB.open("InfraDepotDB", 1);
@@ -237,16 +279,25 @@
     }
 
     function renderVarieties() {
-        ['sand', 'cement'].forEach(cat => {
-            document.getElementById('v_'+cat).innerHTML = VARIETIES[cat].map(v => 
+        Object.keys(VARIETIES).forEach(cat => {
+            const container = document.getElementById('v_'+cat);
+            if(container) container.innerHTML = VARIETIES[cat].map(v => 
                 `<div class="check-pill"><input type="checkbox" class="var-item" data-cat="${cat}" value="${v}"><span>${v}</span></div>`
             ).join('');
         });
     }
 
+    function toggleBox(id) {
+        const char = id === 'aggregate' ? 'A' : id.charAt(0).toUpperCase();
+        document.getElementById('box_'+id).style.display = document.getElementById('chk_'+char).checked ? 'block' : 'none';
+    }
+
+    function toggleTransport() {
+        document.getElementById('transport_detail').style.display = document.getElementById('transport_status').value === 'Yes' ? 'block' : 'none';
+    }
+
     function updateID() { document.getElementById('sup_id').innerText = "NS-" + Date.now().toString().slice(-6); }
     function autoWA() { document.getElementById('whatsapp').value = document.getElementById('phone').value; }
-    function toggleBox(id) { document.getElementById('box_'+id).style.display = document.getElementById('chk_'+id.charAt(0).toUpperCase()).checked ? 'block' : 'none'; }
     
     function getGPS() { 
         navigator.geolocation.getCurrentPosition(p => { 
@@ -255,6 +306,7 @@
             if(marker) map.removeLayer(marker);
             marker = L.marker([p.coords.latitude, p.coords.longitude]).addTo(map);
             map.setView([p.coords.latitude, p.coords.longitude], 16);
+            document.getElementById('count_gps').innerText = "Captured";
         }); 
     }
 
@@ -269,41 +321,12 @@
         });
     }
 
-    function saveSupplier() {
-        const firm = document.getElementById('firm_name').value;
-        if(!firm) return alert("Firm Name Required");
-        
-        const record = {
-            supplier_id: document.getElementById('sup_id').innerText,
-            staff: document.getElementById('staff_id_input').value.toUpperCase(),
-            firm_name: firm,
-            owner: document.getElementById('owner_name').value,
-            address: document.getElementById('address').value,
-            whatsapp: document.getElementById('whatsapp').value,
-            gps: document.getElementById('gps_val').value,
-            varieties: Array.from(document.querySelectorAll('.var-item:checked')).map(i => i.value),
-            photos: photos,
-            timestamp: new Date().toLocaleString()
-        };
-        
-        const tx = db.transaction("suppliers", "readwrite");
-        tx.objectStore("suppliers").put(record);
-        tx.oncomplete = () => { loadFromDB(); alert("Data Saved Successfully!"); };
-    }
-
     function loadFromDB() {
         if(!db) return;
         const tx = db.transaction("suppliers", "readonly");
         tx.objectStore("suppliers").getAll().onsuccess = e => {
-            const data = e.target.result;
-            document.getElementById('count_all').innerText = data.length;
-            document.getElementById('history_list').innerHTML = data.reverse().map(s => `<div><b>${s.firm_name}</b> [${s.supplier_id}] - ${s.timestamp}</div>`).join('');
+            document.getElementById('count_all').innerText = e.target.result.length;
         };
-    }
-
-    function syncMasterToDrive() {
-        // Your Google Apps Script fetch/post logic remains here
-        alert("Establishing Secure Link to Cloud... Data Sync Started.");
     }
 </script>
 </body>
