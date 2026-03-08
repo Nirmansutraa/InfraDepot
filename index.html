@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NSID Intelligence">
     <meta name="theme-color" content="#0f172a">
-    <title>NirmaSutra Intelligence Network</title>
+    <meta name="description" content="NirmaSutra Enterprise Intelligence Terminal">
+
+    <title>NirmaSutra Intelligence Network | NSIDBS06</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -14,51 +17,63 @@
 
     <style>
         /**
-         * GLOBAL DESIGN TOKENS
+         * NIRMASUTRA DESIGN SYSTEM (NDS) V6.0
+         * COMPREHENSIVE STYLE ARCHITECTURE
          */
         :root {
+            /* Color Palette - Core */
             --orange: #ff6a00;
-            --orange-soft: rgba(255, 106, 0, 0.1);
-            --orange-glow: rgba(255, 106, 0, 0.4);
+            --orange-hover: #e65f00;
+            --orange-glow: rgba(255, 106, 0, 0.35);
             --dark: #0f172a;
+            --dark-alt: #1e293b;
             --darker: #020617;
+            
+            /* Status Colors */
+            --green: #10b981;
+            --green-soft: rgba(16, 185, 129, 0.1);
+            --red: #ef4444;
+            --red-soft: rgba(239, 68, 68, 0.1);
+            --blue: #3b82f6;
+            --blue-soft: rgba(59, 130, 246, 0.1);
+            
+            /* UI Elements */
             --slate: #64748b;
             --bg: #f8fafc;
             --white: #ffffff;
-            --green: #10b981;
-            --red: #ef4444;
-            --blue: #3b82f6;
             --border: #e2e8f0;
-            --glass: rgba(255, 255, 255, 0.05);
+            --glass: rgba(255, 255, 255, 0.04);
+            
+            /* Shadows & Depth */
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            --radius-xl: 35px;
+            --radius-lg: 24px;
+            --radius-md: 16px;
         }
 
-        /**
-         * CORE RESET
-         */
+        /* --- CSS NORMALIZATION --- */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             -webkit-tap-highlight-color: transparent;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg);
             color: #1e293b;
-            line-height: 1.6;
+            line-height: 1.5;
             overflow-x: hidden;
             overscroll-behavior-y: contain;
         }
 
-        /**
-         * AUTHENTICATION UI
-         */
-        .auth-screen {
+        /* --- AUTHENTICATION LAYER --- */
+        .auth-container {
             position: fixed;
             top: 0;
             left: 0;
@@ -70,46 +85,48 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 30px;
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 25px;
+            transition: opacity 0.6s ease, visibility 0.6s;
         }
 
-        .auth-container {
+        .auth-panel {
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             background: var(--glass);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            padding: 50px 35px;
-            border-radius: 45px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            padding: 60px 35px;
+            border-radius: 50px;
             text-align: center;
+            color: var(--white);
             box-shadow: var(--shadow-lg);
         }
 
-        .sys-logo {
-            font-size: 34px;
+        .auth-branding h1 {
+            font-size: 38px;
             font-weight: 900;
             color: var(--orange);
-            letter-spacing: -1px;
-            margin-bottom: 4px;
+            letter-spacing: -1.5px;
+            margin-bottom: 5px;
         }
 
-        .sys-tag {
-            font-size: 10px;
+        .auth-branding p {
+            font-size: 11px;
+            letter-spacing: 5px;
             color: var(--slate);
             text-transform: uppercase;
-            letter-spacing: 4px;
-            margin-bottom: 40px;
+            margin-bottom: 45px;
             font-weight: 700;
         }
 
-        .input-box {
+        .form-group {
             position: relative;
             width: 100%;
-            margin-bottom: 22px;
+            margin-bottom: 24px;
         }
 
-        .field {
+        .input-field {
             width: 100%;
             padding: 22px;
             border-radius: 22px;
@@ -118,17 +135,18 @@
             color: var(--white);
             font-size: 16px;
             text-align: center;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .field:focus {
+        .input-field:focus {
             border-color: var(--orange);
             outline: none;
+            box-shadow: 0 0 0 4px var(--orange-glow);
         }
 
-        .toggle-btn {
+        .visibility-toggle {
             position: absolute;
-            right: 20px;
+            right: 22px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
@@ -136,386 +154,616 @@
             color: var(--slate);
             font-size: 20px;
             cursor: pointer;
+            padding: 5px;
         }
 
-        .action-btn {
+        .btn-primary {
             width: 100%;
             padding: 22px;
             border: none;
             border-radius: 22px;
             background-color: var(--orange);
             color: var(--white);
-            font-weight: 800;
+            font-weight: 900;
+            font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             cursor: pointer;
-            box-shadow: 0 10px 20px var(--orange-glow);
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 12px 24px var(--orange-glow);
         }
 
-        /**
-         * MAIN DASHBOARD
-         */
-        #app_shell {
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        /* --- DASHBOARD ARCHITECTURE --- */
+        #pwa_layout {
             display: none;
             max-width: 800px;
             margin: 0 auto;
-            padding-bottom: 140px;
+            padding-bottom: 160px;
+            animation: fadeIn 0.5s ease-out;
         }
 
-        .pwa-header {
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .app-bar {
             background-color: var(--dark);
-            padding: 70px 25px 35px;
-            border-bottom-left-radius: 45px;
-            border-bottom-right-radius: 45px;
+            padding: 75px 25px 40px;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
             color: var(--white);
         }
 
-        .status-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 30px;
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
 
-        .status-pill {
-            background-color: rgba(255, 255, 255, 0.08);
-            padding: 18px 10px;
-            border-radius: 24px;
+        .operator-info h2 {
+            font-size: 30px;
+            font-weight: 900;
+            margin-top: 5px;
+        }
+
+        .operator-info small {
+            color: var(--slate);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .hud-display {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 35px;
+        }
+
+        .hud-item {
+            background-color: rgba(255, 255, 255, 0.07);
+            padding: 20px 10px;
+            border-radius: 26px;
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .pill-val {
+        .hud-item b {
             display: block;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 900;
         }
 
-        .pill-lbl {
+        .hud-item span {
             font-size: 9px;
             color: var(--slate);
+            font-weight: 800;
             text-transform: uppercase;
-            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
-        .card-title {
-            padding: 35px 25px 15px;
-            font-size: 12px;
-            font-weight: 800;
+        .section-header {
+            padding: 40px 25px 15px;
+            font-size: 13px;
+            font-weight: 900;
             color: var(--slate);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 2.5px;
         }
 
-        .ui-card {
+        .data-card {
             background-color: var(--white);
-            margin: 0 20px 20px;
-            padding: 28px;
-            border-radius: 38px;
+            margin: 0 22px 22px;
+            padding: 30px;
+            border-radius: var(--radius-xl);
             box-shadow: var(--shadow-md);
             border: 1px solid var(--border);
         }
 
-        .id-display {
+        .nsid-display {
             background-color: var(--darker);
             color: var(--green);
-            padding: 22px;
+            padding: 28px;
             border-radius: 22px;
             text-align: center;
-            font-family: 'Courier New', monospace;
-            font-size: 26px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 28px;
             font-weight: 900;
             margin-bottom: 25px;
-            border: 2px solid #1e293b;
+            border: 2px solid var(--dark-alt);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        #map_box {
-            height: 350px;
+        /* --- MAP & GEODATA --- */
+        #map_engine {
+            height: 380px;
             width: 100%;
-            border-radius: 30px;
-            border: 5px solid var(--white);
+            border-radius: 32px;
+            border: 6px solid var(--white);
             box-shadow: var(--shadow-md);
-            margin-bottom: 20px;
-            background-color: #eee;
+            margin-bottom: 25px;
+            z-index: 10;
         }
 
-        .media-scroller {
+        .geo-output {
+            width: 100%;
+            margin-top: 15px;
+            padding: 20px;
+            border-radius: 22px;
+            border: 1px solid var(--border);
+            background-color: var(--bg);
+            font-size: 14px;
+            font-weight: 500;
+            resize: none;
+            color: var(--dark-alt);
+        }
+
+        /* --- MEDIA ASSETS --- */
+        .asset-shelf {
             display: flex;
             gap: 15px;
             overflow-x: auto;
-            padding: 5px 0 20px;
-            scrollbar-width: none;
+            padding-bottom: 15px;
+            scrollbar-width: none; /* Firefox */
         }
 
-        .img-preview {
-            min-width: 150px;
-            height: 150px;
-            border-radius: 25px;
+        .asset-shelf::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .asset-item {
+            min-width: 160px;
+            height: 160px;
+            border-radius: 28px;
             object-fit: cover;
             border: 4px solid var(--white);
             box-shadow: var(--shadow-md);
+            transition: transform 0.3s;
         }
 
-        /**
-         * BOTTOM NAVIGATION
-         */
-        .nav-dock {
+        .asset-item:active {
+            transform: scale(0.95);
+        }
+
+        /* --- UTILITY DOCK --- */
+        .action-dock {
             position: fixed;
-            bottom: 30px;
+            bottom: 35px;
             left: 20px;
             right: 20px;
             background-color: var(--dark);
-            padding: 20px;
-            border-radius: 35px;
+            padding: 22px;
+            border-radius: 40px;
             display: flex;
             gap: 15px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
             z-index: 9999;
         }
 
-        .dock-btn {
+        .dock-item {
             flex: 1;
-            padding: 20px;
+            padding: 22px;
             border: none;
-            border-radius: 22px;
+            border-radius: 24px;
             font-weight: 900;
             color: var(--white);
             text-transform: uppercase;
-            font-size: 12px;
+            font-size: 13px;
+            letter-spacing: 1px;
+            cursor: pointer;
         }
 
-        /* UTILITIES */
+        /* --- UTILITIES --- */
         .hidden { display: none !important; }
-        .shake { animation: shake-anim 0.3s ease; border-color: var(--red) !important; }
-        @keyframes shake-anim {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-10px); }
-            60% { transform: translateX(10px); }
+        .bg-blue { background-color: var(--blue); }
+        .bg-green { background-color: var(--green); }
+        .bg-red { background-color: var(--red); }
+        
+        .shake-err { 
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; 
+            border-color: var(--red) !important;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
     </style>
 </head>
 <body>
 
-    <div id="scr_master" class="auth-screen">
-        <div class="auth-container">
-            <h1 class="sys-logo">NIRMASUTRA</h1>
-            <p class="sys-tag">System Master Gate</p>
-            <div class="input-box">
-                <input type="password" id="m_key" class="field" placeholder="MASTER KEY">
-                <button class="toggle-btn" onclick="toggleView('m_key')">👁️</button>
+    <div id="gate_system" class="auth-container">
+        <div class="auth-panel">
+            <div class="auth-branding">
+                <h1>NIRMASUTRA</h1>
+                <p>Enterprise Master Gateway</p>
             </div>
-            <button class="action-btn" onclick="checkMaster()">Authorize System</button>
-            <p id="m_msg" style="color:var(--red); font-size:11px; margin-top:20px; font-weight:800;"></p>
+            
+            <div class="form-group">
+                <input type="password" id="m_input" class="input-field" placeholder="ENTER MASTER KEY" autocomplete="off">
+                <button class="visibility-toggle" onclick="togglePass('m_input')">👁️</button>
+            </div>
+
+            <button class="btn-primary" onclick="validateMaster()">INITIALIZE SYSTEM</button>
+            <p id="m_msg" style="color:var(--red); font-size:12px; margin-top:20px; font-weight:800; min-height:1.2em;"></p>
         </div>
     </div>
 
-    <div id="scr_user" class="auth-screen hidden">
-        <div class="auth-container">
-            <h1 class="sys-logo">OPERATOR</h1>
-            <p class="sys-tag">Identity Validation</p>
-            <div class="input-box">
-                <input type="text" id="u_id" class="field" placeholder="USER ID (NSID001)">
+    <div id="gate_operator" class="auth-container hidden">
+        <div class="auth-panel">
+            <div class="auth-branding">
+                <h1>OPERATOR</h1>
+                <p>Identity Verification</p>
             </div>
-            <div class="input-box">
-                <input type="password" id="u_key" class="field" placeholder="PASSWORD">
-                <button class="toggle-btn" onclick="toggleView('u_key')">👁️</button>
+            
+            <div class="form-group">
+                <input type="text" id="op_id" class="input-field" placeholder="USER ID (e.g. NSID001)" autocomplete="username">
             </div>
-            <button class="action-btn" onclick="checkUser()" style="background-color:var(--blue);">Sign In</button>
-            <p id="u_msg" style="color:var(--red); font-size:11px; margin-top:20px; font-weight:800;"></p>
+
+            <div class="form-group">
+                <input type="password" id="op_pass" class="input-field" placeholder="SECURITY PASSWORD" autocomplete="current-password">
+                <button class="visibility-toggle" onclick="togglePass('op_pass')">👁️</button>
+            </div>
+
+            <button class="btn-primary bg-blue" onclick="validateOperator()">OPEN SESSION</button>
+            <p id="op_msg" style="color:var(--red); font-size:12px; margin-top:20px; font-weight:800; min-height:1.2em;"></p>
         </div>
     </div>
 
-    <main id="app_shell">
-        <header class="pwa-header">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                    <p style="font-size:9px; color:var(--slate); font-weight:900; letter-spacing:1px;">SESSION ACTIVE</p>
-                    <h2 id="disp_user" style="font-size:28px;">NSID000</h2>
+    <main id="pwa_layout">
+        <header class="app-bar">
+            <div class="header-flex">
+                <div class="operator-info">
+                    <small>System Operator</small>
+                    <h2 id="op_name_display">NSID---</h2>
                 </div>
-                <button onclick="logOut()" style="background:var(--red); border:none; color:white; padding:12px 20px; border-radius:18px; font-size:10px; font-weight:900;">EXIT</button>
+                <button class="bg-red" onclick="terminateSession()" style="border:none; color:white; padding:12px 20px; border-radius:18px; font-size:10px; font-weight:900; cursor:pointer;">SIGN OUT</button>
             </div>
-            <div class="status-row">
-                <div class="status-pill"><span class="pill-val" id="cnt_local">0</span><span class="pill-lbl">Queue</span></div>
-                <div class="status-pill"><span class="pill-val" id="cnt_media">0</span><span class="pill-lbl">Media</span></div>
-                <div class="status-pill"><span class="pill-val" id="cnt_gps" style="color:var(--red);">OFF</span><span class="pill-lbl">GPS</span></div>
+
+            <div class="hud-display">
+                <div class="hud-item">
+                    <b id="hud_queue">0</b>
+                    <span>Local Records</span>
+                </div>
+                <div class="hud-item">
+                    <b id="hud_media">0</b>
+                    <span>Assets</span>
+                </div>
+                <div class="hud-item">
+                    <b id="hud_gps" style="color:var(--red);">OFF</b>
+                    <span>GPS Status</span>
+                </div>
             </div>
         </header>
 
-        <h3 class="card-title">01 / Business Entity</h3>
-        <section class="ui-card">
-            <div id="badge_id" class="id-display">NS-NEW-0000</div>
-            <label style="font-size:10px; font-weight:800; color:var(--slate); margin-bottom:8px; display:block;">FIRM NAME</label>
-            <input type="text" id="firm_name" oninput="updateNSID()" class="field" style="background:#f1f5f9; color:#0f172a; text-align:left;" placeholder="Type business name...">
+        <h3 class="section-header">01 / Entity Profile</h3>
+        <section class="data-card">
+            <div id="nsid_badge" class="nsid-display">NS-GEN-0000</div>
+            
+            <div style="margin-bottom:20px;">
+                <label style="font-size:10px; font-weight:900; color:var(--slate); text-transform:uppercase; margin-bottom:10px; display:block;">Business Legal Title</label>
+                <input type="text" id="input_firm" oninput="generateDynamicID()" class="input-field" style="background:var(--bg); color:var(--darker); text-align:left;" placeholder="Enter firm name...">
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div>
+                    <label style="font-size:10px; font-weight:900; color:var(--slate); margin-bottom:10px; display:block;">Owner Name</label>
+                    <input type="text" id="input_owner" class="input-field" style="background:var(--bg); color:var(--darker); text-align:left; padding:15px; font-size:14px;">
+                </div>
+                <div>
+                    <label style="font-size:10px; font-weight:900; color:var(--slate); margin-bottom:10px; display:block;">Contact No.</label>
+                    <input type="tel" id="input_phone" class="input-field" style="background:var(--bg); color:var(--darker); text-align:left; padding:15px; font-size:14px;">
+                </div>
+            </div>
         </section>
 
-        <h3 class="card-title">02 / Geospatial Data</h3>
-        <section class="ui-card">
-            <div id="map_box"></div>
-            <button class="action-btn" style="background:var(--dark);" onclick="getPrecisionGPS()">📍 Lock Location</button>
-            <textarea id="addr_res" style="width:100%; margin-top:15px; padding:18px; border-radius:18px; border:1px solid var(--border); font-size:14px;" placeholder="Address data will appear here..."></textarea>
+        <h3 class="section-header">02 / Geospatial Intelligence</h3>
+        <section class="data-card">
+            <div id="map_engine"></div>
+            <button class="btn-primary" style="background-color:var(--dark);" onclick="acquireLocation()">📍 SYNC PRECISION COORDINATES</button>
+            <textarea id="output_address" rows="3" class="geo-output" placeholder="Verification address will be auto-resolved upon GPS lock..."></textarea>
         </section>
 
-        <h3 class="card-title">03 / Evidence Assets</h3>
-        <section class="ui-card">
-            <div class="media-scroller" id="media_shelf"></div>
-            <input type="file" id="cam_input" accept="image/*" capture="environment" style="display:none;" onchange="handleCam(this)">
-            <button class="action-btn" onclick="document.getElementById('cam_input').click()" style="background:var(--blue);">📷 Site Photo</button>
+        <h3 class="section-header">03 / Visual Evidence</h3>
+        <section class="data-card">
+            <div class="asset-shelf" id="shelf_display">
+                </div>
+            
+            <input type="file" id="camera_trigger" accept="image/*" capture="environment" class="hidden" onchange="captureAsset(this)">
+            <button class="btn-primary bg-blue" onclick="document.getElementById('camera_trigger').click()">📷 LAUNCH FIELD CAMERA</button>
         </section>
 
-        <nav class="nav-dock">
-            <button class="dock-btn" style="background:var(--blue);" onclick="saveRecord()">💾 Save</button>
-            <button class="dock-btn" style="background:var(--green);" onclick="syncCloud()">🚀 Sync</button>
+        <h3 class="section-header">04 / Data Governance</h3>
+        <section class="data-card" style="text-align:center; background-color:var(--blue-soft);">
+            <p style="font-size:11px; font-weight:800; color:var(--blue); margin-bottom:15px;">XLSX REPORT GENERATOR</p>
+            <button class="btn-primary bg-blue" onclick="exportToExcel()" style="padding:15px; font-size:12px;">📥 EXPORT LOCAL DATABASE</button>
+        </section>
+
+        <nav class="action-dock">
+            <button class="dock-item bg-blue" onclick="commitToVault()">💾 COMMIT</button>
+            <button class="dock-item bg-green" onclick="pushToCloud()">🚀 SYNC CLOUD</button>
         </nav>
     </main>
 
     <script>
         /**
-         * NIRMASUTRA ENGINE NSIDBS06 (Extended Version)
+         * NIRMASUTRA ENGINE NSIDBS06
+         * PRODUCTION GRADE JAVASCRIPT
          */
         
-        // Configuration
-        const MASTER_SECRET = "Life4life@nsid";
-        let localDB, appMap, userMarker, mediaList = [];
+        // --- SYSTEM CONFIGURATION ---
+        const CONFIG = {
+            MASTER_KEY: "Life4life@nsid",
+            DB_NAME: "NS_INTEL_VAULT",
+            DB_VERSION: 25,
+            OPERATOR_REGISTRY: {
+                "NSID001": "Life4life@01",
+                "NSID002": "Life4life@02",
+                "NSID003": "Life4life@03",
+                "NSID004": "Life4life@04",
+                "NSID005": "Life4life@05"
+            },
+            DEFAULT_LOC: [24.5854, 73.7125] // Rajasthan / Udaipur Hub
+        };
+
+        // --- GLOBAL STATE ---
+        let storage, map, marker, capturedMedia = [];
 
         /**
-         * Initialize IndexedDB with versioning logic
+         * INITIALIZATION: Database Bootstrapper
          */
-        const bootStorage = () => {
-            const request = indexedDB.open("NS_INTEL_VAULT", 15);
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains("records")) {
-                    db.createObjectStore("records", { keyPath: "id", autoIncrement: true });
+        const initSystem = () => {
+            const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains("intel_records")) {
+                    db.createObjectStore("intel_records", { keyPath: "id", autoIncrement: true });
                 }
             };
-            request.onsuccess = (e) => {
-                localDB = e.target.result;
-                updateMetrics();
+
+            request.onsuccess = (event) => {
+                storage = event.target.result;
+                updateHUD();
+                console.log("NSID Engine: Storage Online");
             };
+
+            request.onerror = (err) => console.error("Database Error:", err);
         };
 
         /**
-         * Security Handlers
+         * SECURITY: Master Gateway Validation
          */
-        function toggleView(id) {
-            const input = document.getElementById(id);
-            input.type = input.type === 'password' ? 'text' : 'password';
-        }
+        function validateMaster() {
+            const val = document.getElementById('m_input').value.trim();
+            const msg = document.getElementById('m_msg');
+            const field = document.getElementById('m_input');
 
-        function checkMaster() {
-            const input = document.getElementById('m_key').value.trim();
-            if (input === MASTER_SECRET) {
-                sessionStorage.setItem('ns_m', 'OK');
-                document.getElementById('scr_master').classList.add('hidden');
-                document.getElementById('scr_user').classList.remove('hidden');
+            if (val === CONFIG.MASTER_KEY) {
+                sessionStorage.setItem('gate_1_clear', 'true');
+                document.getElementById('gate_system').classList.add('hidden');
+                document.getElementById('gate_operator').classList.remove('hidden');
             } else {
-                handleErr('m_key', 'm_msg');
+                field.classList.add('shake-err');
+                msg.innerText = "CRITICAL ERROR: INVALID MASTER KEY";
+                setTimeout(() => {
+                    field.classList.remove('shake-err');
+                    msg.innerText = "";
+                }, 2000);
             }
         }
 
-        function checkUser() {
-            const id = document.getElementById('u_id').value.trim();
-            const pw = document.getElementById('u_key').value.trim();
-            const db = { "NSID001": "Life4life@01", "NSID002": "Life4life@02", "NSID003": "Life4life@03" };
+        /**
+         * SECURITY: Operator Identity Validation
+         */
+        function validateOperator() {
+            const uid = document.getElementById('op_id').value.trim();
+            const upass = document.getElementById('op_pass').value.trim();
+            const msg = document.getElementById('op_msg');
+            const field = document.getElementById('op_pass');
 
-            if (db[id] === pw) {
-                sessionStorage.setItem('ns_u', id);
-                launchDashboard(id);
+            if (CONFIG.OPERATOR_REGISTRY[uid] === upass) {
+                sessionStorage.setItem('gate_2_clear', uid);
+                bootDashboard(uid);
             } else {
-                handleErr('u_key', 'u_msg');
+                field.classList.add('shake-err');
+                msg.innerText = "IDENTITY DENIED: CHECK ID/PASS";
+                setTimeout(() => {
+                    field.classList.remove('shake-err');
+                    msg.innerText = "";
+                }, 2000);
             }
         }
 
-        function launchDashboard(uid) {
-            document.getElementById('scr_user').classList.add('hidden');
-            document.getElementById('app_shell').style.display = 'block';
-            document.getElementById('disp_user').innerText = uid;
+        /**
+         * UI: Launch Main Interface
+         */
+        function bootDashboard(uid) {
+            document.getElementById('gate_operator').classList.add('hidden');
+            document.getElementById('pwa_layout').style.display = 'block';
+            document.getElementById('op_name_display').innerText = uid;
             
+            // Map Initialization (Deferred for DOM rendering)
             setTimeout(() => {
-                appMap = L.map('map_box').setView([24.5854, 73.7125], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(appMap);
-            }, 300);
-        }
-
-        function handleErr(inp, msg) {
-            const el = document.getElementById(inp);
-            el.classList.add('shake');
-            document.getElementById(msg).innerText = "ACCESS DENIED";
-            setTimeout(() => {
-                el.classList.remove('shake');
-                document.getElementById(msg).innerText = "";
-            }, 1500);
+                map = L.map('map_engine').setView(CONFIG.DEFAULT_LOC, 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+            }, 400);
         }
 
         /**
-         * Feature Logic
+         * GEOSPATIAL: Precision GPS Locking
          */
-        function updateNSID() {
-            const name = document.getElementById('firm_name').value;
-            const prefix = name.substring(0,3).toUpperCase() || "NEW";
-            const rand = Math.floor(1000 + Math.random() * 9000);
-            document.getElementById('badge_id').innerText = `NS-${prefix}-${rand}`;
+        function acquireLocation() {
+            const gpsLabel = document.getElementById('hud_gps');
+            const addrBox = document.getElementById('output_address');
+
+            if (!navigator.geolocation) {
+                alert("GPS Protocol Not Supported");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    
+                    if (marker) map.removeLayer(marker);
+                    marker = L.marker([latitude, longitude]).addTo(map);
+                    map.setView([latitude, longitude], 17);
+
+                    gpsLabel.innerText = "LOCK";
+                    gpsLabel.style.color = "var(--green)";
+
+                    // Reverse Geocoding via Nominatim
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            addrBox.value = data.display_name;
+                        });
+                },
+                (err) => {
+                    alert("GPS Signal Lost: " + err.message);
+                },
+                { enableHighAccuracy: true }
+            );
         }
 
-        function getPrecisionGPS() {
-            navigator.geolocation.getCurrentPosition(pos => {
-                const { latitude, longitude } = pos.coords;
-                if(userMarker) appMap.removeLayer(userMarker);
-                userMarker = L.marker([latitude, longitude]).addTo(appMap);
-                appMap.setView([latitude, longitude], 17);
-                document.getElementById('cnt_gps').innerText = "LOCK";
-                document.getElementById('cnt_gps').style.color = "var(--green)";
-                
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-                    .then(r => r.json()).then(d => document.getElementById('addr_res').value = d.display_name);
-            }, () => alert("Enable GPS"), { enableHighAccuracy: true });
+        /**
+         * LOGISTICS: Auto-ID Generator
+         */
+        function generateDynamicID() {
+            const name = document.getElementById('input_firm').value;
+            const prefix = name.length >= 3 ? name.substring(0, 3).toUpperCase() : "GEN";
+            const nonce = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('nsid_badge').innerText = `NS-${prefix}-${nonce}`;
         }
 
-        function handleCam(input) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                mediaList.push(e.target.result);
-                renderMedia();
+        /**
+         * MEDIA: Field Camera Handler
+         */
+        function captureAsset(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    capturedMedia.push(e.target.result);
+                    renderShelf();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function renderShelf() {
+            const shelf = document.getElementById('shelf_display');
+            shelf.innerHTML = capturedMedia.map(src => `<img src="${src}" class="asset-item">`).join('');
+            document.getElementById('hud_media').innerText = capturedMedia.length;
+        }
+
+        /**
+         * PERSISTENCE: Database Commitment
+         */
+        function commitToVault() {
+            const firm = document.getElementById('input_firm').value.trim();
+            
+            if (!firm) {
+                alert("CRITICAL: Entity Profile Incomplete (Firm Name Required)");
+                return;
+            }
+
+            const transaction = storage.transaction("intel_records", "readwrite");
+            const store = transaction.objectStore("intel_records");
+
+            const record = {
+                nsid: document.getElementById('nsid_badge').innerText,
+                firm_name: firm,
+                owner: document.getElementById('input_owner').value,
+                phone: document.getElementById('input_phone').value,
+                address: document.getElementById('output_address').value,
+                media_count: capturedMedia.length,
+                timestamp: new Date().toLocaleString()
             };
-            reader.readAsDataURL(input.files[0]);
-        }
 
-        function renderMedia() {
-            const shelf = document.getElementById('media_shelf');
-            shelf.innerHTML = mediaList.map(m => `<img src="${m}" class="img-preview">`).join('');
-            document.getElementById('cnt_media').innerText = mediaList.length;
+            const request = store.add(record);
+
+            request.onsuccess = () => {
+                alert("INTEL COMMITTED TO VAULT");
+                location.reload();
+            };
         }
 
         /**
-         * Persistence & Lifecycle
+         * DATA GOVERNANCE: Excel Export Logic
          */
-        function saveRecord() {
-            const store = localDB.transaction("records", "readwrite").objectStore("records");
-            store.add({
-                firm: document.getElementById('firm_name').value,
-                nsid: document.getElementById('badge_id').innerText,
-                media: mediaList,
-                date: new Date().toISOString()
-            });
-            alert("RECORD COMMITTED");
-            location.reload();
+        function exportToExcel() {
+            const transaction = storage.transaction("intel_records", "readonly");
+            const store = transaction.objectStore("intel_records");
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const results = request.result;
+                if (results.length === 0) {
+                    alert("No local records found for export.");
+                    return;
+                }
+
+                const sheet = XLSX.utils.json_to_sheet(results);
+                const book = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(book, sheet, "Intelligence_Records");
+                XLSX.writeFile(book, `NSID_Records_${new Date().toISOString().slice(0,10)}.xlsx`);
+            };
         }
 
-        function syncCloud() { alert("Establishing Cloud Tunnel..."); }
-        function logOut() { sessionStorage.clear(); location.reload(); }
-        function updateMetrics() {
-            const store = localDB.transaction("records", "readonly").objectStore("records");
-            const count = store.count();
-            count.onsuccess = () => document.getElementById('cnt_local').innerText = count.result;
+        /**
+         * UTILITY: System Helpers
+         */
+        function updateHUD() {
+            const transaction = storage.transaction("intel_records", "readonly");
+            const store = transaction.objectStore("intel_records");
+            const countRequest = store.count();
+            
+            countRequest.onsuccess = () => {
+                document.getElementById('hud_queue').innerText = countRequest.result;
+            };
         }
 
+        function togglePass(id) {
+            const el = document.getElementById(id);
+            el.type = el.type === "password" ? "text" : "password";
+        }
+
+        function terminateSession() {
+            if (confirm("Confirm Session Termination? Unsaved data will be lost.")) {
+                sessionStorage.clear();
+                location.reload();
+            }
+        }
+
+        function pushToCloud() {
+            alert("Secure Uplink Initiated... Handshaking with InfraDepot Mainframe.");
+        }
+
+        // --- LIFECYCLE BOOT ---
         window.onload = () => {
-            bootStorage();
-            if(sessionStorage.getItem('ns_m') && sessionStorage.getItem('ns_u')) {
-                document.getElementById('scr_master').classList.add('hidden');
-                launchDashboard(sessionStorage.getItem('ns_u'));
+            initSystem();
+            
+            // Session Recovery
+            const s1 = sessionStorage.getItem('gate_1_clear');
+            const s2 = sessionStorage.getItem('gate_2_clear');
+            
+            if (s1 === 'true' && s2) {
+                document.getElementById('gate_system').classList.add('hidden');
+                bootDashboard(s2);
             }
         };
+
     </script>
 </body>
 </html>
