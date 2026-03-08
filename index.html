@@ -2,798 +2,520 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NirmaSutra Intelligence Network | NSIDBS06</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    <title>NirmaSutra Intelligence Network</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        /* NIRMASUTRA DESIGN SYSTEM (NDS) v6.0
-           Color Palette: 
-           - Primary: #ff6a00 (Construction Orange)
-           - Secondary: #0f172a (Deep Space Blue)
-           - Action: #10b981 (Eco Green)
-        */
-        
-        :root { 
-            --orange: #ff6a00; 
+        /**
+         * GLOBAL DESIGN TOKENS
+         */
+        :root {
+            --orange: #ff6a00;
             --orange-soft: rgba(255, 106, 0, 0.1);
-            --bg: #f8fafc; 
-            --green: #10b981; 
-            --dark: #0f172a; 
-            --slate: #64748b; 
-            --red: #ef4444; 
-            --blue: #3b82f6; 
-            --white: #ffffff; 
+            --orange-glow: rgba(255, 106, 0, 0.4);
+            --dark: #0f172a;
+            --darker: #020617;
+            --slate: #64748b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --green: #10b981;
+            --red: #ef4444;
+            --blue: #3b82f6;
             --border: #e2e8f0;
             --glass: rgba(255, 255, 255, 0.05);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
         }
 
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            margin: 0; 
-            padding: 0; 
-        }
-
-        body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: var(--bg); 
-            color: #1e293b; 
-            line-height: 1.5;
+        /**
+         * CORE RESET
+         */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* --- LAYER 0: SECURITY UI --- */
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: #1e293b;
+            line-height: 1.6;
+            overflow-x: hidden;
+            overscroll-behavior-y: contain;
+        }
+
+        /**
+         * AUTHENTICATION UI
+         */
         .auth-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: var(--dark);
-            z-index: 99999;
+            background-color: var(--dark);
+            z-index: 100000;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 30px;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .auth-card {
+        .auth-container {
             width: 100%;
             max-width: 420px;
             background: var(--glass);
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
             padding: 50px 35px;
             border-radius: 45px;
             text-align: center;
-            color: white;
-            box-shadow: 0 40px 100px -20px rgba(0,0,0,0.6);
+            box-shadow: var(--shadow-lg);
         }
 
-        .system-title {
-            font-size: 32px;
+        .sys-logo {
+            font-size: 34px;
             font-weight: 900;
             color: var(--orange);
             letter-spacing: -1px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
-        .system-subtitle {
-            font-size: 11px;
-            letter-spacing: 5px;
+        .sys-tag {
+            font-size: 10px;
             color: var(--slate);
             text-transform: uppercase;
-            margin-bottom: 45px;
+            letter-spacing: 4px;
+            margin-bottom: 40px;
             font-weight: 700;
         }
 
-        /* Input Styling with Show/Hide Logic */
-        .field-group {
+        .input-box {
             position: relative;
             width: 100%;
             margin-bottom: 22px;
         }
 
-        .auth-input {
+        .field {
             width: 100%;
             padding: 22px;
-            padding-right: 60px;
-            border-radius: 20px;
+            border-radius: 22px;
             border: 2px solid #334155;
-            background: #020617;
-            color: white;
+            background-color: var(--darker);
+            color: var(--white);
             font-size: 16px;
-            text-align: left;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            transition: border-color 0.3s ease;
         }
 
-        .auth-input:focus {
+        .field:focus {
             border-color: var(--orange);
             outline: none;
-            box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.15);
         }
 
-        .visibility-toggle {
+        .toggle-btn {
             position: absolute;
-            right: 22px;
+            right: 20px;
             top: 50%;
             transform: translateY(-50%);
-            background: transparent;
+            background: none;
             border: none;
             color: var(--slate);
-            cursor: pointer;
             font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            cursor: pointer;
         }
 
-        .btn-primary {
+        .action-btn {
             width: 100%;
             padding: 22px;
             border: none;
             border-radius: 22px;
-            background: var(--orange);
-            color: white;
+            background-color: var(--orange);
+            color: var(--white);
             font-weight: 800;
-            font-size: 15px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             cursor: pointer;
-            transition: transform 0.2s;
-            margin-top: 10px;
+            box-shadow: 0 10px 20px var(--orange-glow);
         }
 
-        .btn-primary:active {
-            transform: scale(0.97);
-        }
-
-        /* --- LAYER 1: APP ROOT --- */
-        #main_application {
+        /**
+         * MAIN DASHBOARD
+         */
+        #app_shell {
             display: none;
-            max-width: 680px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
             padding-bottom: 140px;
         }
 
-        /* Navigation Header */
-        .app-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
+        .pwa-header {
+            background-color: var(--dark);
+            padding: 70px 25px 35px;
+            border-bottom-left-radius: 45px;
+            border-bottom-right-radius: 45px;
+            color: var(--white);
         }
 
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: var(--orange);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 900;
-        }
-
-        /* HUD Stats */
-        .hud-container {
+        .status-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-top: 30px;
         }
 
-        .stat-box {
-            background: var(--white);
-            padding: 20px;
-            border-radius: 25px;
+        .status-pill {
+            background-color: rgba(255, 255, 255, 0.08);
+            padding: 18px 10px;
+            border-radius: 24px;
             text-align: center;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .stat-value {
+        .pill-val {
             display: block;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 900;
-            color: var(--dark);
         }
 
-        .stat-label {
+        .pill-lbl {
             font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
             color: var(--slate);
+            text-transform: uppercase;
             font-weight: 700;
         }
 
-        /* Section Styling */
-        .module-header {
-            margin: 40px 0 20px 0;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .module-number {
-            width: 35px;
-            height: 35px;
-            background: var(--dark);
-            color: var(--orange);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: monospace;
-            font-weight: 900;
-        }
-
-        .module-title {
-            font-size: 14px;
-            font-weight: 900;
+        .card-title {
+            padding: 35px 25px 15px;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--slate);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
         }
 
-        .content-card {
-            background: var(--white);
-            padding: 30px;
-            border-radius: 30px;
+        .ui-card {
+            background-color: var(--white);
+            margin: 0 20px 20px;
+            padding: 28px;
+            border-radius: 38px;
+            box-shadow: var(--shadow-md);
             border: 1px solid var(--border);
-            margin-bottom: 20px;
         }
 
-        /* Map & Photos */
-        #map_display {
-            height: 300px;
-            width: 100%;
-            border-radius: 25px;
-            border: 4px solid var(--white);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            z-index: 1;
-        }
-
-        .photo-gallery {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .photo-item {
-            position: relative;
-            aspect-ratio: 1;
-            border-radius: 20px;
-            overflow: hidden;
-            background: #e2e8f0;
-            border: 2px solid var(--white);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-
-        .photo-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .geo-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 23, 42, 0.85);
+        .id-display {
+            background-color: var(--darker);
             color: var(--green);
-            padding: 10px;
-            font-size: 9px;
-            font-family: monospace;
+            padding: 22px;
+            border-radius: 22px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 26px;
+            font-weight: 900;
+            margin-bottom: 25px;
+            border: 2px solid #1e293b;
         }
 
-        .hidden { display: none !important; }
+        #map_box {
+            height: 350px;
+            width: 100%;
+            border-radius: 30px;
+            border: 5px solid var(--white);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 20px;
+            background-color: #eee;
+        }
 
-        /* Floating Actions */
-        .action-bar {
+        .media-scroller {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 5px 0 20px;
+            scrollbar-width: none;
+        }
+
+        .img-preview {
+            min-width: 150px;
+            height: 150px;
+            border-radius: 25px;
+            object-fit: cover;
+            border: 4px solid var(--white);
+            box-shadow: var(--shadow-md);
+        }
+
+        /**
+         * BOTTOM NAVIGATION
+         */
+        .nav-dock {
             position: fixed;
             bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 600px;
-            background: var(--dark);
-            padding: 15px;
-            border-radius: 30px;
+            left: 20px;
+            right: 20px;
+            background-color: var(--dark);
+            padding: 20px;
+            border-radius: 35px;
             display: flex;
             gap: 15px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            z-index: 1000;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            z-index: 9999;
         }
 
-        .btn-sync {
+        .dock-btn {
             flex: 1;
-            padding: 18px;
-            border-radius: 20px;
+            padding: 20px;
             border: none;
-            font-weight: 800;
-            font-size: 13px;
-            cursor: pointer;
+            border-radius: 22px;
+            font-weight: 900;
+            color: var(--white);
             text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        /* UTILITIES */
+        .hidden { display: none !important; }
+        .shake { animation: shake-anim 0.3s ease; border-color: var(--red) !important; }
+        @keyframes shake-anim {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            60% { transform: translateX(10px); }
         }
     </style>
 </head>
 <body>
 
-    <div id="gate_master" class="auth-screen">
-        <div class="auth-card">
-            <h1 class="system-title">NIRMASUTRA</h1>
-            <p class="system-subtitle">MASTER SECURITY GATE</p>
-            
-            <div class="field-group">
-                <input type="password" id="m_pass_input" class="auth-input" placeholder="SYSTEM MASTER KEY">
-                <button class="visibility-toggle" onclick="toggleInputVisibility('m_pass_input')">👁️</button>
+    <div id="scr_master" class="auth-screen">
+        <div class="auth-container">
+            <h1 class="sys-logo">NIRMASUTRA</h1>
+            <p class="sys-tag">System Master Gate</p>
+            <div class="input-box">
+                <input type="password" id="m_key" class="field" placeholder="MASTER KEY">
+                <button class="toggle-btn" onclick="toggleView('m_key')">👁️</button>
             </div>
-
-            <button class="btn-primary" onclick="verifyMasterGate()">AUTHORIZE SYSTEM</button>
-            <p id="m_error" style="color:var(--red); font-size:12px; margin-top:20px; font-weight:800;"></p>
+            <button class="action-btn" onclick="checkMaster()">Authorize System</button>
+            <p id="m_msg" style="color:var(--red); font-size:11px; margin-top:20px; font-weight:800;"></p>
         </div>
     </div>
 
-    <div id="gate_user" class="auth-screen hidden">
-        <div class="auth-card">
-            <h1 class="system-title">OPERATOR</h1>
-            <p class="system-subtitle">IDENTITY VERIFICATION</p>
-            
-            <div class="field-group">
-                <input type="text" id="u_id_input" class="auth-input" placeholder="USER ID (NSID001)">
+    <div id="scr_user" class="auth-screen hidden">
+        <div class="auth-container">
+            <h1 class="sys-logo">OPERATOR</h1>
+            <p class="sys-tag">Identity Validation</p>
+            <div class="input-box">
+                <input type="text" id="u_id" class="field" placeholder="USER ID (NSID001)">
             </div>
-
-            <div class="field-group">
-                <input type="password" id="u_pass_input" class="auth-input" placeholder="PASSWORD">
-                <button class="visibility-toggle" onclick="toggleInputVisibility('u_pass_input')">👁️</button>
+            <div class="input-box">
+                <input type="password" id="u_key" class="field" placeholder="PASSWORD">
+                <button class="toggle-btn" onclick="toggleView('u_key')">👁️</button>
             </div>
-
-            <button id="login_btn" class="btn-primary" onclick="processUserAuthentication()" style="background:var(--blue);">VERIFY IDENTITY</button>
-            
-            <div style="margin-top:25px;">
-                <a href="javascript:void(0)" onclick="invokeAdminHelp()" style="color:var(--slate); font-size:11px; text-decoration:none; font-weight:700;">REQUEST ACCESS RESET</a>
-            </div>
-            <p id="u_error" style="color:var(--red); font-size:12px; margin-top:20px; font-weight:800;"></p>
+            <button class="action-btn" onclick="checkUser()" style="background-color:var(--blue);">Sign In</button>
+            <p id="u_msg" style="color:var(--red); font-size:11px; margin-top:20px; font-weight:800;"></p>
         </div>
     </div>
 
-    <div id="main_application">
-        
-        <header class="app-nav">
-            <div class="user-profile">
-                <div class="user-avatar" id="avatar_initial">A</div>
+    <main id="app_shell">
+        <header class="pwa-header">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
-                    <p style="font-size:10px; font-weight:800; color:var(--slate); text-transform:uppercase;">Active Operator</p>
-                    <p style="font-size:14px; font-weight:900;" id="display_uid">NSID000</p>
+                    <p style="font-size:9px; color:var(--slate); font-weight:900; letter-spacing:1px;">SESSION ACTIVE</p>
+                    <h2 id="disp_user" style="font-size:28px;">NSID000</h2>
                 </div>
+                <button onclick="logOut()" style="background:var(--red); border:none; color:white; padding:12px 20px; border-radius:18px; font-size:10px; font-weight:900;">EXIT</button>
             </div>
-            <button onclick="systemTermination()" style="background:var(--red); border:none; color:white; padding:10px 20px; border-radius:15px; font-size:10px; font-weight:900;">TERMINATE</button>
+            <div class="status-row">
+                <div class="status-pill"><span class="pill-val" id="cnt_local">0</span><span class="pill-lbl">Queue</span></div>
+                <div class="status-pill"><span class="pill-val" id="cnt_media">0</span><span class="pill-lbl">Media</span></div>
+                <div class="status-pill"><span class="pill-val" id="cnt_gps" style="color:var(--red);">OFF</span><span class="pill-lbl">GPS</span></div>
+            </div>
         </header>
 
-        <div class="hud-container">
-            <div class="stat-box">
-                <span class="stat-label">Offline</span>
-                <span class="stat-value" id="count_local">0</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">Photos</span>
-                <span class="stat-value" id="count_photos">0</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">GPS Stat</span>
-                <span class="stat-value" id="gps_indicator" style="color:var(--red); font-size:14px;">NO-LOCK</span>
-            </div>
-        </div>
+        <h3 class="card-title">01 / Business Entity</h3>
+        <section class="ui-card">
+            <div id="badge_id" class="id-display">NS-NEW-0000</div>
+            <label style="font-size:10px; font-weight:800; color:var(--slate); margin-bottom:8px; display:block;">FIRM NAME</label>
+            <input type="text" id="firm_name" oninput="updateNSID()" class="field" style="background:#f1f5f9; color:#0f172a; text-align:left;" placeholder="Type business name...">
+        </section>
 
-        <div class="module-header">
-            <div class="module-number">01</div>
-            <div class="module-title">Business Intelligence</div>
-        </div>
-        
-        <div class="content-card">
-            <div id="firm_id_badge" style="background:var(--dark); color:var(--green); text-align:center; padding:25px; border-radius:20px; font-family:monospace; font-size:28px; margin-bottom:25px; border:2px solid #334155;">NS-NEW-0000</div>
-            
-            <div style="margin-bottom:20px;">
-                <label style="font-size:10px; font-weight:900; color:var(--slate); text-transform:uppercase; display:block; margin-bottom:8px;">Legal Firm Name</label>
-                <input type="text" id="input_firm_name" style="width:100%; padding:18px; border-radius:15px; border:1px solid var(--border); background:var(--bg); font-size:16px;" placeholder="Enter Firm Name" oninput="generateDynamicID()">
-            </div>
+        <h3 class="card-title">02 / Geospatial Data</h3>
+        <section class="ui-card">
+            <div id="map_box"></div>
+            <button class="action-btn" style="background:var(--dark);" onclick="getPrecisionGPS()">📍 Lock Location</button>
+            <textarea id="addr_res" style="width:100%; margin-top:15px; padding:18px; border-radius:18px; border:1px solid var(--border); font-size:14px;" placeholder="Address data will appear here..."></textarea>
+        </section>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                <div>
-                    <label style="font-size:10px; font-weight:900; color:var(--slate); text-transform:uppercase; display:block; margin-bottom:8px;">Proprietor</label>
-                    <input type="text" id="input_owner" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:var(--bg);" placeholder="Name">
-                </div>
-                <div>
-                    <label style="font-size:10px; font-weight:900; color:var(--slate); text-transform:uppercase; display:block; margin-bottom:8px;">Contact No</label>
-                    <input type="tel" id="input_phone" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--border); background:var(--bg);" placeholder="10 Digits">
-                </div>
-            </div>
-        </div>
+        <h3 class="card-title">03 / Evidence Assets</h3>
+        <section class="ui-card">
+            <div class="media-scroller" id="media_shelf"></div>
+            <input type="file" id="cam_input" accept="image/*" capture="environment" style="display:none;" onchange="handleCam(this)">
+            <button class="action-btn" onclick="document.getElementById('cam_input').click()" style="background:var(--blue);">📷 Site Photo</button>
+        </section>
 
-        <div class="module-header">
-            <div class="module-number">02</div>
-            <div class="module-title">Spatial Positioning</div>
-        </div>
-
-        <div class="content-card">
-            <div id="map_display"></div>
-            <button class="btn-primary" style="background:var(--dark); margin-bottom:20px;" onclick="triggerPrecisionGPS()">📍 LOCK PRECISION GPS</button>
-            
-            <input type="hidden" id="internal_coords">
-            
-            <label style="font-size:10px; font-weight:900; color:var(--slate); text-transform:uppercase; display:block; margin-bottom:8px;">Site Address (Auto-Verified)</label>
-            <textarea id="output_address" rows="3" style="width:100%; padding:18px; border-radius:15px; border:1px solid var(--border); background:var(--bg); font-size:14px;" placeholder="Locked coordinates will generate address..."></textarea>
-        </div>
-
-        <div class="module-header">
-            <div class="module-number">03</div>
-            <div class="module-title">Visual Documentation</div>
-        </div>
-
-        <div class="content-card">
-            <div class="photo-gallery" id="photo_preview_container">
-                </div>
-            
-            <input type="file" id="camera_trigger" accept="image/*" capture="environment" style="display:none;" onchange="handleImageCapture(this)">
-            <button class="btn-primary" onclick="document.getElementById('camera_trigger').click()" style="background:var(--blue); margin-top:20px;">📷 CAPTURE GEO-TAGGED IMAGE</button>
-        </div>
-
-        <div class="action-bar">
-            <button class="btn-sync" style="background:var(--blue); color:white;" onclick="commitRecordToLocal()">💾 LOCAL SAVE</button>
-            <button class="btn-sync" style="background:var(--green); color:white;" onclick="initiateCloudPush()">🚀 CLOUD SYNC</button>
-        </div>
-
-    </div>
+        <nav class="nav-dock">
+            <button class="dock-btn" style="background:var(--blue);" onclick="saveRecord()">💾 Save</button>
+            <button class="dock-btn" style="background:var(--green);" onclick="syncCloud()">🚀 Sync</button>
+        </nav>
+    </main>
 
     <script>
         /**
-         * GLOBAL CONFIGURATIONS
-         * Location: Udaipur, Rajasthan (Central Hub)
+         * NIRMASUTRA ENGINE NSIDBS06 (Extended Version)
          */
-        const MASTER_SYSTEM_KEY = "Life4life@nsdb";
-        const UDAIPUR_GPS = { lat: 24.5854, lng: 73.7125 };
-        const AUTHORIZED_RADIUS_KM = 1.5; // Roughly 150km safety radius
-
-        let leafMap, leafMarker, capturedAssets = [], localDatabase;
-        let currentUser = null;
-
-        // --- 01. INITIALIZATION SEQUENCE ---
-        window.addEventListener('load', function() {
-            console.log("NSIDBS06: System Boot Initiated");
-            setupIndexedDB();
-            checkExistingSession();
-        });
-
-        function setupIndexedDB() {
-            const dbRequest = indexedDB.open("NSIDBS_MASTER_PROD", 8);
-            
-            dbRequest.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains("site_records")) {
-                    db.createObjectStore("site_records", { keyPath: "id", autoIncrement: true });
-                }
-                console.log("NSIDBS06: Database Schema Updated");
-            };
-
-            dbRequest.onsuccess = (event) => {
-                localDatabase = event.target.result;
-                refreshDashboardMetrics();
-            };
-
-            dbRequest.onerror = () => {
-                alert("CRITICAL ERROR: Browser Database Access Denied.");
-            };
-        }
-
-        // --- 02. SECURITY LOGIC (VISIBILITY & GATES) ---
         
-        function toggleInputVisibility(elementId) {
-            const inputField = document.getElementById(elementId);
-            if (inputField.type === "password") {
-                inputField.type = "text";
-            } else {
-                inputField.type = "password";
-            }
-        }
+        // Configuration
+        const MASTER_SECRET = "Life4life@nsid";
+        let localDB, appMap, userMarker, mediaList = [];
 
-        function verifyMasterGate() {
-            const rawVal = document.getElementById('m_pass_input').value;
-            const input = rawVal.trim(); // Handle accidental spaces
-            const errorLabel = document.getElementById('m_error');
-
-            if (input === MASTER_SYSTEM_KEY) {
-                sessionStorage.setItem('ns_master_clearance', 'AUTHORIZED');
-                document.getElementById('gate_master').classList.add('hidden');
-                document.getElementById('gate_user').classList.remove('hidden');
-            } else {
-                errorLabel.innerText = "ACCESS DENIED: INVALID SYSTEM KEY";
-                document.getElementById('m_pass_input').style.borderColor = "var(--red)";
-                setTimeout(() => {
-                    errorLabel.innerText = "";
-                    document.getElementById('m_pass_input').style.borderColor = "#334155";
-                }, 3000);
-            }
-        }
-
-        async function processUserAuthentication() {
-            const uid = document.getElementById('u_id_input').value.trim();
-            const pass = document.getElementById('u_pass_input').value.trim();
-            const btn = document.getElementById('login_btn');
-            const error = document.getElementById('u_error');
-
-            if (!uid || !pass) {
-                error.innerText = "Credentials required.";
-                return;
-            }
-
-            btn.innerText = "VERIFYING RADIUS...";
-            btn.disabled = true;
-
-            // SECURITY LAYER 5: GPS RADIUS CHECK
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-
-                    // Radius Calculation (Pythagorean estimate for localized radius)
-                    const diffLat = lat - UDAIPUR_GPS.lat;
-                    const diffLng = lng - UDAIPUR_GPS.lng;
-                    const distance = Math.sqrt(Math.pow(diffLat, 2) + Math.pow(diffLng, 2));
-
-                    if (distance > AUTHORIZED_RADIUS_KM) {
-                        alert("SECURITY LOCK: Outside operational radius (Rajasthan). Access restricted.");
-                        btn.innerText = "VERIFY IDENTITY";
-                        btn.disabled = false;
-                        return;
-                    }
-
-                    // LAYER 2: Credential Check
-                    const validUsers = {
-                        "NSID001": "Life4life@01",
-                        "NSID002": "Life4life@02",
-                        "NSID003": "Life4life@03",
-                        "NSID004": "Life4life@04",
-                        "NSID005": "Life4life@05"
-                    };
-
-                    if (validUsers[uid] === pass) {
-                        launchApplicationSession(uid);
-                    } else {
-                        error.innerText = "INVALID USER ID OR PASSWORD";
-                        btn.innerText = "VERIFY IDENTITY";
-                        btn.disabled = false;
-                    }
-                },
-                (err) => {
-                    alert("SECURITY REQUIREMENT: GPS hardware must be active for login.");
-                    btn.innerText = "VERIFY IDENTITY";
-                    btn.disabled = false;
-                },
-                { enableHighAccuracy: true }
-            );
-        }
-
-        function launchApplicationSession(uid) {
-            currentUser = uid;
-            sessionStorage.setItem('ns_user_active', uid);
-            
-            document.getElementById('gate_user').classList.add('hidden');
-            document.getElementById('main_application').style.display = 'block';
-            
-            document.getElementById('display_uid').innerText = uid;
-            document.getElementById('avatar_initial').innerText = uid.charAt(4);
-            
-            initializeMapModule();
-        }
-
-        function checkExistingSession() {
-            const master = sessionStorage.getItem('ns_master_clearance');
-            const user = sessionStorage.getItem('ns_user_active');
-            
-            if (master === 'AUTHORIZED' && user) {
-                document.getElementById('gate_master').classList.add('hidden');
-                launchApplicationSession(user);
-            } else if (master === 'AUTHORIZED') {
-                document.getElementById('gate_master').classList.add('hidden');
-                document.getElementById('gate_user').classList.remove('hidden');
-            }
-        }
-
-        // --- 03. CORE MAP LOGIC ---
-
-        function initializeMapModule() {
-            setTimeout(() => {
-                if (leafMap) return;
-                
-                leafMap = L.map('map_display').setView([24.5854, 73.7125], 13);
-                
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap'
-                }).addTo(leafMap);
-
-                leafMap.on('click', (e) => {
-                    updateMarkerPosition(e.latlng.lat, e.latlng.lng);
-                });
-            }, 600);
-        }
-
-        async function triggerPrecisionGPS() {
-            if (!navigator.geolocation) return alert("Browser does not support GPS.");
-
-            navigator.geolocation.getCurrentPosition((p) => {
-                const lat = p.coords.latitude;
-                const lng = p.coords.longitude;
-                updateMarkerPosition(lat, lng);
-            }, (err) => {
-                alert("GPS Error: Ensure high-accuracy mode is on.");
-            }, { enableHighAccuracy: true });
-        }
-
-        function updateMarkerPosition(lat, lng) {
-            const coords = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            document.getElementById('internal_coords').value = coords;
-            document.getElementById('gps_indicator').innerText = "SECURED";
-            document.getElementById('gps_indicator').style.color = "var(--green)";
-
-            if (leafMarker) leafMap.removeLayer(leafMarker);
-            leafMarker = L.marker([lat, lng], { draggable: true }).addTo(leafMap);
-            leafMap.setView([lat, lng], 16);
-
-            fetchReverseGeocode(lat, lng);
-        }
-
-        async function fetchReverseGeocode(lat, lng) {
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                const data = await response.json();
-                if (data.display_name) {
-                    document.getElementById('output_address').value = data.display_name;
+        /**
+         * Initialize IndexedDB with versioning logic
+         */
+        const bootStorage = () => {
+            const request = indexedDB.open("NS_INTEL_VAULT", 15);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains("records")) {
+                    db.createObjectStore("records", { keyPath: "id", autoIncrement: true });
                 }
-            } catch (e) {
-                console.warn("Reverse Geocoding failed or offline.");
+            };
+            request.onsuccess = (e) => {
+                localDB = e.target.result;
+                updateMetrics();
+            };
+        };
+
+        /**
+         * Security Handlers
+         */
+        function toggleView(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function checkMaster() {
+            const input = document.getElementById('m_key').value.trim();
+            if (input === MASTER_SECRET) {
+                sessionStorage.setItem('ns_m', 'OK');
+                document.getElementById('scr_master').classList.add('hidden');
+                document.getElementById('scr_user').classList.remove('hidden');
+            } else {
+                handleErr('m_key', 'm_msg');
             }
         }
 
-        // --- 04. MEDIA HANDLING ---
+        function checkUser() {
+            const id = document.getElementById('u_id').value.trim();
+            const pw = document.getElementById('u_key').value.trim();
+            const db = { "NSID001": "Life4life@01", "NSID002": "Life4life@02", "NSID003": "Life4life@03" };
 
-        function handleImageCapture(input) {
-            const file = input.files[0];
-            if (!file) return;
+            if (db[id] === pw) {
+                sessionStorage.setItem('ns_u', id);
+                launchDashboard(id);
+            } else {
+                handleErr('u_key', 'u_msg');
+            }
+        }
 
+        function launchDashboard(uid) {
+            document.getElementById('scr_user').classList.add('hidden');
+            document.getElementById('app_shell').style.display = 'block';
+            document.getElementById('disp_user').innerText = uid;
+            
+            setTimeout(() => {
+                appMap = L.map('map_box').setView([24.5854, 73.7125], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(appMap);
+            }, 300);
+        }
+
+        function handleErr(inp, msg) {
+            const el = document.getElementById(inp);
+            el.classList.add('shake');
+            document.getElementById(msg).innerText = "ACCESS DENIED";
+            setTimeout(() => {
+                el.classList.remove('shake');
+                document.getElementById(msg).innerText = "";
+            }, 1500);
+        }
+
+        /**
+         * Feature Logic
+         */
+        function updateNSID() {
+            const name = document.getElementById('firm_name').value;
+            const prefix = name.substring(0,3).toUpperCase() || "NEW";
+            const rand = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('badge_id').innerText = `NS-${prefix}-${rand}`;
+        }
+
+        function getPrecisionGPS() {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude, longitude } = pos.coords;
+                if(userMarker) appMap.removeLayer(userMarker);
+                userMarker = L.marker([latitude, longitude]).addTo(appMap);
+                appMap.setView([latitude, longitude], 17);
+                document.getElementById('cnt_gps').innerText = "LOCK";
+                document.getElementById('cnt_gps').style.color = "var(--green)";
+                
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                    .then(r => r.json()).then(d => document.getElementById('addr_res').value = d.display_name);
+            }, () => alert("Enable GPS"), { enableHighAccuracy: true });
+        }
+
+        function handleCam(input) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Optimization: Resize to 1200px max width
-                    const scale = 1200 / img.width;
-                    canvas.width = 1200;
-                    canvas.height = img.height * scale;
-                    
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    const asset = {
-                        id: Date.now(),
-                        data: canvas.toDataURL('image/jpeg', 0.8),
-                        gps: document.getElementById('internal_coords').value || "NO_GPS",
-                        time: new Date().toLocaleTimeString()
-                    };
-
-                    capturedAssets.push(asset);
-                    renderPhotoGrid();
-                };
-                img.src = e.target.result;
+                mediaList.push(e.target.result);
+                renderMedia();
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(input.files[0]);
         }
 
-        function renderPhotoGrid() {
-            const container = document.getElementById('photo_preview_container');
-            container.innerHTML = capturedAssets.map(asset => `
-                <div class="photo-item">
-                    <img src="${asset.data}">
-                    <div class="geo-overlay">
-                        📍 ${asset.gps}<br>🕒 ${asset.time}
-                        <button onclick="removeAsset(${asset.id})" style="float:right; background:var(--red); border:none; color:white; border-radius:50%; width:15px; height:15px; cursor:pointer;">×</button>
-                    </div>
-                </div>
-            `).join('');
-            
-            document.getElementById('count_photos').innerText = capturedAssets.length;
+        function renderMedia() {
+            const shelf = document.getElementById('media_shelf');
+            shelf.innerHTML = mediaList.map(m => `<img src="${m}" class="img-preview">`).join('');
+            document.getElementById('cnt_media').innerText = mediaList.length;
         }
 
-        function removeAsset(id) {
-            capturedAssets = capturedAssets.filter(a => a.id !== id);
-            renderPhotoGrid();
+        /**
+         * Persistence & Lifecycle
+         */
+        function saveRecord() {
+            const store = localDB.transaction("records", "readwrite").objectStore("records");
+            store.add({
+                firm: document.getElementById('firm_name').value,
+                nsid: document.getElementById('badge_id').innerText,
+                media: mediaList,
+                date: new Date().toISOString()
+            });
+            alert("RECORD COMMITTED");
+            location.reload();
         }
 
-        // --- 05. DATA STORAGE & SYNC ---
-
-        function generateDynamicID() {
-            const name = document.getElementById('input_firm_name').value;
-            const prefix = name.length >= 3 ? name.substring(0,3).toUpperCase() : "NEW";
-            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-            document.getElementById('firm_id_badge').innerText = `NS-${prefix}-${randomSuffix}`;
+        function syncCloud() { alert("Establishing Cloud Tunnel..."); }
+        function logOut() { sessionStorage.clear(); location.reload(); }
+        function updateMetrics() {
+            const store = localDB.transaction("records", "readonly").objectStore("records");
+            const count = store.count();
+            count.onsuccess = () => document.getElementById('cnt_local').innerText = count.result;
         }
 
-        function commitRecordToLocal() {
-            const firmName = document.getElementById('input_firm_name').value;
-            const gps = document.getElementById('internal_coords').value;
-
-            if (!firmName || !gps) {
-                alert("CRITICAL ERROR: Firm Name and GPS Lock are required for commitment.");
-                return;
+        window.onload = () => {
+            bootStorage();
+            if(sessionStorage.getItem('ns_m') && sessionStorage.getItem('ns_u')) {
+                document.getElementById('scr_master').classList.add('hidden');
+                launchDashboard(sessionStorage.getItem('ns_u'));
             }
-
-            const payload = {
-                uid: document.getElementById('firm_id_badge').innerText,
-                firm: firmName,
-                owner: document.getElementById('input_owner').value,
-                phone: document.getElementById('input_phone').value,
-                gps: gps,
-                address: document.getElementById('output_address').value,
-                media: capturedAssets,
-                operator: currentUser,
-                timestamp: new Date().toISOString()
-            };
-
-            const tx = localDatabase.transaction("site_records", "readwrite");
-            const store = tx.objectStore("site_records");
-            
-            store.add(payload);
-
-            tx.oncomplete = () => {
-                alert("COMMIT SUCCESS: Record secured in Local encrypted storage.");
-                location.reload();
-            };
-        }
-
-        function refreshDashboardMetrics() {
-            if (!localDatabase) return;
-            const tx = localDatabase.transaction("site_records", "readonly");
-            const store = tx.objectStore("site_records");
-            const countReq = store.count();
-            
-            countReq.onsuccess = () => {
-                document.getElementById('count_local').innerText = countReq.result;
-            };
-        }
-
-        function initiateCloudPush() {
-            alert("Establishing SSL Tunnel to NirmaSutra Mainframe... [Sync logic ready for API URL]");
-        }
-
-        function systemTermination() {
-            if (confirm("TERMINATE SESSION: This will clear temporary clearance. Proceed?")) {
-                sessionStorage.clear();
-                location.reload();
-            }
-        }
-
-        function invokeAdminHelp() {
-            const user = document.getElementById('u_id_input').value || "UNKNOWN";
-            window.open(`https://wa.me/91XXXXXXXXXX?text=URGENT_ACCESS_REQUEST_FOR_${user}`);
-        }
-
+        };
     </script>
 </body>
 </html>
