@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NirmaSutra InfraDepot | Intel</title>
+    <title>NirmaSutra InfraDepot | Pro Intel</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -19,28 +19,27 @@
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; }
         
-        /* Layout Additions */
         #app_root, #login_zone, #data_entry_zone, #view_zone { display: none; flex-direction: column; gap: 15px; }
         .pass-wrapper { position: relative; }
         .toggle-btn { position: absolute; right: 10px; top: 12px; background: none; border: none; font-size: 10px; color: var(--blue); cursor: pointer; font-weight: bold; }
         
-        /* Base Styling Restored */
-        .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .stat-card { background: var(--dark); color: white; padding: 10px; border-radius: 8px; text-align: center; }
-        .stat-card b { font-size: 16px; color: var(--orange); }
+        .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .stat-card { background: var(--dark); color: white; padding: 8px; border-radius: 8px; text-align: center; font-size: 10px; }
+        .stat-card b { font-size: 14px; color: var(--orange); }
         .full-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
         .variety-container { display: none; background: #fffcf0; padding: 12px; border: 1px dashed var(--orange); border-radius: 8px; margin-top: 10px; }
-        .check-pill { display: flex; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .check-pill { display: flex; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; }
         .check-pill input { width: 18px; height: 18px; margin-right: 8px; margin-bottom: 0; }
+        
         .trans-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
         .counter-ctrl { display: flex; align-items: center; gap: 10px; }
         .c-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--dark); color: white; font-weight: bold; cursor: pointer; }
         .c-val { font-family: monospace; font-weight: bold; width: 20px; text-align: center; }
 
-        /* Data Table Addition */
-        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
-        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
-        th { background: var(--dark); color: white; }
+        /* Preview Photo Styling */
+        .preview-item { position: relative; width: 100%; aspect-ratio: 1/1; }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+        .remove-photo { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -49,7 +48,7 @@
     
     <div id="login_zone" class="card">
         <h3>🔑 Staff Authentication</h3>
-        <label>Select ID</label>
+        <label>Staff ID</label>
         <select id="staff_id_input">
             <option value="">-- Choose ID --</option>
             <option value="NSID001">NSID001</option>
@@ -64,44 +63,78 @@
             <button type="button" class="toggle-btn" onclick="togglePass('staff_pass_input')">SHOW</button>
         </div>
         <button class="btn" onclick="handleLogin()" style="background: var(--dark);">Unlock Portal</button>
-        <button onclick="requestReset()" style="background:none; border:none; color:var(--blue); font-size:10px; margin-top:10px; text-decoration:underline; cursor:pointer;">Forgot Password?</button>
     </div>
 
     <div id="data_entry_zone">
         <div class="card">
             <div class="dash-grid">
-                <div class="stat-card"><small>Entries</small><b id="count_all">0</b></div>
-                <div class="stat-card"><small>GPS</small><b id="count_gps">0</b></div>
-                <div class="stat-card" onclick="toggleView()" style="cursor:pointer; background:var(--blue);"><small>View</small><b>DATA</b></div>
+                <div class="stat-card"><small>Entries</small><br><b id="count_all">0</b></div>
+                <div class="stat-card"><small>GPS</small><br><b id="count_gps">No</b></div>
+                <div class="stat-card"><small>Photos</small><br><b id="count_pics">0</b></div>
+                <div class="stat-card" onclick="toggleView()" style="cursor:pointer; background:var(--blue);"><small>View</small><br><b>DATA</b></div>
             </div>
         </div>
 
         <div class="card">
-            <h3>1. Tracking ID</h3>
-            <div id="sup_id" style="background:#0f172a; color:#22c55e; font-family:monospace; font-size:20px; text-align:center; padding:15px; border-radius:8px; font-weight:bold;">NS-GENERATING</div>
+            <h3>1. Identity & Verification</h3>
+            <div id="sup_id" style="background:#0f172a; color:#22c55e; font-family:monospace; font-size:20px; text-align:center; padding:15px; border-radius:8px; font-weight:bold; margin-bottom:10px;">NS-GENERATING</div>
+            <label>Verification Status</label>
+            <select id="ver_status">
+                <option value="Not Verified">🔴 Not Verified (Default)</option>
+                <option value="Field Visit Verified">🟠 Field Visit Verified</option>
+                <option value="Digitally Verified (WhatsApp)">🟢 Digitally Verified (WA)</option>
+            </select>
         </div>
 
         <div class="card">
-            <h3>2. Entity Info</h3>
+            <h3>2. Entity Information</h3>
             <label>Firm Name</label><input type="text" id="firm_name" oninput="updateID()">
+            <label>Owner Name</label><input type="text" id="owner_name">
             <div class="full-grid">
-                <div><label>Phone</label><input type="tel" id="phone" oninput="autoWA()"></div>
+                <div><label>Phone</label><input type="tel" id="phone" oninput="autoWA('phone','whatsapp')"></div>
                 <div><label>WhatsApp</label><input type="tel" id="whatsapp"></div>
             </div>
+            <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+            <label>Contact Person (Ordering)</label><input type="text" id="contact_person">
+            <div class="full-grid">
+                <div><label>CP Phone</label><input type="tel" id="cp_phone" oninput="autoWA('cp_phone','cp_whatsapp')"></div>
+                <div><label>CP WhatsApp</label><input type="tel" id="cp_whatsapp"></div>
+            </div>
         </div>
 
         <div class="card">
-            <h3>3. Location & Site Photos</h3>
-            <div id="map" style="height:150px; border-radius:10px; margin-bottom:10px;"></div>
-            <button class="btn" style="background:var(--dark);" onclick="getGPS()">📍 CAPTURE GPS</button>
+            <h3>3. Smart Location & Photos</h3>
+            <div id="map" style="height:180px; border-radius:10px; margin-bottom:10px;"></div>
+            <div class="full-grid">
+                <button class="btn" style="background:var(--dark); font-size:11px;" onclick="getGPS()">📍 LOCK GPS</button>
+                <button class="btn" style="background:var(--blue); font-size:11px;" onclick="getAddressFromGPS()">📝 FETCH ADDRESS</button>
+            </div>
             <input type="hidden" id="gps_val">
+            <label>Business Address</label>
+            <textarea id="address" rows="2" placeholder="Click 'Fetch' or type..."></textarea>
+            
             <input type="file" id="img_in" accept="image/*" capture="environment" multiple hidden onchange="handlePhotos(this)">
-            <div style="border:2px dashed var(--slate); padding:15px; text-align:center; border-radius:10px; cursor:pointer; margin-top:10px;" onclick="document.getElementById('img_in').click()">📸 TAP TO ADD SITE PHOTOS</div>
+            <div style="border:2px dashed var(--slate); padding:15px; text-align:center; border-radius:10px; cursor:pointer; margin-top:10px;" onclick="document.getElementById('img_in').click()">
+                📸 <b>TAP TO ATTACH SITE PHOTOS</b><br><small id="photo_label">No photos selected</small>
+            </div>
             <div id="preview_zone" style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-top:10px;"></div>
         </div>
 
         <div class="card">
-            <h3>4. Materials Intelligence</h3>
+            <h3>4. Supply Area</h3>
+            <div class="check-pill" style="margin-bottom:10px; background:var(--dark); color:white;">
+                <input type="checkbox" id="area_udaipur" onchange="toggleWholeUdaipur()"> <span>WHOLE UDAIPUR (Select All)</span>
+            </div>
+            <div class="full-grid" id="area_grid">
+                <div class="check-pill"><input type="checkbox" class="area-item" value="Sector 3-5"><span>Sector 3-5</span></div>
+                <div class="check-pill"><input type="checkbox" class="area-item" value="Sector 11-14"><span>Sector 11-14</span></div>
+                <div class="check-pill"><input type="checkbox" class="area-item" value="Sukher"><span>Sukher</span></div>
+                <div class="check-pill"><input type="checkbox" class="area-item" value="Gordhan Vilas"><span>Gordhan Vilas</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>5. Materials (Top 10 Brands)</h3>
             <div class="full-grid">
                 <div class="check-pill"><input type="checkbox" id="chk_S" onchange="toggleBox('sand')"><span>Sand</span></div>
                 <div class="check-pill"><input type="checkbox" id="chk_C" onchange="toggleBox('cement')"><span>Cement</span></div>
@@ -117,7 +150,7 @@
         </div>
 
         <div class="card">
-            <h3>5. Fleet counters</h3>
+            <h3>6. Fleet Counters</h3>
             <select id="transport_status" onchange="toggleTransport()">
                 <option value="No">No Vehicles</option>
                 <option value="Yes">Yes (List Fleet)</option>
@@ -143,8 +176,8 @@
                 <button onclick="toggleView()" style="background:var(--red); color:white; border:none; border-radius:4px; padding:5px 10px;">Back</button>
             </div>
             <div style="overflow-x:auto;">
-                <table id="history_table">
-                    <thead><tr><th>ID</th><th>Firm</th><th>Materials</th><th>Fleet</th></tr></thead>
+                <table style="width:100%; border-collapse:collapse; font-size:10px; margin-top:10px;">
+                    <thead><tr style="background:var(--dark); color:white;"><th>ID</th><th>Firm</th><th>Status</th></tr></thead>
                     <tbody id="table_body"></tbody>
                 </table>
             </div>
@@ -153,19 +186,20 @@
 </div>
 
 <script>
-    // --- 🔐 MASTER CONFIG ---
-    const MASTER_KEY = "Life4life@nsid";
-    const ADMIN_WA = "91XXXXXXXXXX"; 
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyi81jA2H036vY-f-nSj4P44PzE0eE-yW72tT3o_KogC7GIdzE6X6_hRshqVvG5V15N/exec"; 
-
+    const MASTER_KEY = "Life4life@nsid";
+    const ADMIN_WA = "91XXXXXXXXXX";
     const DEFAULTS = { "NSID001": "Nirma@001", "NSID002": "Nirma@002", "NSID003": "Nirma@003", "NSID004": "Nirma@004", "NSID005": "Nirma@005" };
+    
     const VARIETIES = {
-        sand: ["M-Sand", "P-Sand", "River Sand", "Crushed Sand"],
-        cement: ["UltraTech", "Ambuja", "JK Lakshmi", "Wonder"],
-        bricks: ["Red Bricks", "AAC Blocks", "Fly Ash"],
-        tmt: ["Tata Tiscon", "Jindal", "Kamdhenu"],
-        aggregate: ["10mm", "20mm", "40mm"]
+        sand: ["M-Sand", "P-Sand", "River Sand", "Crushed Sand", "Banas Sand"],
+        cement: ["UltraTech", "Ambuja", "JK Lakshmi", "Wonder", "JK Super", "ACC", "Shree Cement", "Birla Uttam", "Binani", "Sanghi"],
+        bricks: ["Red Bricks", "AAC Blocks", "CLC Blocks", "Fly Ash", "Cement Bricks"],
+        tmt: ["Tata Tiscon", "Jindal Neosteel", "Kamdhenu", "Rathi", "JSW Neosteel", "Sail", "Vizag Steel", "Shree TMT", "Asian TMT", "Priyanka TMT"],
+        aggregate: ["10mm", "20mm", "40mm", "Grit", "Dust"]
     };
+
+    let db, map, marker, photos = [];
 
     window.onload = function() {
         if (sessionStorage.getItem("nirma_gate") !== "true") {
@@ -178,11 +212,9 @@
     function showApp() { 
         document.getElementById('app_root').style.display = 'block'; 
         document.getElementById('login_zone').style.display = 'flex'; 
-        renderVarieties(); 
-        initDB(); 
+        renderVarieties(); initDB(); 
     }
 
-    // --- SECURITY ADDITIONS ---
     function togglePass(id) {
         let x = document.getElementById(id);
         x.type = x.type === "password" ? "text" : "password";
@@ -192,31 +224,81 @@
     function handleLogin() {
         const id = document.getElementById('staff_id_input').value;
         const pass = document.getElementById('staff_pass_input').value;
-        const stored = localStorage.getItem("pass_" + id) || DEFAULTS[id];
-        if (id && pass === stored) {
+        if (id && pass === (localStorage.getItem("pass_" + id) || DEFAULTS[id])) {
             document.getElementById('login_zone').style.display = 'none';
             document.getElementById('data_entry_zone').style.display = 'flex';
-            updateID(); initMap(); loadTable();
+            updateID(); initMap();
         } else { alert("Login Error"); }
     }
 
-    function requestReset() {
-        const id = document.getElementById('staff_id_input').value;
-        if(!id) return alert("Select Staff ID");
-        window.open(`https://wa.me/${ADMIN_WA}?text=Password%20Reset%20${id}`, '_blank');
+    // --- PHOTO LOGIC (NEW ADDITION) ---
+    function handlePhotos(input) {
+        const zone = document.getElementById('preview_zone');
+        Array.from(input.files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const photoId = Date.now() + index;
+                photos.push({id: photoId, data: e.target.result});
+                updatePhotoUI();
+            };
+            reader.readAsDataURL(file);
+        });
+        input.value = ""; // Reset input
     }
 
-    // --- BASE VERSION CORE FUNCTIONS ---
-    let db, map, marker, photos = [];
-    function initDB() {
-        const req = indexedDB.open("InfraDepotDB", 1);
-        req.onupgradeneeded = e => { e.target.result.createObjectStore("suppliers", { keyPath: "supplier_id" }); };
-        req.onsuccess = e => { db = e.target.result; updateCount(); };
+    function removePhoto(id) {
+        photos = photos.filter(p => p.id !== id);
+        updatePhotoUI();
     }
 
+    function updatePhotoUI() {
+        const zone = document.getElementById('preview_zone');
+        zone.innerHTML = photos.map(p => `
+            <div class="preview-item">
+                <img src="${p.data}">
+                <button class="remove-photo" onclick="removePhoto(${p.id})">×</button>
+            </div>
+        `).join('');
+        document.getElementById('count_pics').innerText = photos.length;
+        document.getElementById('photo_label').innerText = photos.length > 0 ? `${photos.length} photos attached` : "No photos selected";
+    }
+
+    // --- MAP & GPS ---
     function initMap() { 
         map = L.map('map').setView([24.5854, 73.7125], 13); 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
+        map.on('click', e => updateMarker(e.latlng.lat, e.latlng.lng));
+    }
+
+    function updateMarker(lat, lon) {
+        if(marker) map.removeLayer(marker);
+        marker = L.marker([lat, lon]).addTo(map);
+        document.getElementById('gps_val').value = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+        document.getElementById('count_gps').innerText = "Yes";
+    }
+
+    function getGPS() { 
+        navigator.geolocation.getCurrentPosition(p => { 
+            updateMarker(p.coords.latitude, p.coords.longitude);
+            map.setView([p.coords.latitude, p.coords.longitude], 16);
+        }); 
+    }
+
+    async function getAddressFromGPS() {
+        const gps = document.getElementById('gps_val').value;
+        if(!gps) return alert("Lock GPS first!");
+        const [lat, lon] = gps.split(',');
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const data = await res.json();
+            document.getElementById('address').value = data.display_name;
+        } catch(e) { alert("Fetch failed. Type manually."); }
+    }
+
+    // --- OTHER UI LOGIC ---
+    function toggleWholeUdaipur() {
+        const check = document.getElementById('area_udaipur').checked;
+        document.querySelectorAll('.area-item').forEach(i => i.checked = check);
     }
 
     function renderVarieties() {
@@ -243,30 +325,15 @@
     }
 
     function updateID() { document.getElementById('sup_id').innerText = "NS-" + Date.now().toString().slice(-6); }
-    function autoWA() { document.getElementById('whatsapp').value = document.getElementById('phone').value; }
+    function autoWA(p, w) { document.getElementById(w).value = document.getElementById(p).value; }
 
-    function getGPS() { 
-        navigator.geolocation.getCurrentPosition(p => { 
-            document.getElementById('gps_val').value = `${p.coords.latitude},${p.coords.longitude}`;
-            if(marker) map.removeLayer(marker);
-            marker = L.marker([p.coords.latitude, p.coords.longitude]).addTo(map);
-            map.setView([p.coords.latitude, p.coords.longitude], 16);
-            document.getElementById('count_gps').innerText = "1";
-        }); 
+    // --- DB & SYNC ---
+    function initDB() {
+        const req = indexedDB.open("InfraDepotDB", 1);
+        req.onupgradeneeded = e => { e.target.result.createObjectStore("suppliers", { keyPath: "supplier_id" }); };
+        req.onsuccess = e => { db = e.target.result; updateCount(); };
     }
 
-    function handlePhotos(input) {
-        Array.from(input.files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = e => {
-                photos.push(e.target.result);
-                document.getElementById('preview_zone').innerHTML += `<img src="${e.target.result}" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:6px;">`;
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    // --- TABLE VIEW ADDITION ---
     function toggleView() {
         const entry = document.getElementById('data_entry_zone');
         const view = document.getElementById('view_zone');
@@ -276,45 +343,43 @@
 
     function loadTable() {
         const tx = db.transaction("suppliers", "readonly");
-        const body = document.getElementById('table_body');
-        body.innerHTML = "";
+        const body = document.getElementById('table_body'); body.innerHTML = "";
         tx.objectStore("suppliers").getAll().onsuccess = e => {
             e.target.result.forEach(row => {
-                body.innerHTML += `<tr><td>${row.supplier_id}</td><td>${row.firm_name}</td><td>${row.mats}</td><td>${row.flt}</td></tr>`;
+                body.innerHTML += `<tr><td>${row.supplier_id}</td><td>${row.firm_name}</td><td>${row.status}</td></tr>`;
             });
         };
     }
 
-    // --- LIVE SYNC ADDITION ---
     async function saveAndAutoSync() {
         const btn = document.getElementById('sub_btn');
         const record = {
             supplier_id: document.getElementById('sup_id').innerText,
+            status: document.getElementById('ver_status').value,
             firm_name: document.getElementById('firm_name').value,
-            staff: document.getElementById('staff_id_input').value,
-            mats: Array.from(document.querySelectorAll('.var-item:checked')).map(i => i.value).join(", "),
-            flt: `T:${document.getElementById('v1').innerText}, M:${document.getElementById('v2').innerText}, D:${document.getElementById('v4').innerText}`
+            owner: document.getElementById('owner_name').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            cp_wa: document.getElementById('cp_whatsapp').value,
+            address: document.getElementById('address').value,
+            gps: document.getElementById('gps_val').value,
+            supply_areas: Array.from(document.querySelectorAll('.area-item:checked')).map(i => i.value).join(", "),
+            materials: Array.from(document.querySelectorAll('.var-item:checked')).map(i => i.value).join(", "),
+            fleet: `T:${document.getElementById('v1').innerText}, MT:${document.getElementById('v2').innerText}, D:${document.getElementById('v4').innerText}`,
+            photo_count: photos.length,
+            timestamp: new Date().toLocaleString()
         };
 
-        if(!record.firm_name) return alert("Firm Name Required");
+        if(!record.firm_name || !record.address) return alert("Firm Name & Address Required");
         btn.disabled = true; btn.innerText = "SYNCING...";
 
         try {
-            // Save Locally First
             const tx = db.transaction("suppliers", "readwrite");
             tx.objectStore("suppliers").put(record);
-            
-            // Sync to Google
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(record)
-            });
-            alert("✅ Synced Successfully!");
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(record) });
+            alert("✅ Data Synced to Cloud!");
             location.reload();
         } catch (e) {
-            alert("⚠️ Saved Locally (Network Offline)");
+            alert("⚠️ Saved Locally Only.");
             btn.disabled = false; btn.innerText = "RETRY SYNC";
         }
     }
