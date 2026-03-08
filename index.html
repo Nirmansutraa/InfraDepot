@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nirmansutra InfraDepot | Secure Intel</title>
+    <title>NirmaSutra InfraDepot | Secure Intel</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ff6a00">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/otplib/12.0.1/otplib-browser.js"></script>
 
     <style>
         :root { --orange: #ff6a00; --bg: #f1f5f9; --green: #10b981; --dark: #0f172a; --slate: #64748b; --red: #ef4444; --blue: #3b82f6; }
@@ -23,54 +20,64 @@
         h3 { margin: 0 0 12px 0; color: var(--dark); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-left: 4px solid var(--orange); padding-left: 8px; }
         label { font-size: 10px; font-weight: 700; color: var(--slate); display: block; margin-bottom: 4px; text-transform: uppercase; }
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-save { background: var(--green); color: white; }
-        .btn-sync { background: var(--blue); color: white; }
-        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.9); z-index: 10000; color: white; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--orange); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; }
+        .btn-save { background: var(--green); }
+        .btn-sync { background: var(--blue); }
         .id-box { background: #0f172a; color: #22c55e; font-family: monospace; font-size: 20px; text-align: center; padding: 15px; border-radius: 8px; font-weight: bold; }
         
-        /* 🔐 Lock State CSS */
+        /* State Control Zones */
         #app_root { display: none; }
-        #data_entry_zone { display: none; flex-direction: column; gap: 15px; }
+        #login_zone, #password_reset_zone, #admin_zone, #data_entry_zone { display: none; flex-direction: column; gap: 15px; }
+
+        /* Legacy Grid Styles */
         .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .stat-card { background: var(--dark); color: white; padding: 10px; border-radius: 8px; text-align: center; }
         .stat-card b { font-size: 16px; color: var(--orange); }
         .full-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .variety-container { display: none; background: #fffcf0; padding: 12px; border: 1px dashed var(--orange); border-radius: 8px; }
         .check-pill { display: flex; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .check-pill input { width: 18px; height: 18px; margin-right: 8px; }
-        .thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 6px; }
     </style>
 </head>
 <body>
 
-<div id="loader"><div class="spinner"></div><p>Processing...</p></div>
-
 <div class="container" id="app_root">
     
-    <div class="card" style="border: 2px solid var(--blue);">
-        <h3>🔑 Staff Identity Verification</h3>
-        <div id="auth_inputs">
-            <label>Staff ID</label>
-            <input type="text" id="staff_id_input" placeholder="NSID001">
-            <label>6-Digit Authenticator Code</label>
-            <input type="number" id="otp_input" placeholder="000000" pattern="\d*">
-            <button class="btn" id="verify_btn" onclick="validateTOTP()" style="background: var(--dark); color: white;">Verify & Unlock Form</button>
+    <div id="login_zone" class="card">
+        <h3>🔑 Staff Authentication</h3>
+        <label>Staff ID</label>
+        <input type="text" id="staff_id_input" placeholder="NSID001">
+        <label>Password</label>
+        <input type="password" id="staff_pass_input" placeholder="••••••">
+        <button class="btn" onclick="handleLogin()" style="background: var(--dark);">Login & Unlock</button>
+        
+        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+            <button onclick="requestReset()" style="background:none; border:none; color:var(--blue); font-size:10px; cursor:pointer; text-decoration:underline;">Forgot Password?</button>
+            <button onclick="toggleAdmin()" style="background:none; border:none; color:var(--slate); font-size:10px; cursor:pointer; text-decoration:underline;">Admin Settings</button>
         </div>
-        <p id="auth_msg" style="font-size: 11px; color: var(--slate); font-weight: bold; margin-top: 10px; text-align: center;">Form is currently locked.</p>
+        <p id="auth_msg" style="font-size: 11px; color: var(--red); text-align: center; margin-top: 10px; font-weight: bold;"></p>
     </div>
 
-    <div class="card">
-        <h3>1. Tracking ID</h3>
-        <div id="sup_id" class="id-box">ID-GENERATING</div>
+    <div id="password_reset_zone" class="card" style="border: 2px solid var(--orange);">
+        <h3>🆕 Security Update Required</h3>
+        <p style="font-size: 12px; color: var(--slate); margin-bottom: 15px;">You are using a default password. Set a custom password to proceed.</p>
+        <label>New Password</label>
+        <input type="password" id="new_pass" placeholder="Min 6 characters">
+        <label>Confirm New Password</label>
+        <input type="password" id="confirm_pass" placeholder="••••••">
+        <button class="btn" onclick="saveNewPassword()" style="background: var(--orange);">Update & Unlock Form</button>
+    </div>
+
+    <div id="admin_zone" class="card" style="border: 2px solid var(--blue);">
+        <h3>🛠️ Admin Control Panel</h3>
+        <label>Staff ID to Reset</label>
+        <input type="text" id="reset_staff_id" placeholder="NSID001">
+        <button class="btn" style="background: var(--blue);" onclick="adminResetStaff()">Reset to Default</button>
+        <button class="btn" style="background: var(--slate); margin-top: 10px;" onclick="location.reload()">Back to Login</button>
     </div>
 
     <div id="data_entry_zone">
-        
         <div class="card">
-            <h3>📊 Intelligence Dashboard</h3>
+            <h3>📊 Dashboard</h3>
             <div class="dash-grid">
                 <div class="stat-card"><small>Total</small><b id="count_all">0</b></div>
                 <div class="stat-card"><small>Sand</small><b id="count_S">0</b></div>
@@ -79,46 +86,24 @@
         </div>
 
         <div class="card">
-            <h3>2. Entity Information</h3>
+            <h3>1. Tracking ID</h3>
+            <div id="sup_id" class="id-box">NS-GENERATING</div>
+        </div>
+
+        <div class="card">
+            <h3>2. Entity Info</h3>
             <label>Firm Name</label><input type="text" id="firm_name" oninput="updateID()">
-            <label>Owner Name</label><input type="text" id="owner_name">
-            <label>Address</label><textarea id="address"></textarea>
-            <div class="full-grid">
-                <div><label>Phone</label><input type="tel" id="phone" oninput="autoWA()"></div>
-                <div><label>WhatsApp</label><input type="tel" id="whatsapp"></div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>3. GPS & Media</h3>
+            <label>Phone</label><input type="tel" id="phone">
             <div id="map" style="height:180px; border-radius:10px; margin-bottom:10px;"></div>
-            <button class="btn" style="background:var(--dark); color:white; margin-bottom:10px;" onclick="getGPS()">📍 CAPTURE GPS</button>
+            <button class="btn" style="background:var(--dark);" onclick="getGPS()">📍 CAPTURE GPS</button>
             <input type="text" id="gps_val" readonly placeholder="Coordinates">
-            <input type="file" id="img_in" accept="image/*" capture="environment" multiple hidden onchange="handlePhotos(this)">
-            <div style="border:2px dashed var(--slate); padding:20px; text-align:center; border-radius:10px; cursor:pointer;" onclick="document.getElementById('img_in').click()">📸 TAP TO CAPTURE PHOTOS</div>
-            <div id="preview_zone" style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-top:10px;"></div>
         </div>
 
         <div class="card">
-            <h3>4. Materials</h3>
-            <div class="full-grid">
-                <div class="check-pill"><input type="checkbox" id="chk_S" onchange="toggleBox('sand')"><span>Sand</span></div>
-                <div class="check-pill"><input type="checkbox" id="chk_C" onchange="toggleBox('cement')"><span>Cement</span></div>
-            </div>
-            <div id="box_sand" class="variety-container"><div id="v_sand" class="full-grid"></div></div>
-            <div id="box_cement" class="variety-container"><div id="v_cement" class="full-grid"></div></div>
-        </div>
-
-        <div class="card">
-            <h3>5. Operations</h3>
+            <h3>3. Operations</h3>
             <button class="btn btn-save" id="save_btn" onclick="saveSupplier()">💾 SAVE LOCALLY</button>
             <button class="btn btn-sync" id="sync_btn" onclick="syncMasterToDrive()" style="margin-top:10px;">🚀 SYNC TO CLOUD</button>
-            <button class="btn" style="background:#e2e8f0; margin-top:10px;" onclick="location.reload()">➕ NEW ENTRY</button>
-        </div>
-
-        <div class="card">
-            <h3>6. Local History</h3>
-            <div id="history_list" style="max-height:150px; overflow-y:auto; font-size:12px;"></div>
+            <button class="btn" style="background:var(--slate); margin-top:10px;" onclick="location.reload()">🔒 LOGOUT</button>
         </div>
     </div>
 </div>
@@ -126,66 +111,89 @@
 <script>
     // --- 🔐 SECURITY CONFIG ---
     const MASTER_KEY = "Life4life@nsid";
-    const STAFF_SECRETS = {
-        "NSID001": "NIRM4SUTR4ST4FFB",
-        "NSID002": "NIRM4SUTR4ST4FFC",
-        "NSID003": "NIRM4SUTR4ST4FFD",
-        "NSID004": "NIRM4SUTR4ST4FFE",
-        "NSID005": "NIRM4SUTR4ST4FFF"
+    const ADMIN_WA = "91XXXXXXXXXX"; // ⬅️ YOUR WHATSAPP NUMBER
+    const DEFAULTS = {
+        "NSID001": "Nirma@001", "NSID002": "Nirma@002",
+        "NSID003": "Nirma@003", "NSID004": "Nirma@004", "NSID005": "Nirma@005"
     };
 
-    // --- 🛡️ TIER 1: MASTER ACCESS ---
+    // --- 🛡️ GATEKEEPER ---
     window.onload = function() {
         if (sessionStorage.getItem("nirma_gate") !== "true") {
             let attempt = prompt("🔒 NIRMANSUTRA SECURE ACCESS:");
             if (attempt === MASTER_KEY) {
                 sessionStorage.setItem("nirma_gate", "true");
-                document.getElementById('app_root').style.display = 'flex';
-                initDB();
+                showApp();
             } else {
-                alert("Unauthorized.");
                 window.location.href = "https://google.com";
             }
         } else {
-            document.getElementById('app_root').style.display = 'flex';
-            initDB();
+            showApp();
         }
     };
 
-    // --- 🛡️ TIER 2: STAFF TOTP VERIFICATION ---
-    function validateTOTP() {
-        const id = document.getElementById('staff_id_input').value.toUpperCase().trim();
-        const token = document.getElementById('otp_input').value.trim();
-        const msg = document.getElementById('auth_msg');
-        const vBtn = document.getElementById('verify_btn');
-        const entryZone = document.getElementById('data_entry_zone');
-
-        if (!STAFF_SECRETS[id]) {
-            msg.innerText = "❌ Unknown Staff ID";
-            msg.style.color = "var(--red)";
-            return;
-        }
-
-        try {
-            // window: 3 allows for ±90 seconds time drift
-            const isValid = otplib.authenticator.check(token, STAFF_SECRETS[id], { window: 3 });
-
-            if (isValid) {
-                entryZone.style.display = 'flex';
-                document.getElementById('auth_inputs').style.display = 'none';
-                vBtn.disabled = true;
-                msg.innerText = "✅ IDENTITY VERIFIED: Welcome " + id;
-                msg.style.color = "var(--green)";
-                initApp(); 
-            } else {
-                msg.innerText = "❌ Invalid or Expired Code. Try Again.";
-                msg.style.color = "var(--red)";
-                entryZone.style.display = 'none';
-            }
-        } catch (err) { console.error(err); }
+    function showApp() {
+        document.getElementById('app_root').style.display = 'block';
+        document.getElementById('login_zone').style.display = 'flex';
+        initDB();
     }
 
-    // --- ⚙️ BASE ENGINE (RETAINED) ---
+    // --- 🔑 LOGIN & RESET LOGIC ---
+    function handleLogin() {
+        const id = document.getElementById('staff_id_input').value.toUpperCase().trim();
+        const pass = document.getElementById('staff_pass_input').value.trim();
+        const msg = document.getElementById('auth_msg');
+
+        if (!DEFAULTS[id]) { msg.innerText = "❌ Unknown Staff ID"; return; }
+
+        const storedPass = localStorage.getItem("pass_" + id) || DEFAULTS[id];
+
+        if (pass === storedPass) {
+            if (pass === DEFAULTS[id]) {
+                document.getElementById('login_zone').style.display = 'none';
+                document.getElementById('password_reset_zone').style.display = 'flex';
+            } else {
+                unlockForm(id);
+            }
+        } else {
+            msg.innerText = "❌ Incorrect Password";
+        }
+    }
+
+    function saveNewPassword() {
+        const id = document.getElementById('staff_id_input').value.toUpperCase().trim();
+        const n1 = document.getElementById('new_pass').value.trim();
+        const n2 = document.getElementById('confirm_pass').value.trim();
+
+        if (n1.length < 6) return alert("Min 6 characters required.");
+        if (n1 !== n2) return alert("Passwords do not match.");
+        
+        localStorage.setItem("pass_" + id, n1);
+        alert("Security Updated!");
+        unlockForm(id);
+    }
+
+    function requestReset() {
+        const id = document.getElementById('staff_id_input').value.toUpperCase().trim();
+        if (!id) return alert("Enter Staff ID first.");
+        const msg = `Reset Request for Staff: ${id}`;
+        window.open(`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function toggleAdmin() {
+        document.getElementById('login_zone').style.display = 'none';
+        document.getElementById('admin_zone').style.display = 'flex';
+    }
+
+    function adminResetStaff() {
+        const id = document.getElementById('reset_staff_id').value.toUpperCase().trim();
+        if (DEFAULTS[id]) {
+            localStorage.removeItem("pass_" + id);
+            alert(id + " reset to default.");
+        }
+    }
+
+    // --- ⚙️ BASE ENGINE (PRESERVED) ---
     let db, map, marker;
     function initDB() {
         const request = indexedDB.open("InfraDepotDB", 1);
@@ -196,19 +204,19 @@
         request.onsuccess = e => { db = e.target.result; loadFromDB(); };
     }
 
-    function initApp() {
+    function unlockForm(id) {
+        document.getElementById('login_zone').style.display = 'none';
+        document.getElementById('password_reset_zone').style.display = 'none';
+        document.getElementById('admin_zone').style.display = 'none';
+        document.getElementById('data_entry_zone').style.display = 'flex';
+        updateID();
         if(!map) {
             map = L.map('map').setView([24.5854, 73.7125], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         }
-        updateID();
-        // Variety loaders here...
     }
 
     function updateID() { document.getElementById('sup_id').innerText = "NS-" + Date.now().toString().slice(-6); }
-    function autoWA() { document.getElementById('whatsapp').value = document.getElementById('phone').value; }
-    function toggleBox(id) { document.getElementById('box_'+id).style.display = document.getElementById('chk_'+id.charAt(0).toUpperCase()).checked ? 'block' : 'none'; }
-    
     function getGPS() { 
         navigator.geolocation.getCurrentPosition(p => { 
             const coords = `${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`;
@@ -223,29 +231,23 @@
         if(!db) return;
         const tx = db.transaction("suppliers", "readonly");
         tx.objectStore("suppliers").getAll().onsuccess = e => {
-            const data = e.target.result;
-            document.getElementById('count_all').innerText = data.length;
-            document.getElementById('history_list').innerHTML = data.reverse().map(s => `<div><b>${s.firm_name}</b> - ${s.timestamp}</div>`).join('');
+            document.getElementById('count_all').innerText = e.target.result.length;
         };
     }
 
     function saveSupplier() {
         const firm = document.getElementById('firm_name').value;
         if(!firm) return alert("Firm Name Required");
-        document.getElementById('loader').style.display = 'flex';
         const record = {
             supplier_id: document.getElementById('sup_id').innerText,
-            staff_id: document.getElementById('staff_id_input').value.toUpperCase(),
+            staff: document.getElementById('staff_id_input').value.toUpperCase(),
             firm_name: firm,
             gps: document.getElementById('gps_val').value,
             timestamp: new Date().toLocaleString()
         };
         const tx = db.transaction("suppliers", "readwrite");
         tx.objectStore("suppliers").put(record);
-        tx.oncomplete = () => {
-            loadFromDB();
-            setTimeout(() => { document.getElementById('loader').style.display = 'none'; alert("Saved!"); }, 500);
-        };
+        tx.oncomplete = () => { loadFromDB(); alert("Saved!"); };
     }
 </script>
 </body>
