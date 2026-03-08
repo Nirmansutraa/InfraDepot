@@ -45,7 +45,7 @@
         .fleet-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 5px; }
         .c-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--dark); color: white; }
 
-        /* NSID13 NEW MODULE STYLES */
+        /* NSID13 & NSID14 NEW MODULE STYLES */
         .ns_new_grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .ns_new_section { border-top: 2px solid #e2e8f0; padding-top: 15px; margin-top: 10px; }
         .ns_new_option_box { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; margin: 10px 0; }
@@ -121,6 +121,25 @@
             <button class="btn" style="background:var(--dark); font-size:11px;" onclick="getGPS()">📍 LOCK GPS LOCATION</button>
             <input type="hidden" id="gps_val">
             <textarea id="address" rows="2" placeholder="Precise Address..."></textarea>
+        </div>
+
+        <div class="card ns_new_section">
+            <h3>📸 Site Photo Evidence</h3>
+            <div id="ns_cap_status_bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 11px; font-weight: bold; color: var(--slate);">Photo Counter: <b id="ns_cap_count">0</b> / 10</span>
+                <span id="ns_cap_global_sync" style="font-size: 10px; color: var(--orange);">● Ready</span>
+            </div>
+            
+            <input type="file" id="ns_cap_file_input" accept="image/*" capture="environment" style="display:none;" onchange="ns_cap_processImage(this)">
+            <button id="ns_cap_btn" class="btn" onclick="document.getElementById('ns_cap_file_input').click()" style="background: var(--dark); border: 2px solid var(--orange);">
+                📷 CAPTURE SITE PHOTO
+            </button>
+
+            <div id="ns_cap_preview_grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;"></div>
+
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
+                <button class="btn" onclick="ns_cap_syncAll()" style="background: var(--green);">☁️ SYNC PHOTOS TO CLOUD</button>
+            </div>
         </div>
 
         <div class="card ns_new_section">
@@ -312,7 +331,7 @@
     // --- NSID001 SECURITY LOGIC ---
     window.onload = function() {
         initUserDB();
-        ns_new_setupListeners(); // NSID13 HOOK
+        ns_new_setupListeners();
         if (localStorage.getItem("master_access") === "true") {
             hideMaster();
             checkSession();
@@ -349,7 +368,6 @@
         if (users[uid] && users[uid].password === pass) {
             const session = { userid: uid, role: users[uid].role, loggedIn: true, device: Math.random().toString(36).slice(2) };
             localStorage.setItem("ns_session", JSON.stringify(session));
-            // NSID13: Auto-populate for next time
             localStorage.setItem("ns_last_uid", uid);
             startDashboard(session);
         } else {
@@ -359,7 +377,6 @@
 
     function checkSession() {
         const session = JSON.parse(localStorage.getItem("ns_session"));
-        // NSID13: Restore Last User ID
         const lastUid = localStorage.getItem("ns_last_uid");
         if(lastUid) document.getElementById('u_id').value = lastUid;
 
@@ -382,11 +399,11 @@
             renderAreas();
             initDB();
             setTimeout(initMap, 300);
-            ns_new_restoreData(); // NSID13 HOOK
+            ns_new_restoreData();
+            ns_cap_initDB(); // Init Photos
         }
     }
 
-    // --- NSID001 RECOVERY LOGIC ---
     function showReset() { 
         document.getElementById('login_zone').classList.add('hidden');
         document.getElementById('reset_zone').classList.remove('hidden');
@@ -400,11 +417,9 @@
         const uid = document.getElementById('reset_uid').value.toUpperCase();
         const users = JSON.parse(localStorage.getItem("users_db"));
         if(!users[uid]) return alert("User Not Found");
-
         const otp = Math.floor(100000 + Math.random() * 900000);
         const token = { otp: otp, expires: Date.now() + 600000 };
         localStorage.setItem("reset_token_" + uid, JSON.stringify(token));
-
         const msg = `Hello ${uid}, Your NirmaSutra Reset OTP is: ${otp}. Valid for 10 mins.`;
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         alert("OTP Sent to WhatsApp");
@@ -415,7 +430,6 @@
         const otp = document.getElementById('reset_otp_input').value;
         const newPass = document.getElementById('reset_new_pass').value;
         const token = JSON.parse(localStorage.getItem("reset_token_" + uid));
-
         if (token && token.otp == otp && Date.now() < token.expires) {
             let users = JSON.parse(localStorage.getItem("users_db"));
             users[uid].password = newPass;
@@ -428,7 +442,6 @@
         }
     }
 
-    // --- NSID001 ADMIN USER MANAGEMENT ---
     function renderUserManagement() {
         const users = JSON.parse(localStorage.getItem("users_db"));
         let html = '<table style="width:100%; text-align:left;"><tr><th>UID</th><th>Role</th><th>Action</th></tr>';
@@ -457,7 +470,6 @@
         renderUserManagement();
     }
 
-    // --- NSID001 DATA ENTRY FEATURES ---
     function toggleVariety(id, el) {
         document.getElementById(id).classList.toggle('hidden', !el.checked);
     }
@@ -527,7 +539,7 @@
     function resetScreen() { location.reload(); }
 
     /* ============================================================
-       NSID13 NEW MODULE (MATERIAL SOURCE LOGIC)
+       NSID13 MODULE (MATERIAL SOURCE LOGIC)
        ============================================================ */
 
     function ns_new_setupListeners() {
@@ -538,14 +550,11 @@
                     target.classList.remove('hidden');
                 } else {
                     target.classList.add('hidden');
-                    // Clear all sub-checkboxes when parent is unchecked
                     target.querySelectorAll('input').forEach(i => i.checked = false);
                 }
                 ns_new_persist();
             });
         });
-
-        // Track changes on all sub-options too
         document.querySelectorAll('.ns_new_option_box input').forEach(opt => {
             opt.addEventListener('change', ns_new_persist);
         });
@@ -568,16 +577,12 @@
         const raw = localStorage.getItem("ns_material_draft");
         if(!raw) return;
         const data = JSON.parse(raw);
-
-        // 1. Restore Main Checkboxes
         document.querySelectorAll('.ns_new_mat').forEach(chk => {
             if(data.materials.includes(chk.value)) {
                 chk.checked = true;
                 document.getElementById(chk.dataset.target).classList.remove('hidden');
             }
         });
-
-        // 2. Restore Sub Checkboxes
         const subMaps = { ns_sand: 'sand', ns_stone: 'stone', ns_agg: 'agg', ns_brick: 'brick', ns_cem: 'cem', ns_tmt: 'tmt' };
         for(let name in subMaps) {
             document.querySelectorAll(`input[name="${name}"]`).forEach(i => {
@@ -586,16 +591,12 @@
         }
     }
 
-    // Modify existing saveData to include new module data
+    // Wrap saveData to include NSID13 data
     const originalSaveData = saveData;
     saveData = function() {
-        // Run original first
         originalSaveData();
-        
-        // Then add extra NSID13 data to the same ID in IndexedDB
         const id = document.getElementById('sup_id').innerText;
         const matData = JSON.parse(localStorage.getItem("ns_material_draft"));
-        
         const tx = db.transaction("records", "readwrite");
         const store = tx.objectStore("records");
         store.get(id).onsuccess = (e) => {
@@ -606,6 +607,134 @@
             }
         };
     };
+
+    /* ============================================================
+       NSID14 LIVE PHOTO CAPTURE LOGIC
+       ============================================================ */
+    
+    let ns_cap_db;
+    const NS_CAP_LIMIT = 10;
+    const NS_CAP_MAX_SIZE = 512 * 1024;
+
+    function ns_cap_initDB() {
+        const req = indexedDB.open("NS_Photo_Vault", 1);
+        req.onupgradeneeded = e => {
+            const store = e.target.result.createObjectStore("photos", { keyPath: "localId" });
+            store.createIndex("syncStatus", "syncStatus", { unique: false });
+        };
+        req.onsuccess = e => {
+            ns_cap_db = e.target.result;
+            ns_cap_reloadPreviews();
+        };
+    }
+
+    async function ns_cap_processImage(input) {
+        if (!input.files || !input.files[0]) return;
+        const count = await ns_cap_getCount();
+        if (count >= NS_CAP_LIMIT) return alert("Maximum 10 photos reached.");
+        const file = input.files[0];
+        const gpsStr = document.getElementById('gps_val').value || "No GPS Fix";
+        const processedBlob = await ns_cap_watermarkAndCompress(file, gpsStr);
+        const photoData = {
+            localId: "IMG_" + Date.now(),
+            visitId: document.getElementById('sup_id').innerText,
+            blob: processedBlob,
+            gps: gpsStr,
+            timestamp: new Date().toLocaleString(),
+            syncStatus: "Pending",
+            cloudUrl: ""
+        };
+        const tx = ns_cap_db.transaction("photos", "readwrite");
+        tx.objectStore("photos").put(photoData);
+        tx.oncomplete = () => { ns_cap_reloadPreviews(); input.value = ""; };
+    }
+
+    function ns_cap_watermarkAndCompress(file, gps) {
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = e => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const scale = Math.min(1, 1600 / img.width);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const boxH = 45;
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+                    ctx.fillRect(0, canvas.height - boxH, canvas.width, boxH);
+                    ctx.fillStyle = "white";
+                    ctx.font = "bold 20px Arial";
+                    ctx.fillText(`NS FIELD: ${gps} | ${new Date().toLocaleString()}`, 20, canvas.height - 15);
+                    let quality = 0.8;
+                    let dataUrl = canvas.toDataURL("image/jpeg", quality);
+                    while (dataUrl.length > NS_CAP_MAX_SIZE && quality > 0.1) {
+                        quality -= 0.1;
+                        dataUrl = canvas.toDataURL("image/jpeg", quality);
+                    }
+                    resolve(dataUrl);
+                };
+            };
+        });
+    }
+
+    async function ns_cap_reloadPreviews() {
+        const tx = ns_cap_db.transaction("photos", "readonly");
+        tx.objectStore("photos").getAll().onsuccess = e => {
+            const photos = e.target.result;
+            document.getElementById('ns_cap_count').innerText = photos.length;
+            document.getElementById('ns_cap_btn').disabled = (photos.length >= NS_CAP_LIMIT);
+            document.getElementById('ns_cap_btn').style.opacity = (photos.length >= NS_CAP_LIMIT) ? "0.5" : "1";
+            const grid = document.getElementById('ns_cap_preview_grid');
+            grid.innerHTML = photos.map((p, index) => `
+                <div class="card" style="padding:5px; position:relative; border:1px solid #cbd5e1;">
+                    <img src="${p.blob}" style="width:100%; border-radius:5px; aspect-ratio:1/1; object-fit:cover;">
+                    <div style="font-size:9px; margin-top:5px; color:var(--slate);">#${index+1} | ${p.syncStatus === 'Synced' ? '✅' : '⏳'} ${p.syncStatus}</div>
+                    <button onclick="ns_cap_delete('${p.localId}')" style="position:absolute; top:8px; right:8px; background:var(--red); color:white; border:none; border-radius:50%; width:24px; height:24px; font-size:12px; cursor:pointer;">×</button>
+                </div>
+            `).join('');
+        };
+    }
+
+    function ns_cap_delete(id) {
+        if(!confirm("Remove this photo?")) return;
+        const tx = ns_cap_db.transaction("photos", "readwrite");
+        tx.objectStore("photos").delete(id);
+        tx.oncomplete = () => ns_cap_reloadPreviews();
+    }
+
+    function ns_cap_getCount() {
+        return new Promise(res => {
+            const tx = ns_cap_db.transaction("photos", "readonly");
+            tx.objectStore("photos").count().onsuccess = e => res(e.target.result);
+        });
+    }
+
+    async function ns_cap_syncAll() {
+        document.getElementById('ns_cap_global_sync').innerText = "● UPLOADING...";
+        const tx = ns_cap_db.transaction("photos", "readonly");
+        tx.objectStore("photos").getAll().onsuccess = async e => {
+            const photos = e.target.result;
+            for (let p of photos) {
+                if (p.syncStatus === "Synced") continue;
+                try {
+                    await fetch(SCRIPT_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        body: JSON.stringify({ action: "photo_sync", visitId: p.visitId, photoId: p.localId, gps: p.gps, timestamp: p.timestamp, image: p.blob })
+                    });
+                    p.syncStatus = "Synced";
+                    ns_cap_db.transaction("photos", "readwrite").objectStore("photos").put(p);
+                } catch (err) { console.error("Sync failed", err); }
+            }
+            document.getElementById('ns_cap_global_sync').innerText = "● ALL SYNCED";
+            ns_cap_reloadPreviews();
+            alert("Photos and Metadata synced to Cloud.");
+        };
+    }
 </script>
 </body>
 </html>
