@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>InfraDepot Intelligence V32 - Matrix Stable</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff6a00">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root { --orange: #ff6a00; --bg: #f1f5f9; --green: #10b981; --dark: #0f172a; --slate: #64748b; --red: #ef4444; --blue: #3b82f6; --infra-gold: #ff6a00; --infra-blue: #0f172a; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        .container { max-width: 500px; margin: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        h3 { margin: 0 0 12px 0; color: var(--dark); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-left: 4px solid var(--orange); padding-left: 8px; }
+        .section-title-alt { color: var(--infra-blue); border-left: 4px solid var(--infra-gold); padding-left: 8px; font-size: 11px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        label { font-size: 10px; font-weight: 700; color: var(--slate); display: block; margin-bottom: 4px; text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; background: #fff; }
+        .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .stat-card { background: var(--dark); color: white; padding: 10px; border-radius: 8px; text-align: center; }
+        .stat-card small { font-size: 8px; text-transform: uppercase; opacity: 0.7; display: block; }
+        .stat-card b { font-size: 16px; color: var(--orange); }
+        .full-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .counter-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .stepper { display: flex; align-items: center; gap: 8px; }
+        .stepper button { border: none; background: var(--dark); color: white; width: 32px; height: 32px; border-radius: 6px; font-size: 18px; font-weight: bold; }
+        .stepper input { width: 30px !important; text-align: center; border: none !important; margin: 0 !important; font-weight: bold; background: transparent; padding: 0; pointer-events: none; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-save { background: var(--green); color: white; }
+        .btn-sync { background: var(--blue); color: white; margin-top: 5px; }
+        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.9); z-index: 10000; color: white; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--orange); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #preview_zone { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
+        .thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+        .id-box { background: #0f172a; color: #22c55e; font-family: monospace; font-size: 20px; text-align: center; padding: 15px; border-radius: 8px; font-weight: bold; border: 1px solid #334155; }
+        .draft-alert { background: #fff4e5; border: 1px solid #ffd599; padding: 10px; border-radius: 8px; font-size: 11px; margin-bottom: 10px; color: #663c00; display: none; }
+        
+        /* Material Matrix Integration Styles */
+        .grid-selection { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .material-card-alt { background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .material-card-alt input { margin-right: 10px; width: 18px; height: 18px; accent-color: var(--infra-gold); }
+        .material-card-alt:has(input:checked) { border-color: var(--infra-gold); background: #fffcf0; }
+        .material-sub-section { background: #fff; margin-top: 10px; padding: 12px; border-radius: 8px; border: 1px dashed var(--infra-gold); }
+        .material-sub-section h4 { color: var(--infra-blue); margin: 10px 0 8px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 12px; text-transform: uppercase; }
+        .filterable-list { display: flex; flex-direction: column; max-height: 160px; overflow-y: auto; border: 1px solid #f1f5f9; padding: 8px; border-radius: 6px; background: #fff; }
+        .filterable-list label { padding: 6px 0; display: flex; align-items: center; font-size: 13px; border-bottom: 1px solid #fafafa; cursor: pointer; }
+        .filterable-list input { margin-right: 8px; width: 16px; height: 16px; accent-color: var(--infra-gold); }
+        .brand-search { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 8px; font-size: 13px; }
+        .counter-badge { font-size: 10px; background: var(--infra-gold); color: white; padding: 2px 6px; border-radius: 10px; margin-left: 5px; }
+    </style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div><p id="loader_text">Securing Data...</p></div>
+
+<div class="container" id="app_root">
+    <div id="pwa_install_banner" style="display:none; background:var(--dark); color:white; padding:15px; border-radius:12px; align-items:center; justify-content:space-between; border-bottom: 4px solid var(--orange);">
+        <div style="font-size:11px;"><b>Install InfraDepot?</b><br>Offline Intelligence Mode</div>
+        <button onclick="triggerPWAInstall()" style="background:var(--orange); color:white; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:11px;">INSTALL</button>
+    </div>
+
+    <div class="card">
+        <h3>📊 Field Intelligence Dashboard</h3>
+        <div class="dash-grid">
+            <div class="stat-card"><small>Total</small><b id="count_all">0</b></div>
+            <div class="stat-card"><small>Sand</small><b id="count_S">0</b></div>
+            <div class="stat-card"><small>Cement</small><b id="count_C">0</b></div>
+            <div class="stat-card"><small>TMT</small><b id="count_T">0</b></div>
+            <div class="stat-card"><small>Agg</small><b id="count_A">0</b></div>
+            <div class="stat-card"><small>Brick</small><b id="count_B">0</b></div>
+        </div>
+    </div>
+
+    <div id="draft_notify" class="draft-alert">⚠️ Crash Recovery: Session data restored.</div>
+
+    <div class="card">
+        <h3>1. Tracking ID</h3>
+        <div id="sup_id" class="id-box">ID-GENERATING</div>
+    </div>
+
+    <div class="card">
+        <h3>2. Entity Information</h3>
+        <label>Firm Name</label><input type="text" id="firm_name" oninput="updateID(); autoSaveDraft()">
+        <label>Owner Name</label><input type="text" id="owner_name" oninput="autoSaveDraft()">
+        <label>Address</label><textarea id="address" oninput="autoSaveDraft()" placeholder="Locality or full address"></textarea>
+        <div class="full-grid">
+            <div><label>Phone</label><input type="tel" id="phone" oninput="autoWA(); autoSaveDraft()"></div>
+            <div><label>WhatsApp</label><input type="tel" id="whatsapp" oninput="autoSaveDraft()"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>3. GPS Location & Mapping</h3>
+        <div style="display:flex; gap:5px; margin-bottom:10px;">
+            <input type="text" id="map_search" placeholder="Search locality">
+            <button onclick="searchMap()" style="background:var(--dark); color:white; border:none; padding:0 15px; border-radius:8px;">GO</button>
+        </div>
+        <div id="map" style="height:220px; border-radius:10px; margin-bottom:10px;"></div>
+        <button class="btn" style="background:var(--dark); color:white;" onclick="getGPS()">📍 CAPTURE SITE GPS</button>
+        <input type="text" id="gps_val" readonly placeholder="Pinned Coordinates">
+        <label>Site Photos</label>
+        <input type="file" id="img_in" accept="image/*" capture="environment" multiple hidden onchange="handlePhotos(this)">
+        <div style="border:2px dashed var(--slate); padding:20px; text-align:center; border-radius:10px; color:var(--slate); font-size:11px;" onclick="document.getElementById('img_in').click()">📸 TAP TO CAPTURE PHOTOS</div>
+        <div id="preview_zone"></div>
+    </div>
+
+    <div class="card">
+        <h3 class="section-title-alt">4. Material Intelligence Matrix</h3>
+        <div class="grid-selection">
+            <label class="material-card-alt"><input type="checkbox" class="material-toggle" data-target="sand-options" value="sand"> Sand</label>
+            <label class="material-card-alt"><input type="checkbox" class="material-toggle" data-target="stone-options" value="stone"> Stone</label>
+            <label class="material-card-alt"><input type="checkbox" class="material-toggle" data-target="agg-options" value="aggregate"> Aggregates</label>
+            <label class="material-card-alt"><input type="checkbox" class="material-toggle" data-target="tmt-options" value="tmt"> TMT Steel</label>
+            <label class="material-card-alt"><input type="checkbox" class="material-toggle" data-target="cem-options" value="cement"> Cement</label>
+            <label class="material-card-alt"><input type="checkbox" class="material-toggle" data-target="brick-options" value="brick"> Bricks</label>
+        </div>
+
+        <div id="sand-options" class="material-sub-section" style="display:none">
+            <h4>Sand Varieties</h4>
+            <div class="filterable-list">
+                <label><input type="checkbox" name="sand_type" value="River Sand"> River Sand</label>
+                <label><input type="checkbox" name="sand_type" value="M-Sand"> M-Sand (Manufactured)</label>
+                <label><input type="checkbox" name="sand_type" value="P-Sand"> P-Sand (Plastering)</label>
+            </div>
+        </div>
+
+        <div id="stone-options" class="material-sub-section" style="display:none">
+            <h4>Masonry Stone Varieties</h4>
+            <div class="filterable-list">
+                <label><input type="checkbox" name="stone_type" value="Random Rubble"> Random Rubble</label>
+                <label><input type="checkbox" name="stone_type" value="Laterite Stone"> Laterite (Chira)</label>
+                <label><input type="checkbox" name="stone_type" value="Basalt Stone"> Basalt / Black Trap</label>
+                <label><input type="checkbox" name="stone_type" value="Stone Boulders"> Stone Boulders</label>
+            </div>
+        </div>
+
+        <div id="agg-options" class="material-sub-section" style="display:none">
+            <h4>Aggregate Sizes</h4>
+            <div class="filterable-list">
+                <label><input type="checkbox" name="agg_type" value="10mm"> 10 mm</label>
+                <label><input type="checkbox" name="agg_type" value="20mm"> 20 mm</label>
+                <label><input type="checkbox" name="agg_type" value="40mm"> 40 mm</label>
+            </div>
+        </div>
+
+        <div id="tmt-options" class="material-sub-section" style="display:none">
+            <h4>TMT Brands <span id="tmt-count" class="counter-badge">0</span></h4>
+            <input type="text" class="brand-search" data-search-group="tmt-list" placeholder="Search TMT brands...">
+            <div id="tmt-list" class="filterable-list">
+                <label><input type="checkbox" name="tmt_brand" value="Tata Tiscon"> Tata Tiscon</label>
+                <label><input type="checkbox" name="tmt_brand" value="JSW Neosteel"> JSW Neosteel</label>
+                <label><input type="checkbox" name="tmt_brand" value="SAIL"> SAIL</label>
+                <label><input type="checkbox" name="tmt_brand" value="Vizag Steel"> Vizag Steel</label>
+                <label><input type="checkbox" name="tmt_brand" value="Jindal Panther"> Jindal Panther</label>
+                <label><input type="checkbox" name="tmt_brand" value="Kamdhenu"> Kamdhenu</label>
+            </div>
+        </div>
+
+        <div id="cem-options" class="material-sub-section" style="display:none">
+            <h4>Cement Brands <span id="cem-count" class="counter-badge">0</span></h4>
+            <input type="text" class="brand-search" data-search-group="cem-list" placeholder="Search Cement brands...">
+            <div id="cem-list" class="filterable-list">
+                <label><input type="checkbox" name="cem_brand" value="UltraTech"> UltraTech</label>
+                <label><input type="checkbox" name="cem_brand" value="Ambuja"> Ambuja</label>
+                <label><input type="checkbox" name="cem_brand" value="ACC"> ACC</label>
+                <label><input type="checkbox" name="cem_brand" value="Shree Cement"> Shree Cement</label>
+                <label><input type="checkbox" name="cem_brand" value="JK Lakshmi"> JK Lakshmi</label>
+            </div>
+        </div>
+
+        <div id="brick-options" class="material-sub-section" style="display:none">
+            <h4>Brick Varieties</h4>
+            <div class="filterable-list">
+                <label><input type="checkbox" name="brick_type" value="Red Clay"> Red Clay Brick</label>
+                <label><input type="checkbox" name="brick_type" value="Fly Ash"> Fly Ash Brick</label>
+                <label><input type="checkbox" name="brick_type" value="AAC Block"> AAC Block</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>5. Transportation Fleet</h3>
+        <div class="full-grid" id="fleet_ui"></div>
+    </div>
+
+    <div class="card">
+        <h3>6. Field Verification</h3>
+        <label>Status</label>
+        <select id="v_status" onchange="autoSaveDraft()"><option>Pending</option><option>Verified</option><option>Blacklisted</option></select>
+        <label>Notes</label><textarea id="notes" oninput="autoSaveDraft()"></textarea>
+    </div>
+
+    <div class="card">
+        <h3>7. Data Operations</h3>
+        <button class="btn btn-save" onclick="saveSupplier()">💾 SAVE & SYNC TO CLOUD</button>
+        <button class="btn" style="background:#cbd5e1; color:var(--dark);" onclick="location.reload()">➕ NEXT BLANK ENTRY</button>
+        <button class="btn" style="background:var(--red); color:white; font-size:10px;" onclick="wipeDatabase()">🗑 WIPE LOCAL DB</button>
+    </div>
+
+    <div class="card">
+        <h3>8. History</h3>
+        <div id="history_list" style="max-height: 200px; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQn7T9OU0Z0SaDwvxWRHG1XB2srjXMSbNS_9gUiIIDc39z0S48hFNvhVH7a9WTqJMG/exec";
+    const fleetList = ["Tractor", "Mini Truck", "Truck", "Mini Dumper", "Dumper", "Trailer"];
+    let db, map, marker, activePhotos = [];
+
+    // --- DB SETUP ---
+    const request = indexedDB.open("InfraDepotDB", 1);
+    request.onupgradeneeded = e => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("suppliers")) db.createObjectStore("suppliers", { keyPath: "supplier_id" });
+    };
+    request.onsuccess = e => { db = e.target.result; initApp(); };
+
+    function initApp() {
+        document.getElementById('fleet_ui').innerHTML = fleetList.map((f, i) => `
+            <div class="counter-card"><span style="font-size:11px; font-weight:bold;">${f}</span>
+                <div class="stepper"><button onclick="adj(${i},-1); autoSaveDraft()">-</button><input type="text" id="f_qty_${i}" value="0"><button onclick="adj(${i},1); autoSaveDraft()">+</button></div>
+            </div>`).join('');
+        
+        map = L.map('map').setView([24.5854, 73.7125], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        map.on('click', e => { updateMarker(e.latlng.lat, e.latlng.lng); reverseGeocode(e.latlng.lat, e.latlng.lng); });
+
+        restoreDraft();
+        loadFromDB();
+        updateID();
+    }
+
+    // --- MATRIX LOGIC ---
+    document.querySelectorAll('.material-toggle').forEach(mt => {
+        mt.addEventListener('change', function() {
+            const target = document.getElementById(this.dataset.target);
+            if(target) target.style.display = this.checked ? "block" : "none";
+            updateID();
+        });
+    });
+
+    document.querySelectorAll('.brand-search').forEach(bs => {
+        bs.addEventListener('input', function() {
+            const term = this.value.toLowerCase();
+            const list = document.getElementById(this.dataset.searchGroup);
+            list.querySelectorAll('label').forEach(l => {
+                l.style.display = l.innerText.toLowerCase().includes(term) ? "flex" : "none";
+            });
+        });
+    });
+
+    function updateCounters() {
+        ['tmt', 'cem'].forEach(p => {
+            const count = document.querySelectorAll(`input[name="${p}_brand"]:checked`).length;
+            const el = document.getElementById(p + '-count');
+            if(el) el.innerText = count;
+        });
+    }
+
+    function updateID() {
+        let p = "ID";
+        const checks = { 'S': 'sand', 'ST': 'stone', 'A': 'aggregate', 'T': 'tmt', 'C': 'cement', 'B': 'brick' };
+        Object.keys(checks).forEach(k => {
+            const el = document.querySelector(`.material-toggle[value="${checks[k]}"]`);
+            if(el && el.checked) p += k;
+        });
+        document.getElementById('sup_id').innerText = p + "-" + Date.now().toString().slice(-6);
+        autoSaveDraft();
+    }
+
+    // --- SAVE & SYNC ---
+    async function saveSupplier() {
+        const firm = document.getElementById('firm_name').value;
+        if(!firm) return alert("Firm Name Required");
+
+        document.getElementById('loader').style.display = 'flex';
+        document.getElementById('loader_text').innerText = "Pushing to Cloud...";
+
+        const fleetObj = {};
+        fleetList.forEach((f, i) => fleetObj[f] = document.getElementById('f_qty_'+i).value);
+
+        const record = {
+            supplier_id: document.getElementById('sup_id').innerText,
+            firm_name: firm,
+            owner_name: document.getElementById('owner_name').value,
+            phone: document.getElementById('phone').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            address: document.getElementById('address').value,
+            gps: document.getElementById('gps_val').value,
+            materials: Array.from(document.querySelectorAll('.material-toggle:checked')).map(m => m.value).join(', '),
+            varieties: Array.from(document.querySelectorAll('.material-sub-section input:checked')).map(v => v.value).join('|'),
+            fleet: JSON.stringify(fleetObj),
+            verification: document.getElementById('v_status').value,
+            notes: document.getElementById('notes').value,
+            timestamp: new Date().toLocaleString()
+        };
+
+        // 1. Local Persistence
+        const tx = db.transaction("suppliers", "readwrite");
+        tx.objectStore("suppliers").put({ ...record, photos: activePhotos });
+
+        tx.oncomplete = async () => {
+            // 2. Cloud Sync
+            try {
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(record)
+                });
+                localStorage.removeItem("supplierDraft");
+                loadFromDB();
+                document.getElementById('loader').style.display = 'none';
+                alert("✅ SECURED: Saved locally and synced to Google Sheet!");
+            } catch (err) {
+                document.getElementById('loader').style.display = 'none';
+                alert("⚠️ OFFLINE: Saved locally only. Cloud sync pending.");
+            }
+        };
+    }
+
+    // --- UTILS ---
+    function autoSaveDraft() {
+        const d = {
+            f: document.getElementById('firm_name').value,
+            o: document.getElementById('owner_name').value,
+            p: document.getElementById('phone').value,
+            a: document.getElementById('address').value,
+            g: document.getElementById('gps_val').value,
+            n: document.getElementById('notes').value
+        };
+        localStorage.setItem("supplierDraft", JSON.stringify(d));
+    }
+
+    function restoreDraft() {
+        const raw = localStorage.getItem("supplierDraft");
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        document.getElementById('firm_name').value = d.f || "";
+        document.getElementById('owner_name').value = d.o || "";
+        document.getElementById('phone').value = d.p || "";
+        document.getElementById('address').value = d.a || "";
+        document.getElementById('gps_val').value = d.g || "";
+        document.getElementById('notes').value = d.n || "";
+        document.getElementById('draft_notify').style.display = 'block';
+    }
+
+    function loadFromDB() {
+        const tx = db.transaction("suppliers", "readonly");
+        tx.objectStore("suppliers").getAll().onsuccess = e => {
+            const data = e.target.result;
+            document.getElementById('count_all').innerText = data.length;
+            ['S','C','T','A','B'].forEach(k => {
+                const map = {'S':'sand','C':'cement','T':'tmt','A':'aggregate','B':'brick'};
+                document.getElementById('count_'+k).innerText = data.filter(s => s.materials.includes(map[k])).length;
+            });
+            document.getElementById('history_list').innerHTML = data.reverse().map(s => `
+                <div style="background:#fff; padding:8px; border-radius:6px; margin-bottom:4px; border:1px solid #ddd; font-size:11px;">
+                    <b>${s.firm_name}</b> <span style="float:right; color:var(--orange)">${s.supplier_id}</span>
+                </div>`).join('');
+        };
+    }
+
+    function adj(i, d) { let el = document.getElementById('f_qty_'+i); el.value = Math.max(0, (parseInt(el.value)||0)+d); }
+    function autoWA() { document.getElementById('whatsapp').value = document.getElementById('phone').value; }
+    function updateMarker(la, lo) {
+        document.getElementById('gps_val').value = `${la.toFixed(6)}, ${lo.toFixed(6)}`;
+        if(marker) map.removeLayer(marker);
+        marker = L.marker([la, lo]).addTo(map);
+        autoSaveDraft();
+    }
+    async function searchMap() {
+        const q = document.getElementById('map_search').value;
+        const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`);
+        const d = await r.json();
+        if(d[0]) { map.setView([d[0].lat, d[0].lon], 15); updateMarker(parseFloat(d[0].lat), parseFloat(d[0].lon)); }
+    }
+    async function reverseGeocode(la, lo) {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${la}&lon=${lo}`);
+        const d = await r.json(); document.getElementById('address').value = d.display_name || "";
+        autoSaveDraft();
+    }
+    function getGPS() { navigator.geolocation.getCurrentPosition(p => { updateMarker(p.coords.latitude, p.coords.longitude); reverseGeocode(p.coords.latitude, p.coords.longitude); }); }
+    function handlePhotos(input) {
+        Array.from(input.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                activePhotos.push(e.target.result);
+                const img = document.createElement('img'); img.src = e.target.result; img.className = 'thumb';
+                document.getElementById('preview_zone').appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+    function wipeDatabase() { if(confirm("Clear local DB?")) { db.transaction("suppliers", "readwrite").objectStore("suppliers").clear(); location.reload(); } }
+
+    // --- PWA ---
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('pwa_install_banner').style.display = 'flex'; });
+    async function triggerPWAInstall() { if (!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt = null; }
+    document.addEventListener('change', (e) => { if(e.target.type === 'checkbox') { updateCounters(); autoSaveDraft(); } });
+</script>
+</body>
+</html>
