@@ -72,3 +72,14 @@ console.log("Reverse geocode failed")
 }
 
 }
+<div class="form-group">
+
+<label>GPS Location</label>
+
+<input id="gps_val" placeholder="Location will appear here">
+
+<button onclick="captureGPS()">
+Capture Location
+</button>
+
+</div>
