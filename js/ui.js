@@ -162,4 +162,16 @@ function logout(){
 
 location.reload()
 
+}function openMap(){
+
+fetch("components/map.html")
+.then(res => res.text())
+.then(html => {
+
+document.getElementById("app_layer").innerHTML = html
+
+initSupplierMap()
+
+})
+
 }
