@@ -2,7 +2,7 @@
    CAPTURE GPS LOCATION
 ---------------------------------- */
 
-function captureGPS(){
+function captureGPS gps: document.getElementById("gps_val").value(){
 
 if(!navigator.geolocation){
 
