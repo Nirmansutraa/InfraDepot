@@ -1,18 +1,12 @@
-async function serverLogin(){
+function showDashboard(){
 
-const id=document.getElementById("login_id").value
-const password=document.getElementById("login_pass").value
+fetch("components/dashboard.html")
+.then(res => res.text())
+.then(html => {
 
-const data=await apiRequest({
-action:"login",
-id:id,
-password:password
+document.getElementById("auth_layer").innerHTML=""
+document.getElementById("app_layer").innerHTML=html
+
 })
-
-if(data.status==="OK"){
-alert("Login success")
-}else{
-alert("Login failed")
-}
 
 }
