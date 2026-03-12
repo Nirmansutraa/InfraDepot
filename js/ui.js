@@ -1,9 +1,20 @@
-async function loadSuppliers(){
+function renderMaterials(){
 
-const suppliers=await apiRequest({
-action:"get_suppliers"
+let html=""
+
+materials.forEach(m=>{
+
+html+=`
+
+<label>
+<input type="checkbox" value="${m}">
+${m}
+</label>
+
+`
+
 })
 
-console.log(suppliers)
+document.getElementById("materials_list").innerHTML=html
 
 }
