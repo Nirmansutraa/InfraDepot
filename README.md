@@ -1,2 +1,0 @@
-# InfraDepot
-Infra Market Intelligence
