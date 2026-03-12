@@ -1,48 +1,111 @@
-async function submitSurvey(){
+/* --------------------------------
+   COLLECT SUPPLIER DATA
+-------------------------------- */
 
-const data={
+function collectSupplierData(){
 
-firm:document.getElementById("firm_name").value,
+const data = {
 
-owner_name:document.getElementById("owner_name").value,
+firm: document.getElementById("firm_name").value,
 
-owner_phone:document.getElementById("owner_phone").value,
+owner_name: document.getElementById("owner_name").value,
 
-owner_whatsapp:document.getElementById("owner_phone").value,
+owner_phone: document.getElementById("owner_phone").value,
 
-manager_name:"",
-manager_phone:"",
-manager_whatsapp:"",
+owner_whatsapp: document.getElementById("owner_phone").value,
 
-address:document.getElementById("business_address").value,
+manager_name: "",
+manager_phone: "",
+manager_whatsapp: "",
 
-gps:"",
+address: document.getElementById("business_address").value,
 
-materials:getSelectedMaterials(),
+gps: "",
 
-brands:"",
-fleet:getSelectedFleet(),
+materials: getSelectedMaterials(),
 
-photos:"",
+brands: "",
 
-staff:"FS"
+fleet: getSelectedFleet(),
+
+photos: "",
+
+staff: "FS"
 
 }
 
-const result=await apiRequest({
+return data
+
+}
+
+
+/* --------------------------------
+   SUBMIT SUPPLIER
+-------------------------------- */
+
+async function submitSurvey(){
+
+const supplierData = collectSupplierData()
+
+if(!supplierData.firm){
+
+alert("Firm name required")
+return
+
+}
+
+if(!supplierData.owner_phone){
+
+alert("Owner phone required")
+return
+
+}
+
+try{
+
+const result = await apiRequest({
 
 action:"submit_supplier",
-...data
+...supplierData
 
 })
 
-if(result.status==="SUCCESS"){
+handleSubmissionResponse(result)
 
-alert("Supplier Registered: "+result.supplierID)
+}catch(err){
 
-}else if(result.status==="DUPLICATE"){
+console.error(err)
 
-alert("Supplier already exists: "+result.existingID)
+alert("Submission failed")
+
+}
+
+}
+
+
+/* --------------------------------
+   HANDLE SERVER RESPONSE
+-------------------------------- */
+
+function handleSubmissionResponse(result){
+
+if(result.status === "SUCCESS"){
+
+alert("Supplier Registered: " + result.supplierID)
+
+showDashboard()
+
+}
+
+else if(result.status === "DUPLICATE"){
+
+alert("Supplier already exists: " + result.existingID)
+
+}
+
+else{
+
+alert("Unknown response")
 
 }
 
