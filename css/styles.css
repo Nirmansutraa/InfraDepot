@@ -70,3 +70,22 @@ font-weight:600;
 border-radius:8px;
 cursor:pointer;
 }
+#map{
+height:250px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #ddd;
+}
+
+.material-block{
+margin-bottom:12px;
+}
+
+.material-title{
+font-weight:600;
+margin-bottom:6px;
+}
+
+.material-grid select{
+margin-bottom:6px;
+}
