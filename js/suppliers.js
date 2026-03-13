@@ -1,25 +1,13 @@
-/* =================================
-SUPPLIER SAVE MODULE
-================================= */
-
 function saveSupplier(){
 
-const supplierData = {
-
-firm:document.getElementById("firm_name").value,
-owner_name:document.getElementById("owner_name").value,
-owner_phone:document.getElementById("owner_phone").value,
-gps:document.getElementById("gps_val").value,
-staff:localStorage.getItem("staff_id") || "UNKNOWN"
-
+const data = {
+firm: document.getElementById("firm_name").value,
+owner: document.getElementById("owner_name").value,
+phone: document.getElementById("owner_phone").value
 }
 
-console.log("Supplier:",supplierData)
+console.log("Supplier:",data)
 
-/* SEND TO APPS SCRIPT */
-
-sendSupplierToServer(supplierData)
-
-alert("Supplier Submitted")
+alert("Supplier Saved")
 
 }
