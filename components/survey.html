@@ -1,5 +1,9 @@
 <link rel="stylesheet" href="../css/styles.css">
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
 <div class="container">
 
 <div class="brand-header">
@@ -18,87 +22,232 @@ Supplier Intelligence
 
 <h3>Supplier Survey</h3>
 
+
 <label>Firm Name</label>
 <input id="firm_name" class="input">
+
 
 <label>Owner Name</label>
 <input id="owner_name" class="input">
 
+
 <label>Owner Mobile</label>
 <input id="owner_mobile" class="input">
+
 
 <label>Owner WhatsApp</label>
 <input id="owner_whatsapp" class="input">
 
+
 <hr>
+
 
 <label>Manager Name</label>
 <input id="manager_name" class="input">
 
+
 <label>Manager Mobile</label>
 <input id="manager_mobile" class="input">
+
 
 <label>Manager WhatsApp</label>
 <input id="manager_whatsapp" class="input">
 
+
 <hr>
+
 
 <h4>Material Intelligence</h4>
 
-<div id="material_selector"></div>
+<div id="material_selector" class="material-grid"></div>
+
 
 <hr>
 
-<label>GPS</label>
+
+<label>GPS Coordinates</label>
 <input id="gps_val" class="input">
+
+
+<button class="btn-secondary" onclick="captureGPS()">
+Capture GPS Location
+</button>
+
 
 <div id="map"></div>
 
+
 <label>Address</label>
 <textarea id="address_val" class="input"></textarea>
+
 
 <button class="btn-primary" onclick="saveSupplier()">
 Save Supplier
 </button>
 
+
 </div>
 
 </div>
+
 
 
 <script src="../data/materials.js"></script>
 <script src="../js/materialsEngine.js"></script>
 <script src="../js/mapEngine.js"></script>
 
+
 <script>
+
+
+let map
+let marker
+
 
 document.addEventListener("DOMContentLoaded",function(){
 
 loadMaterialSelector()
+
 initSupplierMap()
 
+initMap()
+
 })
+
+
+
+function initMap(){
+
+map = L.map('map').setView([24.5854,73.7125],13)
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+maxZoom:19
+}
+).addTo(map)
+
+marker = L.marker([24.5854,73.7125],{draggable:true}).addTo(map)
+
+marker.on("dragend",function(){
+
+let pos = marker.getLatLng()
+
+document.getElementById("gps_val").value =
+pos.lat + "," + pos.lng
+
+reverseGeocode(pos.lat,pos.lng)
+
+})
+
+}
+
+
+
+function captureGPS(){
+
+if(!navigator.geolocation){
+
+alert("GPS not supported")
+
+return
+
+}
+
+navigator.geolocation.getCurrentPosition(
+
+function(position){
+
+let lat = position.coords.latitude
+let lon = position.coords.longitude
+
+document.getElementById("gps_val").value =
+lat + "," + lon
+
+map.setView([lat,lon],17)
+
+marker.setLatLng([lat,lon])
+
+reverseGeocode(lat,lon)
+
+},
+
+function(){
+
+alert("Unable to capture GPS")
+
+},
+
+{
+enableHighAccuracy:true
+}
+
+)
+
+}
+
+
+
+async function reverseGeocode(lat,lon){
+
+try{
+
+let url =
+"https://nominatim.openstreetmap.org/reverse?format=json&lat="+lat+"&lon="+lon
+
+let res = await fetch(url)
+
+let data = await res.json()
+
+if(data.display_name){
+
+document.getElementById("address_val").value =
+data.display_name
+
+}
+
+}catch(err){
+
+console.log("Address lookup failed")
+
+}
+
+}
+
+
 
 function saveSupplier(){
 
 const materials =
-Array.from(document.querySelectorAll('.material:checked'))
+Array.from(document.querySelectorAll('.material'))
 .map(x=>x.value)
 
 const supplier={
 
 firm:document.getElementById("firm_name").value,
+
 owner:document.getElementById("owner_name").value,
+
 owner_mobile:document.getElementById("owner_mobile").value,
+
 owner_whatsapp:document.getElementById("owner_whatsapp").value,
+
 manager_name:document.getElementById("manager_name").value,
+
 manager_mobile:document.getElementById("manager_mobile").value,
+
 manager_whatsapp:document.getElementById("manager_whatsapp").value,
+
 materials:materials.join(", "),
+
 gps:document.getElementById("gps_val").value,
-address:document.getElementById("address_val").value
+
+address:document.getElementById("address_val").value,
+
+timestamp:new Date().toISOString()
 
 }
+
 
 let data = localStorage.getItem("infra_suppliers")
 
@@ -111,7 +260,11 @@ localStorage.setItem(
 JSON.stringify(suppliers)
 )
 
-alert("Supplier Saved")
+
+alert("Supplier Saved Successfully")
+
+
+addSupplierPin(supplier)
 
 }
 
