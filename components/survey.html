@@ -1,147 +1,73 @@
-<div style="max-width:600px;margin:auto;font-family:system-ui,-apple-system,sans-serif;background:#F5F7FA;min-height:100vh;padding-bottom:40px">
+<div style="max-width:600px;margin:auto;font-family:system-ui;background:#F5F7FA;padding-bottom:40px">
 
-<!-- HEADER -->
-
-<div style="text-align:center;padding:18px 10px">
+<div style="text-align:center;padding:18px">
 
 <span style="font-size:26px;font-weight:700;color:#2F3A45">Infra</span>
 <span style="font-size:26px;font-weight:700;color:#FF6A00">Depot</span>
 
-<div style="font-size:12px;color:#64748B;margin-top:2px">
+<div style="font-size:12px;color:#64748B">
 Supplier Intelligence
 </div>
 
 </div>
 
 
-<!-- SUPPLIER FORM -->
-
 <div style="background:white;border-radius:12px;padding:16px;margin:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
 
-<h3 style="margin-top:0;font-size:16px;color:#2F3A45">
-Supplier Survey
-</h3>
+<h3>Supplier Survey</h3>
 
+<label>Firm Name</label>
+<input id="firm_name">
 
-<label style="font-size:12px;color:#64748B">Firm Name</label>
-<input id="firm_name" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:12px;font-size:14px">
+<label>Owner Name</label>
+<input id="owner_name">
 
+<label>Owner Mobile</label>
+<input id="owner_mobile">
 
-<label style="font-size:12px;color:#64748B">Owner Name</label>
-<input id="owner_name" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:12px;font-size:14px">
+<label>Owner WhatsApp</label>
+<input id="owner_whatsapp">
 
+<hr>
 
-<label style="font-size:12px;color:#64748B">Phone</label>
-<input id="owner_phone" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:12px;font-size:14px">
+<label>Manager Name</label>
+<input id="manager_name">
 
+<label>Manager Mobile</label>
+<input id="manager_mobile">
 
-<label style="font-size:12px;color:#64748B">GPS Location</label>
-<input id="gps_val" placeholder="Tap capture button" 
-style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:10px;font-size:14px">
+<label>Manager WhatsApp</label>
+<input id="manager_whatsapp">
 
+<hr>
 
-<button onclick="captureGPS()" 
-style="background:#2F3A45;color:white;border:none;width:100%;padding:12px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:12px">
+<h4>Material Intelligence</h4>
 
-Capture GPS Location
+<div id="material_selector"></div>
 
-</button>
+<hr>
 
+<label>GPS</label>
+<input id="gps_val">
 
-<label style="font-size:12px;color:#64748B">Auto Address</label>
-<input id="address_val" placeholder="Address will auto fill"
-style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:12px;font-size:14px">
+<div id="map" style="height:250px"></div>
 
+<label>Address</label>
+<textarea id="address_val"></textarea>
 
-<button onclick="saveSupplier()" 
-style="background:#FF6A00;color:white;border:none;width:100%;padding:14px;border-radius:8px;font-weight:600;font-size:15px;margin-top:10px">
-
-Save Supplier
-
-</button>
-
-</div>
-
-
-<!-- FOOTER -->
-
-<div style="text-align:center;font-size:11px;color:#94A3B8;margin-top:20px">
-
-InfraDepot Field Intelligence System
+<button onclick="saveSupplier()">Save Supplier</button>
 
 </div>
 
-</div>
-
-
+<script src="../data/materials.js"></script>
+<script src="../js/materialsEngine.js"></script>
 
 <script>
 
-/* CAPTURE GPS */
+document.addEventListener("DOMContentLoaded",function(){
 
-function captureGPS(){
+loadMaterialSelector()
 
-if(!navigator.geolocation){
-
-alert("GPS not supported")
-return
-
-}
-
-navigator.geolocation.getCurrentPosition(
-
-function(position){
-
-const lat = position.coords.latitude
-const lng = position.coords.longitude
-
-document.getElementById("gps_val").value = lat + "," + lng
-
-reverseGeocode(lat,lng)
-
-},
-
-function(){
-
-alert("Unable to capture GPS")
-
-},
-
-{
-enableHighAccuracy:true,
-timeout:10000
-}
-
-)
-
-}
-
-
-/* REVERSE GEOCODING */
-
-async function reverseGeocode(lat,lng){
-
-try{
-
-const url =
-"https://nominatim.openstreetmap.org/reverse?format=json&lat="+lat+"&lon="+lng
-
-const res = await fetch(url)
-
-const data = await res.json()
-
-if(data.display_name){
-
-document.getElementById("address_val").value = data.display_name
-
-}
-
-}catch(err){
-
-console.log("Address lookup failed")
-
-}
-
-}
+})
 
 </script>
