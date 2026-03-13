@@ -1,35 +1,35 @@
-/* LOGIN FUNCTION */
+function loginUser(){
 
-async function login(){
+const id = document.getElementById("staff_id").value
+const pass = document.getElementById("password").value
 
-const id = document.getElementById("login_id").value
-const password = document.getElementById("login_pass").value
+if(id === "" || pass === ""){
 
-const data = await apiRequest({
-action:"login",
-id:id,
-password:password
-})
+alert("Enter login credentials")
+return
 
-if(data.status === "OK"){
+}
 
-showDashboard()
+/* temporary login validation */
+
+if(pass === "1234"){
+
+loadSurvey()
 
 }else{
 
-document.getElementById("login_status").innerText =
-"Login failed"
+alert("Invalid login")
 
 }
 
 }
 
 
-/* LOAD DASHBOARD AFTER LOGIN */
+/* LOAD SURVEY PAGE */
 
-function showDashboard(){
+function loadSurvey(){
 
-fetch("components/dashboard.html")
+fetch("components/survey.html")
 .then(res => res.text())
 .then(html => {
 
@@ -37,14 +37,5 @@ document.getElementById("auth_layer").innerHTML = ""
 document.getElementById("app_layer").innerHTML = html
 
 })
-
-}
-
-
-/* LOGOUT */
-
-function logout(){
-
-location.reload()
 
 }
