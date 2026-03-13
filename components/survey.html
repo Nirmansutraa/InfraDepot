@@ -1,21 +1,60 @@
-<div style="max-width:600px;margin:auto;padding:20px">
+<div style="max-width:600px;margin:auto;font-family:system-ui,-apple-system,sans-serif;background:#F5F7FA;min-height:100vh;padding-bottom:40px">
 
-<h2>InfraDepot Supplier Survey</h2>
+<!-- HEADER -->
 
-<label>Firm Name</label>
-<input id="firm_name">
+<div style="text-align:center;padding:18px 10px">
 
-<label>Owner Name</label>
-<input id="owner_name">
+<span style="font-size:26px;font-weight:700;color:#2F3A45">Infra</span>
+<span style="font-size:26px;font-weight:700;color:#FF6A00">Depot</span>
 
-<label>Phone</label>
-<input id="owner_phone">
+<div style="font-size:12px;color:#64748B;margin-top:2px">
+Supplier Intelligence
+</div>
 
-<label>GPS Location</label>
-<input id="gps_val">
+</div>
 
-<button onclick="saveSupplier()" style="margin-top:20px">
+
+<!-- SURVEY CARD -->
+
+<div style="background:white;border-radius:12px;padding:16px;margin:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
+
+<h3 style="margin-top:0;font-size:16px;color:#2F3A45">
+Supplier Survey
+</h3>
+
+
+<label style="font-size:12px;color:#64748B">Firm Name</label>
+<input id="firm_name" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:12px;font-size:14px">
+
+
+<label style="font-size:12px;color:#64748B">Owner Name</label>
+<input id="owner_name" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:12px;font-size:14px">
+
+
+<label style="font-size:12px;color:#64748B">Phone</label>
+<input id="owner_phone" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:12px;font-size:14px">
+
+
+<label style="font-size:12px;color:#64748B">GPS Location</label>
+<input id="gps_val" placeholder="Tap capture button" style="width:100%;padding:12px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:12px;font-size:14px">
+
+
+<button onclick="saveSupplier()" 
+style="background:#FF6A00;color:white;border:none;width:100%;padding:14px;border-radius:8px;font-weight:600;font-size:15px;margin-top:10px">
+
 Save Supplier
+
 </button>
+
+</div>
+
+
+<!-- FOOTER -->
+
+<div style="text-align:center;font-size:11px;color:#94A3B8;margin-top:20px">
+
+InfraDepot Field Intelligence System
+
+</div>
 
 </div>
