@@ -5,12 +5,12 @@ const pass = document.getElementById("password").value
 
 if(id === "" || pass === ""){
 
-alert("Enter login credentials")
+alert("Enter Staff ID and Password")
 return
 
 }
 
-/* temporary login validation */
+/* TEMP LOGIN SYSTEM */
 
 if(pass === "1234"){
 
@@ -18,7 +18,7 @@ loadSurvey()
 
 }else{
 
-alert("Invalid login")
+alert("Invalid Login")
 
 }
 
