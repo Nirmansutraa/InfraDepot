@@ -1,55 +1,55 @@
-/* -----------------------------------
-InfraDepot Application Boot Module
------------------------------------ */
-
-
-/* System Start */
-
 document.addEventListener("DOMContentLoaded", startInfraDepot)
-
 
 function startInfraDepot(){
 
 console.log("InfraDepot system starting...")
 
-initializeApp()
-
-}
-
-
-/* -----------------------------------
-Initialize Application
------------------------------------ */
-
-function initializeApp(){
-
 loadLogin()
 
 }
 
-
-/* -----------------------------------
-Load Login Component
------------------------------------ */
+/* Load login interface */
 
 function loadLogin(){
 
 fetch("components/login.html")
-
-.then(response => response.text())
-
+.then(res => res.text())
 .then(html => {
 
 document.getElementById("auth_layer").innerHTML = html
 
-document.getElementById("app_layer").innerHTML = ""
+})
+
+}
+
+
+/* Load Survey Page */
+
+function loadSurvey(){
+
+fetch("components/survey.html")
+.then(res => res.text())
+.then(html => {
+
+document.getElementById("app_layer").innerHTML = html
+
+initSurvey()
 
 })
 
-.catch(err => {
+}
 
-console.error("Login component failed to load", err)
 
-})
+function initSurvey(){
+
+console.log("Survey initialized")
+
+if(typeof loadMaterialSelector === "function"){
+loadMaterialSelector()
+}
+
+if(typeof initSupplierMap === "function"){
+initSupplierMap()
+}
 
 }
