@@ -4,13 +4,11 @@ const id = document.getElementById("staff_id").value
 const pass = document.getElementById("password").value
 
 if(id === "" || pass === ""){
-
-alert("Enter Staff ID and Password")
+alert("Enter login credentials")
 return
-
 }
 
-/* TEMP LOGIN SYSTEM */
+/* TEMP LOGIN */
 
 if(pass === "1234"){
 
@@ -23,9 +21,6 @@ alert("Invalid Login")
 }
 
 }
-
-
-/* LOAD SURVEY PAGE */
 
 function loadSurvey(){
 
