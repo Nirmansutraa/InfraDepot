@@ -1,18 +1,49 @@
-async function serverLogin(){
+/* -----------------------------------------
+   INFRADEPOT API CONNECTOR
+------------------------------------------ */
 
-const id=document.getElementById("login_id").value
-const password=document.getElementById("login_pass").value
+const API_URL =
+"https://script.google.com/macros/s/AKfycbyBe9D2_FMlUyGVznsSUscOC-WT2Wzbl67By1BA6APEGv23ddbarvffU2D1VG-E3lQy/exec";
 
-const data=await apiRequest({
-action:"login",
-id:id,
-password:password
+
+/* -----------------------------------------
+   GENERIC API REQUEST
+------------------------------------------ */
+
+async function apiRequest(payload){
+
+try{
+
+console.log("Sending request:", payload)
+
+const response = await fetch(API_URL,{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify(payload)
+
 })
 
-if(data.status==="OK"){
-alert("Login success")
-}else{
-alert("Login failed")
+const data = await response.json()
+
+console.log("Server response:",data)
+
+return data
+
+}
+
+catch(error){
+
+console.error("API ERROR:",error)
+
+alert("Server connection failed")
+
+return {status:"ERROR"}
+
 }
 
 }
