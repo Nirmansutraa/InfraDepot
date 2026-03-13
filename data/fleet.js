@@ -1,9 +1,8 @@
-const fleetTypes=[
-
+const fleetTypes = [
 "Tractor",
 "Mini Truck",
 "Truck",
 "Mini Dumper",
-"Dumper"
-"Trailer",
+"Dumper",
+"Trailer"
 ]
