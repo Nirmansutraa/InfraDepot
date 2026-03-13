@@ -1,103 +1,21 @@
-<div class="container">
+<div style="max-width:600px;margin:auto">
 
-<div class="card">
-
-<h3>Supplier Tracking ID</h3>
-
-<div id="sup_id" class="id-box">ID---</div>
-
-</div>
-
-
-<div class="card">
-
-<h3>Firm Information</h3>
+<h2>InfraDepot Supplier Survey</h2>
 
 <label>Firm Name</label>
-<input type="text" id="firm_name" oninput="updateID()">
+<input id="firm_name">
 
 <label>Owner Name</label>
-<input type="text" id="owner_name">
+<input id="owner_name">
 
-<label>Owner Phone</label>
-<input type="tel" id="owner_phone">
+<label>Phone</label>
+<input id="owner_phone">
 
-<label>Business Address</label>
-<textarea id="business_address"></textarea>
+<label>GPS</label>
+<input id="gps_val">
 
-</div>
-
-
-<div class="card">
-
-<h3>GPS Capture</h3>
-
-<div id="map"></div>
-
-<button class="btn"
-style="background:black;color:white;width:100%"
-onclick="getGPS()">
-
-📍 Capture GPS
-
+<button onclick="saveSupplier()">
+Save Supplier
 </button>
-
-<input id="gps_val" readonly>
-
-</div>
-
-
-<div class="card">
-
-<h3>Photo Verification</h3>
-
-<input
-type="file"
-id="img_in"
-accept="image/*"
-capture="environment"
-multiple
-onchange="handlePhotos(this)"
->
-
-<div id="preview_zone"></div>
-
-</div>
-
-
-<div class="card">
-
-<h3>Actions</h3>
-
-<button
-class="btn"
-style="background:#64748b;color:white;width:100%"
-onclick="saveLocal()">
-
-Save Local
-
-</button>
-
-<br><br>
-
-<button
-class="btn"
-style="background:#10b981;color:white;width:100%"
-onclick="submitData()">
-
-Submit
-
-</button>
-
-</div>
-
-
-<div class="card">
-
-<h3>History</h3>
-
-<div id="history_list"></div>
-
-</div>
 
 </div>
