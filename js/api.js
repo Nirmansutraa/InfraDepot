@@ -1,48 +1,37 @@
-/* -----------------------------------------
-   INFRADEPOT API CONNECTOR
------------------------------------------- */
+/* =================================
+InfraDepot API Connector
+================================= */
 
 const API_URL =
-"https://script.google.com/macros/s/AKfycbyBe9D2_FMlUyGVznsSUscOC-WT2Wzbl67By1BA6APEGv23ddbarvffU2D1VG-E3lQy/exec";
+"https://script.google.com/macros/s/AKfycbwI99TO82FO-l10TcnTQSJeVu3W-K3lkO1zZDd65ePsA6zGBqo2uRUglUMEFL8qjWq-/exec";
 
 
-/* -----------------------------------------
-   GENERIC API REQUEST
------------------------------------------- */
+/* SEND SUPPLIER DATA */
 
-async function apiRequest(payload){
+async function sendSupplierToServer(data){
 
 try{
 
-console.log("Sending request:", payload)
-
-const response = await fetch(API_URL,{
+await fetch(API_URL,{
 
 method:"POST",
-
+mode:"no-cors",
 headers:{
-"Content-Type":"application/json"
+"Content-Type":"text/plain"
 },
 
-body:JSON.stringify(payload)
+body:JSON.stringify({
+action:"submit_supplier",
+...data
+})
 
 })
 
-const data = await response.json()
+console.log("Supplier sent to server")
 
-console.log("Server response:",data)
+}catch(error){
 
-return data
-
-}
-
-catch(error){
-
-console.error("API ERROR:",error)
-
-alert("Server connection failed")
-
-return {status:"ERROR"}
+console.log("Server connection failed")
 
 }
 
