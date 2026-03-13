@@ -1,41 +1,71 @@
-/* ----------------------------------
-   CAPTURE GPS LOCATION
----------------------------------- */
+/* ---------------------------------------
+InfraDepot GPS + Map Module
+--------------------------------------- */
 
-function captureGPS(){
+let map
+let marker
+
+
+/* ---------- INITIALIZE MAP ---------- */
+
+function initMap(){
+
+const mapContainer = document.getElementById("map")
+
+if(!mapContainer) return
+
+map = L.map("map").setView([24.5854,73.7125],13)
+
+L.tileLayer(
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+{
+maxZoom:19
+}
+).addTo(map)
+
+}
+
+
+/* ---------- CAPTURE GPS ---------- */
+
+function getGPS(){
 
 if(!navigator.geolocation){
 
-alert("Geolocation not supported")
+alert("GPS not supported on this device")
 return
 
 }
 
 navigator.geolocation.getCurrentPosition(
 
-position => {
+async function(position){
 
 const lat = position.coords.latitude
 const lng = position.coords.longitude
 
-const gps = lat + "," + lng
+document.getElementById("gps_val").value =
+lat + "," + lng
 
-document.getElementById("gps_val").value = gps
+if(marker) map.removeLayer(marker)
+
+marker = L.marker([lat,lng]).addTo(map)
+
+map.setView([lat,lng],17)
 
 reverseGeocode(lat,lng)
 
 },
 
-error => {
+function(){
 
-alert("Unable to capture location")
+alert("GPS access denied")
 
 },
 
 {
 enableHighAccuracy:true,
-timeout:10000,
-maximumAge:0
+timeout:10000
 }
 
 )
@@ -43,16 +73,17 @@ maximumAge:0
 }
 
 
-/* ----------------------------------
-   REVERSE GEOCODING
----------------------------------- */
+/* ---------- REVERSE GEOCODING ---------- */
 
 async function reverseGeocode(lat,lng){
 
 try{
 
 const url =
-"https://nominatim.openstreetmap.org/reverse?format=json&lat="+lat+"&lon="+lng
+"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="
++ lat +
+"&lon="
++ lng
 
 const res = await fetch(url)
 
@@ -65,10 +96,20 @@ data.display_name
 
 }
 
-}catch(err){
+}
+catch(err){
 
 console.log("Reverse geocode failed")
 
 }
 
 }
+
+
+/* ---------- AUTO INIT WHEN PAGE LOADS ---------- */
+
+document.addEventListener("DOMContentLoaded", function(){
+
+initMap()
+
+})
