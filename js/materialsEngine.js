@@ -2,42 +2,44 @@ function loadMaterialSelector(){
 
 const container = document.getElementById("material_selector")
 
-container.innerHTML = ""
+if(!container) return
 
-Object.keys(MATERIALS_DB).forEach(material => {
+container.innerHTML=""
 
-const card = document.createElement("div")
-card.style.marginBottom = "12px"
+Object.keys(MATERIALS_DB).forEach(material=>{
 
-const matTitle = document.createElement("div")
-matTitle.innerHTML = "<b>"+material+"</b>"
+let block=document.createElement("div")
+block.className="material-block"
 
-const varietySelect = document.createElement("select")
-varietySelect.style.width="100%"
-varietySelect.style.marginBottom="6px"
+let title=document.createElement("div")
+title.className="material-title"
+title.innerText=material
+
+let variety=document.createElement("select")
+variety.className="input material"
 
 MATERIALS_DB[material].varieties.forEach(v=>{
-const opt=document.createElement("option")
+let opt=document.createElement("option")
 opt.value=v
 opt.text=v
-varietySelect.appendChild(opt)
+variety.appendChild(opt)
 })
 
-const brandSelect = document.createElement("select")
-brandSelect.style.width="100%"
+let brand=document.createElement("select")
+brand.className="input"
 
 MATERIALS_DB[material].brands.forEach(b=>{
-const opt=document.createElement("option")
+let opt=document.createElement("option")
 opt.value=b
 opt.text=b
-brandSelect.appendChild(opt)
+brand.appendChild(opt)
 })
 
-card.appendChild(matTitle)
-card.appendChild(varietySelect)
-card.appendChild(brandSelect)
+block.appendChild(title)
+block.appendChild(variety)
+block.appendChild(brand)
 
-container.appendChild(card)
+container.appendChild(block)
 
 })
 
