@@ -9,7 +9,7 @@ gps : document.getElementById("gps_val").value
 
 }
 
-console.log("Supplier Saved",data)
+console.log("Supplier Data:",data)
 
 alert("Supplier Saved")
 
