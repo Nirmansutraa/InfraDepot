@@ -1,43 +1,43 @@
-<div style="max-width:600px;margin:auto;font-family:system-ui;background:#F5F7FA;padding-bottom:40px">
+<div class="container">
 
-<div style="text-align:center;padding:18px">
+<div class="brand-header">
 
-<span style="font-size:26px;font-weight:700;color:#2F3A45">Infra</span>
-<span style="font-size:26px;font-weight:700;color:#FF6A00">Depot</span>
+<span class="brand-infra">Infra</span>
+<span class="brand-depot">Depot</span>
 
-<div style="font-size:12px;color:#64748B">
+<div class="tagline">
 Supplier Intelligence
 </div>
 
 </div>
 
 
-<div style="background:white;border-radius:12px;padding:16px;margin:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
+<div class="card">
 
 <h3>Supplier Survey</h3>
 
 <label>Firm Name</label>
-<input id="firm_name">
+<input id="firm_name" class="input">
 
 <label>Owner Name</label>
-<input id="owner_name">
+<input id="owner_name" class="input">
 
 <label>Owner Mobile</label>
-<input id="owner_mobile">
+<input id="owner_mobile" class="input">
 
 <label>Owner WhatsApp</label>
-<input id="owner_whatsapp">
+<input id="owner_whatsapp" class="input">
 
 <hr>
 
 <label>Manager Name</label>
-<input id="manager_name">
+<input id="manager_name" class="input">
 
 <label>Manager Mobile</label>
-<input id="manager_mobile">
+<input id="manager_mobile" class="input">
 
 <label>Manager WhatsApp</label>
-<input id="manager_whatsapp">
+<input id="manager_whatsapp" class="input">
 
 <hr>
 
@@ -48,14 +48,18 @@ Supplier Intelligence
 <hr>
 
 <label>GPS</label>
-<input id="gps_val">
+<input id="gps_val" class="input">
 
-<div id="map" style="height:250px"></div>
+<div id="map"></div>
 
 <label>Address</label>
-<textarea id="address_val"></textarea>
+<textarea id="address_val" class="input"></textarea>
 
-<button onclick="saveSupplier()">Save Supplier</button>
+<button class="btn-primary" onclick="saveSupplier()">
+Save Supplier
+</button>
+
+</div>
 
 </div>
 
