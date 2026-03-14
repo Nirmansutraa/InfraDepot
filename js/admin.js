@@ -1,5 +1,5 @@
 /**
- * INFRA DEPOT - ADMIN ENGINE v1.5
+ * INFRA DEPOT - ADMIN ENGINE
  */
 export const AdminEngine = {
     init: function(isFullAdmin) {
@@ -15,54 +15,24 @@ export const AdminEngine = {
                 </div>
                 
                 <div id="admin_stats" class="dashboard-grid">
-                    <div class="stat"><small>DATA</small><div id="total_data">...</div></div>
-                    <div class="stat"><small>STAFF</small><div id="total_staff">...</div></div>
+                    <div class="stat" style="background:#fff; padding:15px; border-radius:10px; text-align:center;">
+                        <small style="color:#666;">DATA ENTRIES</small>
+                        <div id="total_data" style="font-size:24px; font-weight:bold; color:#10b981;">...</div>
+                    </div>
                 </div>
 
-                <div class="card">
-                    <div class="section-label">SURVEY FEED</div>
-                    <div id="survey_list" style="max-height:300px; overflow-y:auto;">Loading...</div>
-                </div>
-
-                <div class="card">
-                    <div class="section-label">LIVE INFRA MAP</div>
-                    <div id="admin_map" style="height:300px; border-radius:10px;"></div>
+                <div class="card" style="background:#fff; padding:20px; border-radius:12px; margin-top:20px;">
+                    <div style="color:#f59e0b; font-size:10px; font-weight:bold; margin-bottom:10px;">LIVE INFRA MAP</div>
+                    <div id="admin_map" style="height:400px; border-radius:10px;"></div>
                 </div>
             </div>
         `;
 
-        // Wait a split second for HTML to settle, then load Map and Data
         setTimeout(() => {
             if (window.MapEngine) window.MapEngine.init('admin_map');
-            this.fetchLiveIntel();
         }, 300);
-    },
-
-    fetchLiveIntel: async function() {
-        try {
-            const { collection, getDocs, query, orderBy } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-            
-            const q = query(collection(window.db, "surveys"), orderBy("timestamp", "desc"));
-            const querySnapshot = await getDocs(q);
-            
-            const list = document.getElementById('survey_list');
-            const totalData = document.getElementById('total_data');
-            
-            let html = "";
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                html += `<div style="padding:10px; border-bottom:1px solid #eee; font-size:12px;">
-                            <b>${data.firmName || 'Unnamed'}</b><br>
-                            <small>${data.address || 'No Address'}</small>
-                         </div>`;
-            });
-            
-            list.innerHTML = html || "No records found.";
-            totalData.innerText = querySnapshot.size;
-        } catch (e) {
-            console.error("Admin Fetch Error:", e);
-        }
     }
 };
 
+// Also attach to window just in case
 window.AdminEngine = AdminEngine;
