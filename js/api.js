@@ -1,38 +1,38 @@
-/* =================================
-InfraDepot API Connector
-================================= */
+/**
+ * INFRA DEPOT - MASTER STATE CONTROLLER v1.3
+ */
+import { AuthEngine } from './auth.js';
+import { AdminEngine } from './admin.js';
+import { UIEngine } from './ui.js';
 
-const API_URL =
-"https://script.google.com/macros/s/AKfycbwI99TO82FO-l10TcnTQSJeVu3W-K3lkO1zZDd65ePsA6zGBqo2uRUglUMEFL8qjWq-/exec";
+const App = {
+    init: function() {
+        // Clear any previous "ghost" layers
+        document.body.innerHTML = '<div id="main_viewport"></div>';
+        this.render();
+    },
 
+    render: function() {
+        const viewport = document.getElementById('main_viewport');
+        const user = JSON.parse(localStorage.getItem('infra_user'));
 
-/* SEND SUPPLIER DATA */
+        if (user) {
+            console.log("App: Session active.");
+            // Create a clean container for the App
+            viewport.innerHTML = '<div id="app_layer" style="display:block;"></div>';
+            
+            if (user.role === 'admin' || user.id === 'vijay_master') {
+                AdminEngine.init(true);
+            } else {
+                UIEngine.init();
+            }
+        } else {
+            console.log("App: Loading Login...");
+            // Create a clean container for Login
+            viewport.innerHTML = '<div id="auth_layer" style="display:block;"></div>';
+            AuthEngine.init();
+        }
+    }
+};
 
-async function sendSupplierToServer(data){
-
-try{
-
-await fetch(API_URL,{
-
-method:"POST",
-mode:"no-cors",
-headers:{
-"Content-Type":"text/plain"
-},
-
-body:JSON.stringify({
-action:"submit_supplier",
-...data
-})
-
-})
-
-console.log("Supplier sent to server")
-
-}catch(error){
-
-console.log("Server connection failed")
-
-}
-
-}
+window.addEventListener('DOMContentLoaded', () => App.init());
