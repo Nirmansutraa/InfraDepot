@@ -1,74 +1,40 @@
 /**
- * INFRA DEPOT - GEOSPATIAL ENGINE 2026
- * Fix: High Accuracy Capture & Invalidation Size
+ * INFRA DEPOT - MAP & GPS ENGINE
  */
-
-const MapEngine = {
-    map: null,
-    marker: null,
-
-    init: function() {
-        const container = document.getElementById('map_display');
-        if (!container) return;
-
-        // Reset if it exists to avoid map crashes
-        if (this.map) {
-            this.map.remove();
-        }
-
-        // Initialize at Udaipur center
-        this.map = L.map('map_display', {
-            zoomControl: false,
-            attributionControl: false
-        }).setView([24.5854, 73.7125], 13);
-
-        // March 2026 Trend: Ultra-Dark Tiles
+export const MapEngine = {
+    init: function(containerId) {
+        console.log("Map: Initializing GPS tracking...");
+        this.map = L.map(containerId).setView([24.5854, 73.7125], 13); // Udaipur center
+        
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19
+            attribution: '&copy; OpenStreetMap'
         }).addTo(this.map);
 
-        this.marker = L.marker([24.5854, 73.7125]).addTo(this.map);
-
-        // Forces the map to size correctly, even if it loads hidden
-        setTimeout(() => {
-            this.map.invalidateSize();
-        }, 800);
+        this.marker = null;
     },
 
-    captureGPS: function() {
-        const addrInput = document.getElementById('form_address');
-        const coordsInput = document.getElementById('form_coords');
-
+    autoFillGPS: function() {
         if (!navigator.geolocation) {
-            alert("This device cannot access GPS.");
-            return;
+            return alert("GPS not supported on this device");
         }
 
-        if (addrInput) addrInput.value = "📡 SATELLITE LINKING...";
-        if (coordsInput) coordsInput.value = "LOCKING COORDINATES...";
-
-        // HIGH ACCURACY REQUEST (March 2026 standard)
-        navigator.geolocation.getCurrentPosition((pos) => {
-            const lat = pos.coords.latitude.toFixed(6);
-            const lng = pos.coords.longitude.toFixed(6);
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude.toFixed(6);
+            const lng = position.coords.longitude.toFixed(6);
             
-            this.map.setView([lat, lng], 17); // Zoom in on location
-            this.marker.setLatLng([lat, lng]);
+            // Fill the inputs in the UI
+            const latInput = document.getElementById('survey_lat');
+            const lngInput = document.getElementById('survey_lng');
             
-            if (coordsInput) coordsInput.value = `${lat}, ${lng}`;
-            this.map.invalidateSize(); // Fix tiles after reposition
+            if(latInput) latInput.value = lat;
+            if(lngInput) lngInput.value = lng;
 
-            // Verified Address for current location
-            if (addrInput) {
-                // Production: Use Geocoding API. For now, simulated:
-                addrInput.value = `Verified Locality: Hiran Magri, Sector 4, Udaipur, Rajasthan`;
-            }
-
+            console.log(`GPS: Located at ${lat}, ${lng}`);
         }, (err) => {
-            console.error(err);
-            if (addrInput) addrInput.value = "PERMISSION DENIED: No Address.";
-            if (coordsInput) coordsInput.value = "GPS BLOCKED.";
-            alert("Permission Error: Please allow 'Location Access' in your browser settings to verify the business location.");
-        }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }); // Robust settings
+            alert("Please enable GPS/Location permissions");
+        });
     }
 };
+
+// CRITICAL: Make it globally accessible
+window.MapEngine = MapEngine;
