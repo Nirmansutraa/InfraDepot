@@ -1,16 +1,23 @@
 {
   "short_name": "InfraDepot",
-  "name": "InfraDepot Construction Intelligence",
+  "name": "InfraDepot Market Intelligence",
+  "description": "Enterprise construction material supply-chain intelligence for Udaipur.",
   "icons": [
     {
       "src": "assets/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "192x192",
+      "type": "image/png"
     }
   ],
-  "start_url": ".",
+  "start_url": "./index.html",
   "display": "standalone",
+  "orientation": "portrait",
   "theme_color": "#2dd4bf",
   "background_color": "#000000"
 }
