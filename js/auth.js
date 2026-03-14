@@ -1,13 +1,14 @@
 /**
  * INFRA DEPOT - IDENTITY & ROLE ENGINE 2026
+ * Restricted Field Access Update
  */
 
 const AuthEngine = {
-    // 🛡️ Master User Database (Simulated for this stage)
     users: {
         "vijay_master": { role: "super_admin", name: "Vijay (Owner)" },
         "admin_01": { role: "admin", name: "Project Manager" },
-        "FS-001": { role: "field_staff", name: "Field Surveyor 1" }
+        "FS-001": { role: "field_staff", name: "Field Surveyor 1" },
+        "FS-002": { role: "field_staff", name: "Field Surveyor 2" }
     },
 
     init: function() {
@@ -23,11 +24,11 @@ const AuthEngine = {
         document.getElementById('auth_layer').innerHTML = `
             <div class="container" style="padding-top:100px; text-align:center;">
                 <h1 style="color:var(--accent)">INFRA DEPOT</h1>
-                <p>Intelligence & Logistics Core</p>
+                <p style="opacity:0.7">Enterprise Survey System v4.0</p>
                 <div class="card" style="margin-top:40px;">
-                    <input type="text" id="login_id" placeholder="Enter Staff/Admin ID">
-                    <button class="btn-main btn-green" onclick="AuthEngine.handleLogin()">🔓 SECURE LOGIN</button>
-                    <p style="font-size:11px; margin-top:15px; opacity:0.6;">March 2026 Biometric Handshake Enabled</p>
+                    <input type="text" id="login_id" placeholder="Enter Staff ID">
+                    <button class="btn-main btn-green" onclick="AuthEngine.handleLogin()">SECURE LOGIN</button>
+                    <p style="font-size:10px; margin-top:20px; opacity:0.5;">March 2026 Biometric Handshake Ready</p>
                 </div>
             </div>
         `;
@@ -38,25 +39,22 @@ const AuthEngine = {
         const user = this.users[id];
 
         if (user) {
-            const sessionData = { id: id, ...user };
-            localStorage.setItem('infra_user', JSON.stringify(sessionData));
-            alert(`Welcome back, ${user.name}`);
+            localStorage.setItem('infra_user', JSON.stringify({ id: id, ...user }));
             location.reload();
         } else {
-            alert("Unauthorized ID. Access Denied.");
+            alert("Access Denied: ID not recognized.");
         }
     },
 
     launchRoleBasedUI: function(user) {
         document.getElementById('auth_layer').style.display = 'none';
         
-        // Router: Decides what the user sees
-        if (user.role === "super_admin") {
-            AdminEngine.init(true); // Launch Admin Panel with Master rights
-        } else if (user.role === "admin") {
-            AdminEngine.init(false); // Launch Admin Panel with view rights
+        // --- THE RESTRICTION LOGIC ---
+        if (user.role === "super_admin" || user.role === "admin") {
+            AdminEngine.init(user.role === "super_admin");
         } else {
-            UIEngine.init(); // Launch Survey App for field staff
+            // Field Staff ONLY see the survey form
+            UIEngine.init(); 
         }
     },
 
@@ -66,4 +64,4 @@ const AuthEngine = {
     }
 };
 
-window.App = AuthEngine; // Bridge for logout button
+window.App = AuthEngine;
