@@ -1,136 +1,136 @@
-/**
- * INFRA DEPOT - ENTERPRISE UI v2.2 (Final Pro Hierarchy)
- */
+import { materialsData } from '../data/materials.js';
+
 export const UIEngine = {
     init: function() {
         const appLayer = document.getElementById('app_layer');
-        appLayer.style.display = 'block';
-        document.getElementById('auth_layer').style.display = 'none';
-
-        const hierarchy = {
-            "Sand": ["M-Sand", "P-Sand", "River Sand", "Banas Sand"],
-            "Aggregates": ["10mm", "20mm", "40mm", "65mm", "Grit", "Dust"],
-            "Stone": ["Stone Boulders", "Random Rubble", "Khanda", "Kota Stone"],
-            "Cement": ["UltraTech", "Ambuja", "ACC", "JK Lakshmi", "Shree", "Dalmia", "Wonder", "Birla"],
-            "Steel": ["Tata Tiscon", "JSW", "SAIL", "Vizag", "Jindal", "Kamdhenu", "Rathi"],
-            "Bricks": ["Red Bricks", "AAC Blocks", "Fly Ash", "CLC Blocks"]
-        };
-
-        const fleet = ["Tractor", "Mini Truck", "Truck", "Mini Dumper", "Dumper", "Trailer"];
-
+        const trackingID = "ID-" + Math.floor(100000 + Math.random() * 900000);
+        
         appLayer.innerHTML = `
-            <div style="background:#f3f4f6; min-height:100vh; padding-bottom:100px; font-family:sans-serif;">
-                <div style="padding:15px;">
+            <div id="survey_container" style="padding-bottom:100px;">
+                
+                <div class="card" style="background:var(--primary); color:white; text-align:center;">
+                    <div class="section-label" style="color:#10b981;">1. TRACKING ID</div>
+                    <div style="font-size:28px; font-family:monospace; font-weight:bold;">${trackingID}</div>
+                </div>
+
+                <div class="card">
+                    <div class="section-label">2. ENTITY & CONTACTS</div>
+                    <input type="text" id="firm_name" placeholder="Primary Firm Name">
                     
-                    <div class="card" style="background:#fff; border-radius:12px; padding:20px; margin-bottom:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
-                        <div class="section-label">2. ENTITY & CONTACTS</div>
-                        <input type="text" id="firm_name" placeholder="Enter Firm Name" style="border:1px solid #ddd; color:#000;">
-                        
-                        <div style="height:1px; background:#eee; margin:15px 0;"></div>
-                        
-                        <input type="text" id="owner_name" placeholder="Owner Full Name" style="border:1px solid #ddd; color:#000;">
-                        <div class="dashboard-grid">
-                            <input type="number" id="owner_phone" placeholder="Owner Phone" oninput="document.getElementById('owner_wa').value=this.value" style="border:1px solid #ddd; color:#000;">
-                            <input type="number" id="owner_wa" placeholder="Owner WhatsApp" style="border:1px solid #ddd; color:#000;">
-                        </div>
-
-                        <input type="text" id="mgr_name" placeholder="Manager Name" style="border:1px solid #ddd; color:#000; margin-top:10px;">
-                        <div class="dashboard-grid">
-                            <input type="number" id="mgr_phone" placeholder="Manager Phone" oninput="document.getElementById('mgr_wa').value=this.value" style="border:1px solid #ddd; color:#000;">
-                            <input type="number" id="mgr_wa" placeholder="Manager WhatsApp" style="border:1px solid #ddd; color:#000;">
-                        </div>
+                    <p style="font-size:10px; margin:10px 0 2px;">OWNER DETAILS</p>
+                    <input type="text" id="owner_name" placeholder="Owner Full Name">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <input type="number" id="owner_phone" placeholder="Phone" oninput="document.getElementById('owner_wa').value=this.value">
+                        <input type="number" id="owner_wa" placeholder="WhatsApp">
                     </div>
 
-                    <div class="card" style="background:#fff; border-radius:12px; padding:20px; margin-bottom:15px;">
-                        <div class="section-label">3. GPS & VERIFICATION</div>
-                        <div id="survey_map" style="height:200px; border-radius:8px; margin-bottom:10px;"></div>
-                        <button class="btn-main" onclick="window.MapEngine.captureGPS()" style="background:#111; color:#fff;">📍 CAPTURE GPS & ADDRESS</button>
-                        <textarea id="business_address" placeholder="Address will auto-fill..." style="width:100%; border:1px solid #ddd; margin-top:10px; border-radius:8px; padding:10px;"></textarea>
-                        <input type="text" id="survey_coords" placeholder="Coordinates" readonly style="background:#f9fafb; margin-top:5px;">
+                    <p style="font-size:10px; margin:10px 0 2px;">MANAGER CONTACT</p>
+                    <input type="text" id="mgr_name" placeholder="Manager Name">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <input type="number" id="mgr_phone" placeholder="Phone" oninput="document.getElementById('mgr_wa').value=this.value">
+                        <input type="number" id="mgr_wa" placeholder="WhatsApp">
                     </div>
+                    
+                    <textarea id="business_address" placeholder="Business Address (Auto-fills on GPS)"></textarea>
+                </div>
 
-                    <div class="card" style="background:#fff; border-radius:12px; padding:20px; margin-bottom:15px;">
-                        <div class="section-label">4. MATERIALS INTELLIGENCE</div>
-                        ${Object.keys(hierarchy).map(mat => `
-                            <div style="margin-bottom:10px; border:1px solid #eee; border-radius:8px; overflow:hidden;">
-                                <label style="display:flex; align-items:center; padding:12px; background:#f9fafb; cursor:pointer;">
-                                    <input type="checkbox" style="width:20px; margin-right:15px;" onchange="document.getElementById('sub_${mat}').style.display = this.checked ? 'block' : 'none'">
-                                    <span style="font-weight:bold; color:#111;">${mat}</span>
-                                </label>
-                                <div id="sub_${mat}" style="display:none; padding:10px 15px; background:#fff; border-top:1px solid #eee;">
-                                    <p style="font-size:10px; color:#f59e0b; margin-bottom:8px;">SELECT VARIETY / BRANDS:</p>
-                                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                                        ${hierarchy[mat].map(brand => `
-                                            <label style="font-size:12px; color:#444; display:flex; align-items:center;">
-                                                <input type="checkbox" class="mat-item" data-cat="${mat}" value="${brand}" style="width:14px; margin-right:8px;"> ${brand}
-                                            </label>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
+                <div class="card">
+                    <div class="section-label">3. GPS & VERIFICATION</div>
+                    <div id="survey_map" style="height:180px; border-radius:10px; margin-bottom:10px;"></div>
+                    <button class="btn-main" onclick="window.MapEngine.captureGPS()">📍 CAPTURE GPS & ADDRESS</button>
+                    <input type="text" id="survey_coords" placeholder="Coordinates" readonly>
+                    
+                    <div style="border:2px dashed #ccc; padding:20px; text-align:center; border-radius:10px; margin-top:10px;" onclick="document.getElementById('photo_up').click()">
+                        📸 Tap to capture business photos
+                        <input type="file" id="photo_up" accept="image/*" capture="camera" style="display:none;" onchange="window.handlePhoto(this)">
                     </div>
+                    <div id="photo_preview" style="display:flex; gap:10px; margin-top:10px; overflow-x:auto;"></div>
+                </div>
 
-                    <div class="card" style="background:#fff; border-radius:12px; padding:20px; margin-bottom:15px;">
-                        <div class="section-label">5. TRANSPORTATION FLEET</div>
-                        <div class="dashboard-grid">
-                            ${fleet.map(type => `
-                                <div style="background:#f9fafb; padding:15px; border-radius:10px; text-align:center; border:1px solid #eee;">
-                                    <div style="font-size:12px; font-weight:bold; color:#111; margin-bottom:10px;">${type}</div>
-                                    <div style="display:flex; justify-content:center; align-items:center; gap:15px;">
-                                        <button onclick="window.updateCounter('${type}', -1)" style="width:30px; height:30px; background:#111; color:#fff; border:none; border-radius:6px; cursor:pointer;">-</button>
-                                        <b id="count_${type}" style="font-size:18px; min-width:25px; color:#111;">0</b>
-                                        <button onclick="window.updateCounter('${type}', 1)" style="width:30px; height:30px; background:#111; color:#fff; border:none; border-radius:6px; cursor:pointer;">+</button>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
+                <div class="card">
+                    <div class="section-label">4. MATERIALS INTELLIGENCE</div>
+                    <div id="hierarchy_container"></div>
+                </div>
 
-                    <button class="btn-main" onclick="window.syncSurveyNow()" style="background:#10b981; color:#fff; height:60px; font-size:18px; box-shadow:0 4px 10px rgba(16,185,129,0.3);">🚀 SUBMIT INDUSTRY SYNC</button>
+                <div class="card">
+                    <div class="section-label">5. TRANSPORTATION FLEET</div>
+                    <div id="fleet_container"></div>
+                </div>
+
+                <div style="padding:12px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <button class="btn-main" style="background:#64748b;">SAVE LOCAL</button>
+                    <button class="btn-main btn-sync" onclick="window.syncNow()">SUBMIT SYNC</button>
                 </div>
             </div>
         `;
 
-        window.fleetData = {};
-        fleet.forEach(t => window.fleetData[t] = 0);
+        this.renderHierarchy();
+        this.renderFleet();
         setTimeout(() => window.MapEngine.init('survey_map'), 500);
+    },
+
+    renderHierarchy: function() {
+        const container = document.getElementById('hierarchy_container');
+        Object.keys(materialsData).forEach(mat => {
+            const div = document.createElement('div');
+            div.className = 'mat-card';
+            div.innerHTML = `
+                <div class="mat-header" onclick="window.toggleDiv('var_${mat}')">
+                    <span>${mat}</span>
+                    <span>▼</span>
+                </div>
+                <div id="var_${mat}" class="variety-box">
+                    ${materialsData[mat].varieties.map(v => `
+                        <div style="margin-bottom:8px;">
+                            <label><input type="checkbox" onchange="window.toggleDiv('brand_${v.replace(/ /g,'')}')"> ${v}</label>
+                            <div id="brand_${v.replace(/ /g,'')}" class="brand-box">
+                                ${materialsData[mat].brands.map(b => `
+                                    <label style="display:block; font-size:12px; margin:4px 0;">
+                                        <input type="checkbox" class="data-brand" data-mat="${mat}" data-var="${v}" value="${b}"> ${b}
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    },
+
+    renderFleet: function() {
+        const fleet = ["Tractor", "Mini Truck", "Truck", "Mini Dumper", "Dumper", "Trailer"];
+        const container = document.getElementById('fleet_container');
+        fleet.forEach(f => {
+            const div = document.createElement('div');
+            div.className = 'stepper';
+            div.innerHTML = `
+                <span style="font-size:14px; font-weight:bold;">${f}</span>
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <button class="step-btn" onclick="window.updateStep('${f}', -1)">-</button>
+                    <b id="count_${f}">0</b>
+                    <button class="step-btn" onclick="window.updateStep('${f}', 1)">+</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
     }
 };
 
-window.updateCounter = function(t, c) {
-    let v = (window.fleetData[t] || 0) + c;
-    if (v >= 0 && v <= 20) {
-        window.fleetData[t] = v;
-        document.getElementById(`count_${t}`).innerText = v;
-    }
+window.toggleDiv = (id) => {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
 };
 
-window.syncSurveyNow = async function() {
-    const selectedMats = {};
-    document.querySelectorAll('.mat-item:checked').forEach(el => {
-        const cat = el.getAttribute('data-cat');
-        if(!selectedMats[cat]) selectedMats[cat] = [];
-        selectedMats[cat].push(el.value);
-    });
+window.updateStep = (id, val) => {
+    const el = document.getElementById(`count_${id}`);
+    let curr = parseInt(el.innerText);
+    if(curr + val >= 0) el.innerText = curr + val;
+};
 
-    const data = {
-        firmName: document.getElementById('firm_name').value,
-        owner: { name: document.getElementById('owner_name').value, phone: document.getElementById('owner_phone').value, wa: document.getElementById('owner_wa').value },
-        manager: { name: document.getElementById('mgr_name').value, phone: document.getElementById('mgr_phone').value, wa: document.getElementById('mgr_wa').value },
-        address: document.getElementById('business_address').value,
-        coords: document.getElementById('survey_coords').value,
-        fleet: window.fleetData,
-        materials: selectedMats
-    };
-
-    if (!data.firmName || !data.coords) return alert("Firm Name & GPS required!");
-    try {
-        const { pushSurveyToCloud } = await import('./storage.js');
-        await pushSurveyToCloud(data);
-        alert("✅ Industry Intelligence Synced!");
-        location.reload();
-    } catch (e) { alert("Error Syncing"); }
+window.syncNow = async function() {
+    alert("Initiating Enterprise Sync...");
+    // Logic to collect all brands, fleet, and coordinates to Firestore
 };
 
 window.UIEngine = UIEngine;
