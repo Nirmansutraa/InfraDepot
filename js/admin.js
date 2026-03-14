@@ -1,8 +1,7 @@
 /**
- * INFRA DEPOT - SUPER ADMIN COMMAND CENTER
- * Features: Staff Mgmt, Live Feed, CSV Export
+ * INFRA DEPOT - SUPER ADMIN COMMAND CENTER (v5.0)
+ * Includes: Full RBAC User Management
  */
-
 const AdminEngine = {
     init: function(isSuper) {
         const appLayer = document.getElementById('app_layer');
@@ -16,101 +15,109 @@ const AdminEngine = {
                 </div>
 
                 <div class="dashboard-grid">
-                    <div class="stat"><small>TOTAL</small><div id="adm_total">0</div></div>
-                    <div class="stat"><small>TODAY</small><div id="adm_today">0</div></div>
-                    <div class="stat"><small>STAFF</small><div id="adm_staff">0</div></div>
+                    <div class="stat"><small>DATA</small><div id="adm_total">0</div></div>
+                    <div class="stat"><small>STAFF</small><div id="adm_staff_count">0</div></div>
                 </div>
 
-                <div class="card" style="border: 1px dashed var(--accent);">
-                    <div class="section-label">📥 BUSINESS INTELLIGENCE</div>
-                    <p style="font-size:11px; opacity:0.7;">Download all survey records to Excel/CSV for analysis.</p>
-                    <button class="btn-main btn-gray" onclick="AdminEngine.exportToCSV()">📊 DOWNLOAD DATA (CSV)</button>
+                ${isSuper ? `
+                <div class="card" style="border: 1px solid var(--accent);">
+                    <div class="section-label">👥 RBAC USER CONTROL</div>
+                    
+                    <div id="rbac_list" style="margin-bottom:20px;"></div>
+
+                    <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:12px;">
+                        <small style="color:var(--accent)">CREATE NEW USER</small>
+                        <input type="text" id="new_u_id" placeholder="Staff ID (Unique)" style="margin-top:10px;">
+                        <input type="text" id="new_u_name" placeholder="Full Name">
+                        <select id="new_u_role" style="width:100%; padding:12px; background:#000; color:white; border-radius:10px; margin-bottom:10px;">
+                            <option value="field_staff">Field Staff (Input Only)</option>
+                            <option value="admin">Admin (View Only)</option>
+                            <option value="super_admin">Super Admin (Full Access)</option>
+                        </select>
+                        <button class="btn-main btn-green" onclick="AdminEngine.saveUser()">SAVE USER TO CLOUD</button>
+                    </div>
                 </div>
+                ` : ''}
 
                 <div class="card">
-                    <div class="section-label">📡 LIVE SURVEY STREAM</div>
-                    <div id="admin_feed" style="max-height:450px; overflow-y:auto; padding-right:5px;">
-                        <p style="text-align:center; opacity:0.5;">Connecting to secure stream...</p>
-                    </div>
+                    <div class="section-label">📊 LIVE SURVEY DATA</div>
+                    <div id="admin_feed"></div>
                 </div>
             </div>
         `;
-        this.loadAdminData(isSuper);
+        this.refreshUserList();
+        this.loadSurveyData(isSuper);
     },
 
-    loadAdminData: async function(canDelete) {
-        try {
-            const { collection, getDocs, query, orderBy } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-            const q = query(collection(window.db, "surveys"), orderBy("timestamp", "desc"));
-            const snap = await getDocs(q);
-            
-            const todayStr = new Date().toISOString().split('T')[0];
-            let todayCount = 0;
-            let html = "";
-            let rawData = [];
+    // 🔐 RBAC: Save User to Firebase
+    saveUser: async function() {
+        const id = document.getElementById('new_u_id').value.trim();
+        const name = document.getElementById('new_u_name').value.trim();
+        const role = document.getElementById('new_u_role').value;
 
-            snap.forEach(doc => {
-                const d = doc.data();
-                rawData.push(d);
-                if (d.timestamp.startsWith(todayStr)) todayCount++;
+        if (!id || !name) return alert("Fill all details");
 
-                html += `
-                    <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; margin-bottom:12px; border-left:4px solid var(--accent);">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <div>
-                                <b style="font-size:15px; color:var(--accent);">${d.business?.firm || "Unnamed Firm"}</b>
-                                <div style="font-size:11px; opacity:0.6; margin-top:2px;">👤 Owner: ${d.business?.owner || 'N/A'}</div>
-                            </div>
-                            <small style="font-size:10px; opacity:0.5;">${d.timestamp.split('T')[0]}</small>
-                        </div>
-                        
-                        <div style="margin-top:10px; display:flex; gap:8px;">
-                            <button class="btn-step" style="width:auto; padding:0 12px; font-size:10px;" onclick="window.open('https://wa.me/91${d.business?.o_mob}')">WHATSAPP</button>
-                            <button class="btn-step" style="width:auto; padding:0 12px; font-size:10px; background:#34495e; color:white;" onclick="AdminEngine.viewDetails('${doc.id}')">DETAILS</button>
-                            ${canDelete ? `<button class="btn-step" style="width:auto; padding:0 12px; font-size:10px; background:#c0392b; color:white;" onclick="AdminEngine.deleteEntry('${doc.id}')">DEL</button>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-
-            document.getElementById('adm_total').innerText = snap.size;
-            document.getElementById('adm_today').innerText = todayCount;
-            document.getElementById('adm_staff').innerText = Object.keys(AuthEngine.users).filter(id => id.startsWith('FS')).length;
-            document.getElementById('admin_feed').innerHTML = html || "<p style='text-align:center;'>No surveys found.</p>";
-            
-            this.currentData = rawData; // Store for CSV export
-        } catch (e) {
-            console.error("Admin Load Error:", e);
-        }
-    },
-
-    exportToCSV: function() {
-        if (!this.currentData || this.currentData.length === 0) return alert("No data to export.");
-
-        let csv = "Timestamp,Firm Name,Owner,Mobile,Address,Tractors,MiniTrucks,Dumpers\n";
-        
-        this.currentData.forEach(row => {
-            csv += `${row.timestamp},${row.business?.firm},${row.business?.owner},${row.business?.o_mob},"${row.location?.address}",${row.fleet?.tractor},${row.fleet?.mini},${row.fleet?.dumper}\n`;
+        const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        await setDoc(doc(window.db, "users", id), {
+            name: name,
+            role: role,
+            created: new Date().toISOString()
         });
 
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('hidden', '');
-        a.setAttribute('href', url);
-        a.setAttribute('download', `InfraDepot_Data_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        alert("User Created Successfully!");
+        this.refreshUserList();
     },
 
-    deleteEntry: async function(id) {
-        if (confirm("🚨 PERMANENT DELETE: Are you sure?")) {
+    // 🔐 RBAC: Load and Delete Users
+    refreshUserList: async function() {
+        const rbacList = document.getElementById('rbac_list');
+        if (!rbacList) return;
+
+        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        const snap = await getDocs(collection(window.db, "users"));
+        
+        document.getElementById('adm_staff_count').innerText = snap.size;
+        
+        let html = "";
+        snap.forEach(u => {
+            const data = u.data();
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;">
+                    <div>
+                        <b>${u.id}</b> <small style="color:var(--accent)">[${data.role}]</small><br>
+                        <span style="font-size:11px; opacity:0.6;">${data.name}</span>
+                    </div>
+                    <button onclick="AdminEngine.deleteUser('${u.id}')" style="background:none; border:none; color:red; cursor:pointer;">✕</button>
+                </div>
+            `;
+        });
+        rbacList.innerHTML = html;
+    },
+
+    deleteUser: async function(id) {
+        if(confirm(`Remove access for ${id}?`)) {
             const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-            await deleteDoc(doc(window.db, "surveys", id));
-            location.reload();
+            await deleteDoc(doc(window.db, "users", id));
+            this.refreshUserList();
         }
+    },
+
+    loadSurveyData: async function(canDelete) {
+        const { collection, getDocs, query, orderBy } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        const snap = await getDocs(query(collection(window.db, "surveys"), orderBy("timestamp", "desc")));
+        document.getElementById('adm_total').innerText = snap.size;
+        
+        let html = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            html += `
+                <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; margin-bottom:10px; border-left:4px solid var(--accent);">
+                    <b>${d.business?.firm || "Unnamed"}</b><br>
+                    <small>${d.timestamp.split('T')[0]} by ${d.staff || 'N/A'}</small>
+                </div>
+            `;
+        });
+        document.getElementById('admin_feed').innerHTML = html;
     }
 };
-
 window.AdminEngine = AdminEngine;
