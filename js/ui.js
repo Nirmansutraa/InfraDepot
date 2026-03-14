@@ -3,7 +3,7 @@ const UIEngine = {
         const appLayer = document.getElementById('app_layer');
         appLayer.style.display = 'block';
         
-        // Inject Leaflet CSS for mapping
+        // Ensure Leaflet is loaded for maps
         if (!document.getElementById('leaflet-css')) {
             const link = document.createElement('link');
             link.id = 'leaflet-css';
@@ -15,33 +15,54 @@ const UIEngine = {
         appLayer.innerHTML = `
             <div class="container">
                 <div class="top-nav" style="display:flex; justify-content:space-between; align-items:center; padding-bottom:15px;">
-                    <div><small>STAFF</small><br><b style="color:var(--accent-glow)">FS-3500197</b></div>
-                    <button class="btn-circle" style="background:#e74c3c" onclick="location.reload()">×</button>
+                    <div><small style="color:var(--text-secondary)">LOGGED IN AS</small><br><b style="color:var(--accent-glow)">${localStorage.getItem('infra_session')}</b></div>
+                    <button class="btn-circle" style="background:#e74c3c" onclick="App.logout()">×</button>
                 </div>
 
                 <div class="card">
-                    <div class="section-label"><span>03</span> LIVE VERIFICATION</div>
-                    <div id="map_display" style="width:100%; height:180px; border-radius:16px; margin-bottom:12px; background:#111; border:1px solid var(--glass-border);"></div>
-                    
-                    <label>COORDINATES</label>
-                    <input type="text" id="form_coords" placeholder="Waiting for capture..." readonly>
-                    
-                    <button class="btn-main btn-green" style="margin-top:10px;" onclick="MapEngine.captureGPS()">
-                        📍 UPDATE CURRENT LOCATION
-                    </button>
-                    
-                    <label style="margin-top:15px; display:block;">VERIFIED ADDRESS</label>
-                    <textarea id="form_address" placeholder="Address will auto-fill..."></textarea>
+                    <div class="section-label"><span>01</span> LOCATION & MAP</div>
+                    <div id="map_display" style="width:100%; height:180px; border-radius:16px; margin-bottom:12px; background:#111;"></div>
+                    <input type="text" id="form_coords" placeholder="Capture Coordinates" readonly>
+                    <button class="btn-main btn-gray" style="margin-top:10px;" onclick="MapEngine.captureGPS()">📍 CAPTURE GPS</button>
+                    <textarea id="form_address" placeholder="Address auto-fill..." style="margin-top:10px;"></textarea>
+                </div>
+
+                <div class="card">
+                    <div class="section-label"><span>02</span> SUPPLIER ENTITY</div>
+                    <label>FIRM NAME</label>
+                    <input type="text" placeholder="Enter Firm Name">
+                    <label style="margin-top:10px; display:block;">OWNER MOBILE</label>
+                    <input type="tel" placeholder="+91">
+                </div>
+
+                <div class="card">
+                    <div class="section-label"><span>03</span> MATERIALS</div>
+                    <div class="material-grid">
+                        <div class="material-item"><input type="checkbox"> <span>Sand</span></div>
+                        <div class="material-item"><input type="checkbox"> <span>Stone</span></div>
+                        <div class="material-item"><input type="checkbox"> <span>Cement</span></div>
+                        <div class="material-item"><input type="checkbox"> <span>Steel</span></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="section-label"><span>04</span> LOGISTICS</div>
+                    <div class="counter-box"><span>Mini Truck</span><div style="display:flex;gap:15px;"><button class="btn-circle" onclick="UIEngine.step('c1',-1)">-</button><b id="c1">0</b><button class="btn-circle" onclick="UIEngine.step('c1',1)">+</button></div></div>
+                    <div class="counter-box"><span>Dumper</span><div style="display:flex;gap:15px;"><button class="btn-circle" onclick="UIEngine.step('c2',-1)">-</button><b id="c2">0</b><button class="btn-circle" onclick="UIEngine.step('c2',1)">+</button></div></div>
                 </div>
 
                 <div class="footer-actions">
-                    <button class="btn-main btn-gray">SAVE LOCAL</button>
-                    <button class="btn-main btn-green">SYNC CLOUD</button>
+                    <button class="btn-main btn-green" onclick="SupplierEngine.syncToCloud()">🚀 SYNC TO CLOUD</button>
                 </div>
             </div>
         `;
 
-        // Initialize Map after the HTML is added
         setTimeout(() => MapEngine.init(), 100);
+    },
+
+    step: function(id, val) {
+        let el = document.getElementById(id);
+        let current = parseInt(el.innerText);
+        el.innerText = Math.max(0, current + val);
     }
 };
