@@ -1,6 +1,6 @@
 /**
- * INFRA DEPOT - GEOSPATIAL ENGINE (MARCH 2026)
- * Handles Leaflet Map Integration & GPS Capture
+ * INFRA DEPOT - GEOSPATIAL ENGINE 2026
+ * Fix: Auto-resize and Tile Injection
  */
 
 const MapEngine = {
@@ -8,58 +8,54 @@ const MapEngine = {
     marker: null,
 
     init: function() {
-        console.log("MapEngine: Initializing Leaflet...");
+        console.log("MapEngine: Spawning Map...");
         
-        // Udaipur, India - Default fallback coordinates
-        const defaultLat = 24.5854;
-        const defaultLng = 73.7125;
+        // Default: Udaipur Center
+        const lat = 24.5854;
+        const lng = 73.7125;
 
-        // Initialize Map in the 'map_display' div
+        // Create Map
         this.map = L.map('map_display', {
-            zoomControl: false, // Cleaner look for 2026 UI
+            zoomControl: false,
             attributionControl: false
-        }).setView([defaultLat, defaultLng], 13);
+        }).setView([lat, lng], 13);
 
-        // Add Dark Mode Tiles (Using CartoDB Dark Matter)
+        // March 2026 Trend: Ultra-Dark Tiles
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             maxZoom: 19
         }).addTo(this.map);
 
-        // Add a pulsing marker for the current location
-        this.marker = L.marker([defaultLat, defaultLng]).addTo(this.map);
+        this.marker = L.marker([lat, lng]).addTo(this.map);
+
+        // CRITICAL FIX: Forces the map to fill the container correctly
+        setTimeout(() => {
+            this.map.invalidateSize();
+        }, 400);
     },
 
     captureGPS: function() {
         const coordInput = document.getElementById('form_coords');
-        const addressBox = document.getElementById('form_address');
+        const addrInput = document.getElementById('form_address');
 
         if (!navigator.geolocation) {
-            alert("GPS not supported by your browser.");
+            alert("GPS blocked by device.");
             return;
         }
 
-        // Visual Feedback for User
-        coordInput.value = "Locating satellite...";
+        coordInput.value = "📡 SATELLITE LINKING...";
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude.toFixed(6);
-                const lng = position.coords.longitude.toFixed(6);
-                
-                // Update UI
-                coordInput.value = `${lat}, ${lng}`;
-                this.map.setView([lat, lng], 16);
-                this.marker.setLatLng([lat, lng]);
-
-                // CMO Note: In a real PWA, we'd use Reverse Geocoding 
-                // here to turn coordinates into a street name.
-                addressBox.value = "Location Verified: Sector 4, Udaipur";
-            },
-            (error) => {
-                coordInput.value = "Error: Permission Denied";
-                console.error("GPS Error:", error);
-            },
-            { enableHighAccuracy: true }
-        );
+        navigator.geolocation.getCurrentPosition((pos) => {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lng = pos.coords.longitude.toFixed(6);
+            
+            coordInput.value = `${lat}, ${lng}`;
+            this.map.setView([lat, lng], 16);
+            this.marker.setLatLng([lat, lng]);
+            
+            // Simulation of address lookup
+            addrInput.value = "Verified Locality: Udaipur Hub";
+        }, (err) => {
+            coordInput.value = "GPS Error: " + err.message;
+        }, { enableHighAccuracy: true });
     }
 };
