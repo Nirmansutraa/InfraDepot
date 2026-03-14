@@ -1,5 +1,5 @@
 /**
- * INFRA DEPOT - MASTER CONTROLLER v1.4
+ * INFRA DEPOT - MASTER CONTROLLER
  */
 import { AuthEngine } from './auth.js';
 import { AdminEngine } from './admin.js';
@@ -9,25 +9,25 @@ const App = {
     init: function() {
         console.log("InfraDepot: System Booting...");
         
-        // Setup a single clean viewport
-        const body = document.body;
-        body.innerHTML = '<div id="main_viewport" style="width:100%; min-height:100vh;"></div>';
-        
+        // Ensure we have a clean slate to prevent "invisible walls"
+        if (!document.getElementById('main_viewport')) {
+            document.body.innerHTML = '<div id="main_viewport" style="width:100%; min-height:100vh;"></div>';
+        }
+
         const user = JSON.parse(localStorage.getItem('infra_user'));
 
         if (user) {
-            console.log("App: Session active. Launching Dashboard...");
+            console.log("App: Session active.");
             if (user.role === 'admin' || user.id === 'vijay_master') {
                 AdminEngine.init(true);
             } else {
                 UIEngine.init();
             }
         } else {
-            console.log("App: No session. Loading Auth Layer...");
+            console.log("App: Loading Login...");
             AuthEngine.init();
         }
     }
 };
 
-// Launch
 window.addEventListener('DOMContentLoaded', () => App.init());
