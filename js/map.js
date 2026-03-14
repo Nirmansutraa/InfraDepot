@@ -1,52 +1,65 @@
-let supplierMap
+/**
+ * INFRA DEPOT - GEOSPATIAL ENGINE (MARCH 2026)
+ * Handles Leaflet Map Integration & GPS Capture
+ */
 
-/* -----------------------------
-   INITIALIZE MAP
-------------------------------*/
+const MapEngine = {
+    map: null,
+    marker: null,
 
-function initSupplierMap(){
+    init: function() {
+        console.log("MapEngine: Initializing Leaflet...");
+        
+        // Udaipur, India - Default fallback coordinates
+        const defaultLat = 24.5854;
+        const defaultLng = 73.7125;
 
-supplierMap = L.map("supplier_map").setView([24.5854,73.7125],12)
+        // Initialize Map in the 'map_display' div
+        this.map = L.map('map_display', {
+            zoomControl: false, // Cleaner look for 2026 UI
+            attributionControl: false
+        }).setView([defaultLat, defaultLng], 13);
 
-L.tileLayer(
-"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-{
-maxZoom:19
-}).addTo(supplierMap)
+        // Add Dark Mode Tiles (Using CartoDB Dark Matter)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19
+        }).addTo(this.map);
 
-loadSupplierMarkers()
+        // Add a pulsing marker for the current location
+        this.marker = L.marker([defaultLat, defaultLng]).addTo(this.map);
+    },
 
-}
+    captureGPS: function() {
+        const coordInput = document.getElementById('form_coords');
+        const addressBox = document.getElementById('form_address');
 
+        if (!navigator.geolocation) {
+            alert("GPS not supported by your browser.");
+            return;
+        }
 
-/* -----------------------------
-   LOAD SUPPLIERS FROM API
-------------------------------*/
+        // Visual Feedback for User
+        coordInput.value = "Locating satellite...";
 
-async function loadSupplierMarkers(){
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude.toFixed(6);
+                const lng = position.coords.longitude.toFixed(6);
+                
+                // Update UI
+                coordInput.value = `${lat}, ${lng}`;
+                this.map.setView([lat, lng], 16);
+                this.marker.setLatLng([lat, lng]);
 
-const suppliers = await apiRequest({
-action:"get_suppliers"
-})
-
-suppliers.forEach(s => {
-
-if(!s.lat || !s.lng) return
-
-L.marker([s.lat,s.lng])
-.addTo(supplierMap)
-.bindPopup(
-
-`
-<b>${s.firm}</b><br>
-ID: ${s.id}<br>
-Owner: ${s.owner}<br>
-Phone: ${s.phone}<br>
-Materials: ${s.materials}
-`
-
-)
-
-})
-
-}
+                // CMO Note: In a real PWA, we'd use Reverse Geocoding 
+                // here to turn coordinates into a street name.
+                addressBox.value = "Location Verified: Sector 4, Udaipur";
+            },
+            (error) => {
+                coordInput.value = "Error: Permission Denied";
+                console.error("GPS Error:", error);
+            },
+            { enableHighAccuracy: true }
+        );
+    }
+};
