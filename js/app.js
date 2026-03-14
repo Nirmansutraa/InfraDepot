@@ -1,37 +1,41 @@
 /**
- * INFRA DEPOT - MASTER APP CONTROLLER
+ * INFRA DEPOT - MASTER CONTROLLER v6.3
  */
 
 const AppEngine = {
     init: function() {
         console.log("InfraDepot: System Booting...");
         
-        // 1. Check for existing session
+        // 1. Check if a user session exists in local storage
         const session = localStorage.getItem('infra_user');
         
         if (!session) {
-            console.log("App: No session found. Launching Auth Layer...");
-            AuthEngine.init(); // Show Login Screen
+            console.log("App: No session. Loading Auth Layer...");
+            // Load only Auth (Login Screen)
+            if (window.AuthEngine) {
+                window.AuthEngine.init();
+            }
         } else {
-            console.log("App: Session found. Routing to Role Dashboard...");
+            console.log("App: Session active. Verifying Role...");
             try {
                 const user = JSON.parse(session);
-                AuthEngine.launchRoleBasedUI(user);
+                // Load the appropriate Dashboard
+                if (window.AuthEngine) {
+                    window.AuthEngine.launchRoleBasedUI(user);
+                }
             } catch (e) {
-                console.error("Session Corrupt. Clearing...");
+                console.error("Session Corrupt. Resetting...");
                 localStorage.clear();
-                AuthEngine.init();
+                location.reload();
             }
         }
     }
 };
 
-// Start the engine
-window.onload = () => {
-    if (window.db) {
+// Start the engine only after all scripts and Firebase are ready
+window.addEventListener('load', () => {
+    // Small delay to ensure Firebase (window.db) is initialized
+    setTimeout(() => {
         AppEngine.init();
-    } else {
-        // Wait a second for Firebase to initialize if it's slow
-        setTimeout(() => AppEngine.init(), 1000);
-    }
-};
+    }, 500);
+});
