@@ -1,0 +1,25 @@
+/**
+ * INFRA DEPOT - CLOUD CONNECT
+ * Use the WEB CONFIG from Firebase Settings
+ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "PASTE_YOUR_WEB_API_KEY_HERE",
+    authDomain: "infradepo.firebaseapp.com",
+    projectId: "infradepo",
+    storageBucket: "infradepo.appspot.com",
+    messagingSenderId: "PASTE_SENDER_ID_HERE",
+    appId: "PASTE_YOUR_WEB_APP_ID_HERE"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Make DB globally available
+window.db = db;
+
+console.log("Firebase: Web Cloud Connection Established.");
