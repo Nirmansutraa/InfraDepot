@@ -3,50 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | Command Center</title>
-    
+    <title>InfraDepot | Admin Command</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="css/admin-style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+    <style>
+        :root { --nav: #111827; --bg: #f3f4f6; --accent: #10b981; }
+        body { margin:0; font-family: sans-serif; background: var(--bg); display: flex; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--nav); color: white; height: 100vh; position: fixed; }
+        .main { margin-left: 260px; width: calc(100% - 260px); padding: 20px; box-sizing: border-box; }
+        
+        .menu-item { padding: 15px 20px; cursor: pointer; display: block; color: #9ca3af; text-decoration: none; border-left: 4px solid transparent; }
+        .menu-item:hover, .menu-item.active { background: #1f2937; color: white; border-left-color: var(--accent); }
+        
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar span { display: none; }
+            .main { margin-left: 60px; width: calc(100% - 60px); }
+        }
+    </style>
 </head>
 <body>
 
-    <div class="admin-wrapper">
-        <aside class="sidebar">
-            <div class="logo">
-                <span class="logo-icon">🏗️</span>
-                <span class="logo-text">InfraDepot</span>
-            </div>
-            <nav class="menu">
-                <button class="menu-item active" onclick="AdminCore.switchTab('dashboard')">📊 Dashboard</button>
-                <button class="menu-item" onclick="AdminCore.switchTab('suppliers')">🏢 Suppliers</button>
-                <button class="menu-item" onclick="AdminCore.switchTab('materials')">🧱 Materials</button>
-                <button class="menu-item" onclick="AdminCore.switchTab('staff')">👥 Staff Team</button>
-                <button class="menu-item" onclick="AdminCore.switchTab('visits')">📍 Field Visits</button>
-                <button class="menu-item" onclick="AdminCore.switchTab('analytics')">📈 Analytics</button>
-            </nav>
-            <div class="sidebar-footer">
-                <button onclick="AdminCore.logout()" class="logout-btn">Logout</button>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <header class="top-bar">
-                <div class="search-box">
-                    <input type="text" placeholder="Search suppliers, brands, or staff...">
-                </div>
-                <div class="admin-profile">
-                    <span id="admin-name">Super Admin</span>
-                    <div class="avatar">SA</div>
-                </div>
-            </header>
-
-            <section id="content-area">
-                </section>
-        </main>
+    <div class="sidebar">
+        <div style="padding:20px; font-weight:bold; font-size:18px; color:var(--accent);">🏗️ InfraDepot</div>
+        <nav>
+            <a href="#" class="menu-item active">📊 <span>Dashboard</span></a>
+            <a href="#" class="menu-item" onclick="alert('Module Coming Next!')">👥 <span>Staff Mgmt</span></a>
+            <a href="#" class="menu-item" onclick="alert('Module Coming Next!')">🧱 <span>Materials</span></a>
+            <a href="#" class="menu-item" style="color:#ef4444;" onclick="localStorage.clear(); location.reload();">🚪 <span>Logout</span></a>
+        </nav>
     </div>
 
+    <div class="main">
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1 style="font-size:20px;">Market Intelligence Dashboard</h1>
+            <div id="admin-id" style="font-size:12px; color:#666;">Super Admin</div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <small style="color:#666; font-weight:bold;">TOTAL SURVEYS</small>
+                <div id="stat_surveys" style="font-size:32px; font-weight:900;">0</div>
+            </div>
+            <div class="card">
+                <small style="color:#666; font-weight:bold;">ACTIVE STAFF</small>
+                <div id="stat_staff" style="font-size:32px; font-weight:900;">0</div>
+            </div>
+        </div>
+
+        <div class="card" style="padding:10px;">
+            <div id="admin_map" style="height:400px; border-radius:8px;"></div>
+        </div>
+
+        <div class="card" style="padding:0; overflow:hidden;">
+            <div style="padding:15px; border-bottom:1px solid #eee; font-weight:bold;">📋 Recent Field Intelligence</div>
+            <div id="survey_feed"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/admin-core.js"></script>
 </body>
