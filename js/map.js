@@ -1,43 +1,46 @@
 /**
- * INFRA DEPOT - MAP & GPS ENGINE
+ * INFRA DEPOT - PRECISION GPS & REVERSE GEOCODING
  */
 export const MapEngine = {
     init: function(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) {
-            console.warn(`Map: Container #${containerId} not found yet. Skipping init.`);
-            return;
-        }
-
-        console.log("Map: Initializing GPS tracking...");
+        if (!document.getElementById(containerId)) return;
         this.map = L.map(containerId).setView([24.5854, 73.7125], 13);
-        
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(this.map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(this.map);
+        this.marker = L.marker([24.5854, 73.7125]).addTo(this.map);
     },
 
-    // RENAMED to match your button's onclick="MapEngine.captureGPS()"
-    captureGPS: function() {
-        if (!navigator.geolocation) {
-            return alert("GPS not supported on this device");
-        }
+    captureGPS: async function() {
+        if (!navigator.geolocation) return alert("GPS Not Supported");
 
-        console.log("GPS: Requesting coordinates...");
-        navigator.geolocation.getCurrentPosition((position) => {
-            const lat = position.coords.latitude.toFixed(6);
-            const lng = position.coords.longitude.toFixed(6);
-            
-            const latInput = document.getElementById('survey_lat');
-            const lngInput = document.getElementById('survey_lng');
-            
-            if(latInput) latInput.value = lat;
-            if(lngInput) lngInput.value = lng;
+        const options = {
+            enableHighAccuracy: true, // Targets < 10ft accuracy
+            timeout: 10000,
+            maximumAge: 0
+        };
 
-            alert(`Location Captured: ${lat}, ${lng}`);
-        }, (err) => {
-            alert("Please enable GPS/Location permissions in your browser settings.");
-        });
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude, accuracy } = position.coords;
+            
+            // Update UI with coordinates
+            document.getElementById('survey_coords').value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (Acc: ${accuracy.toFixed(1)}m)`;
+            
+            // Move Map
+            this.map.setView([latitude, longitude], 18);
+            this.marker.setLatLng([latitude, longitude]);
+
+            // Reverse Geocoding (Get Address)
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                const data = await response.json();
+                if (data.display_name) {
+                    document.getElementById('business_address').value = data.display_name;
+                }
+            } catch (e) {
+                console.error("Address lookup failed");
+            }
+
+            alert(`Location Locked! Accuracy: ${accuracy.toFixed(1)} meters`);
+        }, (err) => alert("GPS Error: " + err.message), options);
     }
 };
 
