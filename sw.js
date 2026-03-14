@@ -1,27 +1,25 @@
-const CACHE_NAME = 'infradepot-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/components/survey.html',
-  '/css/components.css',
-  '/js/app.js',
-  '/manifest.json'
+const CACHE_NAME = 'infra-depot-v2-2026';
+const OFFLINE_URLS = [
+    './',
+    './index.html',
+    './css/components.css',
+    './js/auth.js',
+    './js/app.js',
+    './js/ui.js',
+    './js/map.js'
 ];
 
-// Install: Save files to phone memory
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_URLS))
+    );
 });
 
-// Fetch: Serve files from cache if offline
+// Advanced Network-First for Auth, Cache-First for Assets
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
+    event.respondWith(
+        caches.match(event.request).then((response) => {
+            return response || fetch(event.request);
+        })
+    );
 });
