@@ -1,21 +1,21 @@
 {
-  "name": "InfraDepot PWA",
+  "name": "InfraDepot Intelligence",
   "short_name": "InfraDepot",
-  "description": "Building Material Tech",
-  "start_url": "/index.html",
+  "description": "Enterprise Logistics & Field Survey Platform",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#121921",
-  "theme_color": "#d35400",
+  "background_color": "#0a0e12",
+  "theme_color": "#ff6b00",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "assets/icons/icon-192x192.png",
+      "src": "assets/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-512x512.png",
+      "src": "assets/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
