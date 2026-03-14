@@ -1,55 +1,63 @@
-document.addEventListener("DOMContentLoaded", startInfraDepot)
+/**
+ * INFRA DEPOT - MAIN APPLICATION CONTROLLER
+ * Managed by CTO/CDO Team (March 2026 Edition)
+ */
 
-function startInfraDepot(){
+const App = {
+    // This is the first function that runs when the app starts
+    init: function() {
+        console.log("InfraDepot: System Booting...");
+        
+        // Check if we have a saved session (Simple check for now)
+        const userSession = localStorage.getItem('infra_session');
 
-console.log("InfraDepot system starting...")
+        if (userSession) {
+            // User is already logged in, go straight to Dashboard
+            this.launchDashboard();
+        } else {
+            // No session found, show Login Screen
+            this.launchAuth();
+        }
+    },
 
-loadLogin()
+    // Triggers the Login Flow
+    launchAuth: function() {
+        console.log("App: Launching Auth Layer...");
+        if (typeof AuthEngine !== 'undefined') {
+            AuthEngine.renderLogin();
+        } else {
+            console.error("AuthEngine not found! Check your index.html scripts.");
+        }
+    },
 
-}
+    // Triggers the Main Survey App
+    launchDashboard: function() {
+        console.log("App: Launching App Layer...");
+        
+        // Hide Login, Show App
+        document.getElementById('auth_layer').style.display = 'none';
+        document.getElementById('app_layer').style.display = 'block';
 
-/* Load login interface */
+        // Initialize UI and Map
+        if (typeof UIEngine !== 'undefined') {
+            UIEngine.init();
+        }
+    },
 
-function loadLogin(){
+    // Helper to save session
+    loginSuccess: function(staffId) {
+        localStorage.setItem('infra_session', staffId);
+        this.launchDashboard();
+    },
 
-fetch("components/login.html")
-.then(res => res.text())
-.then(html => {
+    // Helper to logout
+    logout: function() {
+        localStorage.removeItem('infra_session');
+        location.reload();
+    }
+};
 
-document.getElementById("auth_layer").innerHTML = html
-
-})
-
-}
-
-
-/* Load Survey Page */
-
-function loadSurvey(){
-
-fetch("components/survey.html")
-.then(res => res.text())
-.then(html => {
-
-document.getElementById("app_layer").innerHTML = html
-
-initSurvey()
-
-})
-
-}
-
-
-function initSurvey(){
-
-console.log("Survey initialized")
-
-if(typeof loadMaterialSelector === "function"){
-loadMaterialSelector()
-}
-
-if(typeof initSupplierMap === "function"){
-initSupplierMap()
-}
-
-}
+// Listen for the page to be fully loaded before starting
+window.addEventListener('DOMContentLoaded', () => {
+    App.init();
+});
