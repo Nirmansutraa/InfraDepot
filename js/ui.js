@@ -1,5 +1,5 @@
 /**
- * INFRA DEPOT - ENTERPRISE UI (FIXED IDS)
+ * INFRA DEPOT - FIELD INPUT TERMINAL (RESTRICTED)
  */
 
 const UIEngine = {
@@ -15,33 +15,31 @@ const UIEngine = {
     },
 
     init: function() {
+        const user = JSON.parse(localStorage.getItem('infra_user'));
         const appLayer = document.getElementById('app_layer');
         appLayer.style.display = 'block';
+
         appLayer.innerHTML = `
             <div class="container">
-                <div class="dashboard-grid">
-                    <div class="stat"><small>Today</small><div id="stat_today">0</div></div>
-                    <div class="stat"><small>Year</small><div id="stat_year">0</div></div>
+                <div class="top-nav" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div><small>FIELD STAFF</small><br><b style="color:var(--accent)">${user.id}</b></div>
+                    <button class="btn-circle" style="background:rgba(255,255,255,0.1)" onclick="App.logout()">✕</button>
                 </div>
 
                 <div class="card">
-                    <div class="section-label">📋 IDENTITY</div>
-                    <input type="text" id="f_name" placeholder="Firm Name">
+                    <div class="section-label">📋 FIRM IDENTITY</div>
+                    <input type="text" id="f_name" placeholder="Business Name">
                     <input type="text" id="o_name" placeholder="Owner Name">
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <input type="tel" id="o_mob" placeholder="Owner Mobile" oninput="UIEngine.syncWA('o')">
+                        <input type="tel" id="o_mob" placeholder="Mobile" oninput="UIEngine.syncWA('o')">
                         <input type="tel" id="o_wa" placeholder="WhatsApp">
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                        <input type="tel" id="m_mob" placeholder="Manager Mobile" oninput="UIEngine.syncWA('m')">
-                        <input type="tel" id="m_wa" placeholder="WhatsApp">
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="section-label">📍 RADIUS & LOCATIONS</div>
-                    <div id="map_display" style="width:100%; height:140px; border-radius:10px; margin-bottom:10px;"></div>
-                    <button class="btn-main btn-gray" onclick="MapEngine.captureGPS()">📡 ACTIVATE GPS</button>
+                    <div class="section-label">📍 GEOTAG & AREA</div>
+                    <div id="map_display" style="width:100%; height:140px; border-radius:12px; background:#000;"></div>
+                    <button class="btn-main btn-gray" style="margin-top:10px;" onclick="MapEngine.captureGPS()">📡 ACTIVATE GPS</button>
                     <input type="hidden" id="form_coords">
                     <textarea id="form_address" placeholder="Address..." readonly style="margin-top:10px; font-size:11px;"></textarea>
                     
@@ -50,7 +48,7 @@ const UIEngine = {
                         <label class="check-box"><input type="checkbox" id="area_radius"> 25km Radius</label>
                     </div>
                     <div id="loc_scroller" style="height:100px; overflow-y:auto; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
-                        ${this.locations.map(l => `<label style="display:block; font-size:11px;"><input type="checkbox" class="loc-check" value="${l}"> ${l}</label>`).join('')}
+                        ${this.locations.map(l => `<label style="display:block; font-size:11px; margin-bottom:5px;"><input type="checkbox" class="loc-check" value="${l}"> ${l}</label>`).join('')}
                     </div>
                 </div>
 
@@ -68,7 +66,7 @@ const UIEngine = {
                 </div>
 
                 <div class="card">
-                    <div class="section-label">🚛 FLEET (0-20)</div>
+                    <div class="section-label">🚛 FLEET SIZE (0-20)</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                         ${['Tractor', 'Mini Truck', 'Truck', 'Dumper', 'Trailer'].map(f => this.renderFleet(f)).join('')}
                     </div>
@@ -77,19 +75,18 @@ const UIEngine = {
                 <div class="card">
                     <div class="section-label">📸 GEOTAGGED PHOTOS</div>
                     <div id="photo_grid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:12px;"></div>
-                    <button class="btn-main btn-gray" onclick="document.getElementById('p_in').click()">📷 TAKE GPS TAGGED PHOTO</button>
+                    <button class="btn-main btn-gray" onclick="document.getElementById('p_in').click()">📷 TAKE PHOTO</button>
                     <input type="file" id="p_in" accept="image/*" capture="camera" multiple style="display:none;" onchange="UIEngine.compressAndAdd(this)">
                 </div>
 
-                <button id="sync_btn" class="btn-main btn-green" onclick="window.SupplierEngine.syncToCloud()">🚀 FINISH & SYNC TO CLOUD</button>
+                <button id="sync_btn" class="btn-main btn-green" onclick="window.SupplierEngine.syncToCloud()">🚀 FINISH & SYNC SURVEY</button>
             </div>
         `;
 
-        setTimeout(() => { MapEngine.init(); SupplierEngine.loadDashboardStats(); }, 600);
+        setTimeout(() => { MapEngine.init(); }, 600);
     },
 
     autoSelectAll: function(c) { document.querySelectorAll('.loc-check').forEach(el => el.checked = c); },
-
     toggleMat: function(m, show) {
         const div = document.getElementById('sub_' + m.replace(' ', ''));
         if (!show) { div.style.display = 'none'; return; }
@@ -106,11 +103,7 @@ const UIEngine = {
             </div>
         `;
     },
-
-    syncWA: function(t) { 
-        const mob = document.getElementById(t + '_mob').value;
-        document.getElementById(t + '_wa').value = mob;
-    },
+    syncWA: function(t) { document.getElementById(t+'_wa').value = document.getElementById(t+'_mob').value; },
     renderFleet: function(n) {
         const id = 'fl_' + n.toLowerCase().replace(' ', '');
         return `<div class="counter-box"><small>${n}</small><div class="counter-controls"><button onclick="UIEngine.step('${id}',-1)">-</button><b id="${id}">0</b><button onclick="UIEngine.step('${id}',1)">+</button></div></div>`;
@@ -120,11 +113,9 @@ const UIEngine = {
         let c = parseInt(b.innerText);
         if (c + v >= 0 && c + v <= 20) b.innerText = c + v;
     },
-
     compressAndAdd: function(input) {
-        const gps = document.getElementById('form_coords')?.value || "No GPS Fix";
+        const gps = document.getElementById('form_coords')?.value || "GPS NOT LOCKED";
         Array.from(input.files).forEach(file => {
-            if (this.photos.length >= 10) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
@@ -136,10 +127,10 @@ const UIEngine = {
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
                     ctx.fillStyle = "rgba(0,0,0,0.5)";
-                    ctx.fillRect(0, h - 30, w, 30);
+                    ctx.fillRect(0, h-30, w, 30);
                     ctx.fillStyle = "white";
                     ctx.font = "bold 12px Arial";
-                    ctx.fillText(`📍 ${gps} | ${new Date().toLocaleString()}`, 10, h - 10);
+                    ctx.fillText(`📍 ${gps} | ${new Date().toLocaleString()}`, 10, h-10);
                     this.photos.push(canvas.toDataURL('image/jpeg', 0.6));
                     this.renderPhotoGrid();
                 };
@@ -148,9 +139,8 @@ const UIEngine = {
             reader.readAsDataURL(file);
         });
     },
-
     renderPhotoGrid: function() {
-        document.getElementById('photo_grid').innerHTML = this.photos.map((src, i) => `<div style="position:relative; width:100%; padding-top:100%; background:url(${src}) center/cover; border-radius:8px; border:1px solid var(--accent);"><div onclick="UIEngine.removePhoto(${i})" style="position:absolute; top:-2px; right:-2px; background:red; color:white; width:18px; height:18px; font-size:12px; border-radius:50%; text-align:center; cursor:pointer;">×</div></div>`).join('');
+        document.getElementById('photo_grid').innerHTML = this.photos.map((src, i) => `<div style="position:relative; width:100%; padding-top:100%; background:url(${src}) center/cover; border-radius:8px;"><div onclick="UIEngine.removePhoto(${i})" style="position:absolute; top:-2px; right:-2px; background:red; color:white; width:18px; height:18px; font-size:12px; border-radius:50%; text-align:center; cursor:pointer;">×</div></div>`).join('');
     },
     removePhoto: function(i) { this.photos.splice(i, 1); this.renderPhotoGrid(); }
 };
