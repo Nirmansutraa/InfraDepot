@@ -1,5 +1,5 @@
 /**
- * INFRA DEPOT - ADMIN PANEL v6.1 (FULL RBAC VISIBILITY)
+ * INFRA DEPOT - ADMIN PANEL v6.2 (PWD RESET & OVERRIDE)
  */
 const AdminEngine = {
     map: null,
@@ -19,46 +19,42 @@ const AdminEngine = {
                 </div>
 
                 <div class="dashboard-grid">
-                    <div class="stat"><small>TOTAL DATA</small><div id="adm_total">0</div></div>
-                    <div class="stat"><small>TOTAL STAFF</small><div id="adm_staff_count">0</div></div>
+                    <div class="stat"><small>DATA</small><div id="adm_total">0</div></div>
+                    <div class="stat"><small>STAFF</small><div id="adm_staff_count">0</div></div>
                 </div>
 
                 ${isSuper ? `
                 <div class="card" style="border: 1px solid var(--accent);">
-                    <div class="section-label">👥 STAFF DIRECTORY (ID & PASSWORDS)</div>
+                    <div class="section-label">👥 STAFF DIRECTORY & SECURITY</div>
                     
                     <div id="rbac_list" style="margin-bottom:20px; max-height:250px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:10px;">
-                        <p style="padding:15px; opacity:0.5; font-size:12px;">Loading directory...</p>
+                        <p style="padding:15px; opacity:0.5; font-size:12px;">Accessing Directory...</p>
                     </div>
 
-                    <div style="background:rgba(45, 212, 191, 0.05); padding:15px; border-radius:12px; border:1px dashed rgba(45, 212, 191, 0.3);">
-                        <small style="color:var(--accent)">ONBOARD NEW STAFF</small>
+                    <div style="background:rgba(45, 212, 191, 0.05); padding:15px; border-radius:12px;">
+                        <small style="color:var(--accent)">ADD NEW TEAM MEMBER</small>
                         <select id="new_u_role" onchange="AdminEngine.updateIDPreview()" style="width:100%; padding:12px; background:#000; color:white; border-radius:10px; margin: 10px 0;">
                             <option value="">Select Role...</option>
                             <option value="field_staff">Field Staff (FS)</option>
                             <option value="admin">Admin (AD)</option>
                         </select>
-
                         <div id="id_preview_box" style="padding:12px; background:rgba(0,0,0,0.3); border-radius:10px; text-align:center; margin-bottom:10px; display:none;">
-                            <small style="opacity:0.7">GENERATED ID / TEMP PASS:</small><br>
-                            <b id="generated_id_display" style="color:var(--accent); font-size:18px; letter-spacing:2px;"></b>
+                            <small style="opacity:0.7">GENERATED LOGIN:</small> <b id="generated_id_display" style="color:var(--accent);"></b>
                         </div>
-
                         <input type="text" id="new_u_name" placeholder="Full Name">
                         <input type="tel" id="new_u_phone" placeholder="WhatsApp Number">
                         <input type="email" id="new_u_email" placeholder="Email Address">
-                        
-                        <button id="save_user_btn" class="btn-main btn-green" disabled onclick="AdminEngine.saveUser()">SAVE & SEND CREDENTIALS</button>
+                        <button id="save_user_btn" class="btn-main btn-green" disabled onclick="AdminEngine.saveUser()">ONBOARD STAFF</button>
                     </div>
                 </div>
                 ` : ''}
 
-                <div class="card" style="padding:0; overflow:hidden; height:200px; margin-top:15px;">
+                <div class="card" style="padding:0; overflow:hidden; height:180px; margin-top:15px;">
                     <div id="admin_map" style="width:100%; height:100%; background:#111;"></div>
                 </div>
 
                 <div class="card">
-                    <div class="section-label">📊 LIVE SURVEY DATA</div>
+                    <div class="section-label">📊 SURVEY FEED</div>
                     <div id="admin_feed"></div>
                 </div>
             </div>
@@ -80,11 +76,10 @@ const AdminEngine = {
             
             let html = `
                 <table style="width:100%; border-collapse:collapse; font-size:11px; text-align:left;">
-                    <tr style="border-bottom:1px solid #333; opacity:0.6;">
-                        <th style="padding:10px;">USER ID</th>
-                        <th>NAME</th>
+                    <tr style="opacity:0.6; border-bottom:1px solid #333;">
+                        <th style="padding:10px;">ID/ROLE</th>
                         <th>PASSWORD</th>
-                        <th style="text-align:right; padding-right:10px;">ACTION</th>
+                        <th style="text-align:right; padding-right:10px;">MANAGE</th>
                     </tr>
             `;
 
@@ -93,11 +88,16 @@ const AdminEngine = {
                 const isMaster = u.id === 'vijay_master';
                 html += `
                     <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                        <td style="padding:12px 10px;"><b style="color:var(--accent)">${u.id}</b><br><small style="opacity:0.5">${d.role}</small></td>
-                        <td>${d.name || 'N/A'}</td>
-                        <td style="font-family:monospace; background:rgba(255,255,255,0.03);">${d.password}</td>
+                        <td style="padding:12px 10px;">
+                            <b style="color:var(--accent)">${u.id}</b><br>
+                            <span style="font-size:9px; opacity:0.6">${d.name || 'No Name'}</span>
+                        </td>
+                        <td><span style="font-family:monospace; background:rgba(255,255,255,0.05); padding:2px 4px;">${d.password}</span></td>
                         <td style="text-align:right; padding-right:10px;">
-                            ${isMaster ? '' : `<button onclick="AdminEngine.deleteUser('${u.id}')" style="color:red; background:none; border:none; font-size:16px;">✕</button>`}
+                            ${isMaster ? '' : `
+                                <button onclick="AdminEngine.resetUserPassword('${u.id}')" title="Reset to Default" style="background:none; border:none; color:var(--accent); margin-right:10px; cursor:pointer;">🔄</button>
+                                <button onclick="AdminEngine.deleteUser('${u.id}')" title="Delete" style="background:none; border:none; color:red; cursor:pointer;">✕</button>
+                            `}
                         </td>
                     </tr>
                 `;
@@ -105,6 +105,20 @@ const AdminEngine = {
             html += `</table>`;
             rbacList.innerHTML = html;
         } catch (e) { console.error(e); }
+    },
+
+    resetUserPassword: async function(userId) {
+        if (confirm(`RESET PASSWORD for ${userId}?\nThis will set password to '${userId}' and force a change on next login.`)) {
+            try {
+                const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+                await updateDoc(doc(window.db, "users", userId), {
+                    password: userId,
+                    is_first_login: true
+                });
+                alert(`Password Reset Successful for ${userId}`);
+                this.refreshUserList();
+            } catch (e) { alert("Reset Failed"); }
+        }
     },
 
     updateIDPreview: function() {
@@ -132,24 +146,18 @@ const AdminEngine = {
             await setDoc(doc(window.db, "users", id), {
                 name: name, role: role, password: id, phone: phone, email: email, is_first_login: true, created: new Date().toISOString()
             });
-
-            const waMsg = `*🏗️ INFRA DEPOT ACCESS*%0AWelcome ${name}. ID: *${id}*. Login: https://nirman-sutra.github.io`;
-            window.open(`https://wa.me/91${phone}?text=${waMsg}`, '_blank');
-            window.open(`mailto:${email}?subject=InfraDepot Credentials&body=ID: ${id}`, '_blank');
-
-            alert("Staff Onboarded! ID & Password visible in list.");
+            alert("Staff Onboarded! Notification links triggered.");
             this.refreshUserList();
         } catch (e) { alert(e.message); }
     },
 
-    // ... (Keep initAdminMap, loadSurveyData, showPassChange, deleteUser from v6.0)
     initAdminMap: function() {
         setTimeout(() => {
-            if (document.getElementById('admin_map')) {
+            if (document.getElementById('admin_map') && !this.map) {
                 this.map = L.map('admin_map').setView([24.5854, 73.7125], 11);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(this.map);
             }
-        }, 800);
+        }, 1000);
     },
 
     loadSurveyData: async function() {
@@ -159,7 +167,7 @@ const AdminEngine = {
         let html = "";
         snap.forEach(doc => {
             const d = doc.data();
-            html += `<div class="mat-row" style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05);"><b>${d.business?.firm || "Unnamed"}</b><br><small style="opacity:0.6">${d.timestamp.split('T')[0]} | Staff: ${d.staff || 'N/A'}</small></div>`;
+            html += `<div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12px;"><b>${d.business?.firm || "Unnamed"}</b><br><small style="opacity:0.6">${d.timestamp.split('T')[0]}</small></div>`;
         });
         document.getElementById('admin_feed').innerHTML = html;
     },
@@ -173,7 +181,32 @@ const AdminEngine = {
     },
 
     showPassChange: function() {
-        // ... (Keep existing showPassChange logic)
+        const modal = document.createElement('div');
+        modal.id = "pass_modal_adm";
+        modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;";
+        modal.innerHTML = `
+            <div class="card" style="width:100%; max-width:400px; border:1px solid var(--accent);">
+                <div class="section-label">🔐 CHANGE YOUR PASSWORD</div>
+                <input type="password" id="adm_pass_new" placeholder="Enter New Password">
+                <input type="password" id="adm_pass_conf" placeholder="Confirm New Password">
+                <button class="btn-main btn-green" onclick="AdminEngine.updateMyPassword()">UPDATE PASSWORD</button>
+                <button class="btn-main btn-gray" style="margin-top:10px;" onclick="document.getElementById('pass_modal_adm').remove()">CANCEL</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    updateMyPassword: async function() {
+        const p1 = document.getElementById('adm_pass_new').value.trim();
+        const p2 = document.getElementById('adm_pass_conf').value.trim();
+        const user = JSON.parse(localStorage.getItem('infra_user'));
+        if (!p1 || p1 !== p2) return alert("Passwords do not match!");
+        try {
+            const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+            await updateDoc(doc(window.db, "users", user.id), { password: p1 });
+            alert("Password updated!");
+            document.getElementById('pass_modal_adm').remove();
+        } catch (e) { alert("Error"); }
     }
 };
 window.AdminEngine = AdminEngine;
