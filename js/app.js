@@ -1,63 +1,37 @@
 /**
- * INFRA DEPOT - MAIN APPLICATION CONTROLLER
- * Managed by CTO/CDO Team (March 2026 Edition)
+ * INFRA DEPOT - MASTER APP CONTROLLER
  */
 
-const App = {
-    // This is the first function that runs when the app starts
+const AppEngine = {
     init: function() {
         console.log("InfraDepot: System Booting...");
         
-        // Check if we have a saved session (Simple check for now)
-        const userSession = localStorage.getItem('infra_session');
-
-        if (userSession) {
-            // User is already logged in, go straight to Dashboard
-            this.launchDashboard();
-        } else {
-            // No session found, show Login Screen
-            this.launchAuth();
-        }
-    },
-
-    // Triggers the Login Flow
-    launchAuth: function() {
-        console.log("App: Launching Auth Layer...");
-        if (typeof AuthEngine !== 'undefined') {
-            AuthEngine.renderLogin();
-        } else {
-            console.error("AuthEngine not found! Check your index.html scripts.");
-        }
-    },
-
-    // Triggers the Main Survey App
-    launchDashboard: function() {
-        console.log("App: Launching App Layer...");
+        // 1. Check for existing session
+        const session = localStorage.getItem('infra_user');
         
-        // Hide Login, Show App
-        document.getElementById('auth_layer').style.display = 'none';
-        document.getElementById('app_layer').style.display = 'block';
-
-        // Initialize UI and Map
-        if (typeof UIEngine !== 'undefined') {
-            UIEngine.init();
+        if (!session) {
+            console.log("App: No session found. Launching Auth Layer...");
+            AuthEngine.init(); // Show Login Screen
+        } else {
+            console.log("App: Session found. Routing to Role Dashboard...");
+            try {
+                const user = JSON.parse(session);
+                AuthEngine.launchRoleBasedUI(user);
+            } catch (e) {
+                console.error("Session Corrupt. Clearing...");
+                localStorage.clear();
+                AuthEngine.init();
+            }
         }
-    },
-
-    // Helper to save session
-    loginSuccess: function(staffId) {
-        localStorage.setItem('infra_session', staffId);
-        this.launchDashboard();
-    },
-
-    // Helper to logout
-    logout: function() {
-        localStorage.removeItem('infra_session');
-        location.reload();
     }
 };
 
-// Listen for the page to be fully loaded before starting
-window.addEventListener('DOMContentLoaded', () => {
-    App.init();
-});
+// Start the engine
+window.onload = () => {
+    if (window.db) {
+        AppEngine.init();
+    } else {
+        // Wait a second for Firebase to initialize if it's slow
+        setTimeout(() => AppEngine.init(), 1000);
+    }
+};
