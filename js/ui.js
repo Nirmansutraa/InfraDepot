@@ -1,7 +1,3 @@
-/**
- * INFRA DEPOT - UI ENGINE
- */
-
 const UIEngine = {
     init: function() {
         const appLayer = document.getElementById('app_layer');
@@ -16,12 +12,10 @@ const UIEngine = {
 
                 <div class="card">
                     <div class="section-label"><span>01</span> LOCATION & MAP</div>
-                    <div id="map_display" style="width:100%; height:200px; border-radius:16px; margin-bottom:12px; background:#111; border:1px solid var(--glass-border); z-index: 1;"></div>
+                    <div id="map_display" style="width:100%; height:200px; border-radius:16px; margin-bottom:12px; background:#111; border:1px solid var(--glass-border);"></div>
                     <input type="text" id="form_coords" placeholder="Coordinates" readonly>
-                    <button class="btn-main btn-gray" style="margin-top:10px; border: 1px solid var(--accent-glow);" onclick="MapEngine.captureGPS()">
-                        📍 CAPTURE GPS & ADDRESS
-                    </button>
-                    <textarea id="form_address" placeholder="Address auto-fill..." style="margin-top:10px;"></textarea>
+                    <button class="btn-main btn-gray" style="margin-top:10px;" onclick="MapEngine.captureGPS()">📍 CAPTURE GPS</button>
+                    <textarea id="form_address" placeholder="Address..." style="margin-top:10px;"></textarea>
                 </div>
 
                 <div class="card">
@@ -53,5 +47,4 @@ const UIEngine = {
         el.innerText = Math.max(0, current + val);
     }
 };
-
 window.UIEngine = UIEngine;
