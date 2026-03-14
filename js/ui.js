@@ -1,21 +1,20 @@
 /**
- * INFRA DEPOT - ENTERPRISE UI ENGINE 2026
- * Features: Dashboard, 50 Locations, Material Varieties, 512KB Compression
+ * INFRA DEPOT - ENTERPRISE UI ENGINE (COMPLETE MATERIALS)
  */
 
 const UIEngine = {
-    // 00 PROJECT DATA LIBRARIES
     photos: [],
-    // Full list of 50 Udaipur Prime Locations
     locations: [
         "Hiran Magri", "Fatehsagar", "Sukher", "Bhuwana", "Panchwati", "Mulla Talai", "Goverdhan Vilas", "Pratap Nagar", "Savina", "Shobhagpura", "Debari", "Udaisagar", "Bedla", "Badi", "Rampura", "Titardi", "Kaladwas", "Madri", "Surajpole", "Delhi Gate", "City Station", "Ayad", "Pulla", "Sobhagpura", "New Bhupalpura", "Old Bhupalpura", "Shastri Circle", "University Road", "Thokar Chouraha", "Ganapati Nagar", "Transport Nagar", "Balicha", "Kaya", "Bari", "Lakhawali", "Kavita", "Amberi", "Bhuwana Bypass", "Loyra", "Zinc Smelter", "Chitrakoot Nagar", "Navratna Complex", "Mahaveer Nagar", "Keshav Nagar", "Sajjan Nagar", "Mallatalai", "Rani Road", "Fatehpura", "Bedwas", "Gajrapole"
     ],
-    // 10-Variety/10-Brand Nested Data (Expand as needed)
+    // ALL 6 MATERIALS NOW INCLUDED
     materials: {
-        "Sand": { vars: ["River Sand", "M-Sand", "P-Sand", "Crushed Sand", "Plaster Sand"], brands: ["Local washed", "Premium M-Sand"] },
+        "Sand": { vars: ["River Sand", "M-Sand", "P-Sand", "Crushed Sand", "Filter Sand"], brands: ["Local washed", "Premium M-Sand"] },
+        "Aggregates": { vars: ["10mm", "20mm", "40mm", "60mm", "Grit"], brands: ["Blue Metal", "Black Stone"] },
+        "Masonry Stone": { vars: ["Khanda", "Gittli", "Face Stone", "Rubble"], brands: ["Udaipur Local", "Rajsamand"] },
         "TMT Steel": { vars: ["8mm", "10mm", "12mm", "16mm", "Binding Wire"], brands: ["TATA Tiscon", "JSW Neo", "Jindal"] },
         "Cement": { vars: ["OPC 43", "OPC 53", "PPC", "White Cement"], brands: ["Ambuja", "Ultratech", "JK Lakshmi", "Wonder"] },
-        // ... (Expand other materials similarly)
+        "Bricks": { vars: ["Red Clay", "Fly Ash", "AAC Blocks", "Concrete Blocks"], brands: ["Local Kiln", "Standard Machine"] }
     },
 
     init: function() {
@@ -49,7 +48,7 @@ const UIEngine = {
                     <div class="section-label"><span>02</span> SUPPLY AREA (UDAIPUR)</div>
                     <div id="map_display" style="width:100%; height:140px; border-radius:10px; margin-bottom:10px;"></div>
                     <button class="btn-main btn-gray" onclick="MapEngine.captureGPS()">📍 CAPTURE GPS ADDRESS</button>
-                    <textarea id="form_address" placeholder="Reverse Geo-coding..." readonly style="margin-top:10px; font-size:11px;"></textarea>
+                    <textarea id="form_address" placeholder="Address..." readonly style="margin-top:10px; font-size:11px;"></textarea>
                     
                     <div style="margin: 15px 0; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                         <label class="check-box"><input type="checkbox" id="area_full" onchange="UIEngine.autoSelectAll(this.checked)"> Whole Udaipur</label>
@@ -83,7 +82,7 @@ const UIEngine = {
                 </div>
 
                 <div class="card">
-                    <div class="section-label"><span>05</span> FLEETSIZE</div>
+                    <div class="section-label"><span>05</span> FLEETSIZE (0-20)</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                         ${this.renderFleet('Tractor', 'fl_tractor')}
                         ${this.renderFleet('Mini Truck', 'fl_minitruck')}
@@ -100,16 +99,8 @@ const UIEngine = {
         setTimeout(() => { MapEngine.init(); SupplierEngine.loadDashboardStats(); }, 600);
     },
 
-    // --- Enterprise Functions ---
-
     autoSelectAll: function(checked) {
-        console.log("Whole Udaipur selection: " + checked);
-        // Find ALL checkboxes that have the class '.loc-check'
-        const allLocChecks = document.querySelectorAll('.loc-check');
-        // Loop through them and set their state
-        allLocChecks.forEach(el => {
-            el.checked = checked;
-        });
+        document.querySelectorAll('.loc-check').forEach(el => el.checked = checked);
     },
 
     toggleMaterialSubmenu: function(m, checked) {
@@ -130,35 +121,26 @@ const UIEngine = {
     },
 
     syncWA: function(t) { document.getElementById(t + '_wa').value = document.getElementById(t + '_mob').value; },
-
-    renderFleet: function(name, id) {
-        return `<div class="counter-box" style="padding:10px;"><small>${name}</small><br><div style="display:flex; justify-content:center; align-items:center; gap:8px;"><button onclick="UIEngine.step('${id}',-1)">-</button><b id="${id}">0</b><button onclick="UIEngine.step('${id}',1)">+</button></div></div>`;
-    },
-
+    renderFleet: function(name, id) { return `<div class="counter-box" style="padding:10px;"><small>${name}</small><br><div style="display:flex; justify-content:center; align-items:center; gap:8px;"><button onclick="UIEngine.step('${id}',-1)">-</button><b id="${id}">0</b><button onclick="UIEngine.step('${id}',1)">+</button></div></div>`; },
     step: function(id, val) {
         let b = document.getElementById(id);
         let c = parseInt(b.innerText);
         if (c + val >= 0 && c + val <= 20) b.innerText = c + val;
     },
 
-    // Photo Compression (Canvas engine)
     compressAndAdd: function(input) {
-        const files = Array.from(input.files);
-        files.forEach(file => {
+        Array.from(input.files).forEach(file => {
             if (this.photos.length >= 10) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    let width = img.width, height = img.height;
-                    const maxSize = 800; // Limits image resolution
-                    if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } }
-                    else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
-                    canvas.width = width; canvas.height = height;
-                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // 60% quality = ~100-300KB
-                    this.photos.push(dataUrl);
+                    let w = img.width, h = img.height;
+                    if (w > 800) { h *= 800 / w; w = 800; }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    this.photos.push(canvas.toDataURL('image/jpeg', 0.6));
                     this.renderPhotoGrid();
                 };
                 img.src = e.target.result;
@@ -170,7 +152,6 @@ const UIEngine = {
     renderPhotoGrid: function() {
         document.getElementById('photo_grid').innerHTML = this.photos.map((src, i) => `<div style="position:relative; width:100%; padding-top:100%; background:url(${src}) center/cover; border-radius:4px;"><div onclick="UIEngine.removePhoto(${i})" style="position:absolute; top:0; right:0; background:red; color:white; width:16px; height:16px; font-size:12px; border-radius:50%; text-align:center; cursor:pointer;">×</div></div>`).join('');
     },
-
     removePhoto: function(i) { this.photos.splice(i, 1); this.renderPhotoGrid(); }
 };
 window.UIEngine = UIEngine;
