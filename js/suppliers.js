@@ -1,19 +1,16 @@
 /**
  * INFRA DEPOT - CLOUD SYNC ENGINE
- * Production Fix: March 2026
+ * Fix: Global Availability & Test Mode Logic
  */
 
 const SupplierEngine = {
-    // Safely collect data from the UI
+    // Collect data from the UI
     packageData: function() {
-        console.log("Packaging data for Cloud...");
-        
-        // We use querySelector to find the inputs by their labels/placeholders
         return {
             timestamp: new Date().toISOString(),
-            staffId: localStorage.getItem('infra_session') || "FS-UNKNOWN",
+            staffId: localStorage.getItem('infra_session') || "GUEST",
             firmName: document.querySelector('input[placeholder*="Firm Name"]')?.value || "Unnamed Firm",
-            mobile: document.querySelector('input[placeholder="+91"]')?.value || "0000000000",
+            mobile: document.querySelector('input[placeholder="+91"]')?.value || "No Mobile",
             location: {
                 coords: document.getElementById('form_coords')?.value || "0,0",
                 address: document.getElementById('form_address')?.value || "No Address"
@@ -25,45 +22,45 @@ const SupplierEngine = {
         };
     },
 
-    // The function called by the button
+    // Send to Firebase
     syncToCloud: async function() {
-        console.log("Sync process started...");
-        
+        console.log("Sync initiated...");
         const syncBtn = document.getElementById('sync_btn');
+        
         if (syncBtn) {
             syncBtn.innerHTML = "🌀 CONNECTING...";
             syncBtn.disabled = true;
         }
 
         try {
-            // Check if Firebase Database is ready
+            // 1. Check if Firebase is ready
             if (!window.db) {
-                throw new Error("Firebase Database (window.db) not found. Check index.html");
+                throw new Error("Cloud connection not established. Check index.html keys.");
             }
 
-            // Import the 'addDoc' function from Firebase
-            const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+            // 2. Load Firestore library
+            const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
             
+            // 3. Prepare Data
             const data = this.packageData();
-            data.createdAt = serverTimestamp(); // Add official server time
 
-            // Send to 'surveys' collection
+            // 4. Submit to 'surveys' collection
             const docRef = await addDoc(collection(window.db, "surveys"), data);
             
-            console.log("Cloud Success! ID:", docRef.id);
-            
+            console.log("Success! ID:", docRef.id);
+
             if (syncBtn) {
-                syncBtn.innerHTML = "✅ SYNCED";
+                syncBtn.innerHTML = "✅ SYNCED SUCCESS";
                 syncBtn.style.background = "#2dd4bf";
             }
 
             setTimeout(() => {
-                alert("Data successfully sent to InfraDepot Cloud!");
+                alert("Cloud Sync Successful!");
                 location.reload(); 
             }, 1000);
 
         } catch (error) {
-            console.error("Critical Sync Error:", error);
+            console.error("Sync Error:", error);
             alert("Sync Failed: " + error.message);
             
             if (syncBtn) {
@@ -74,5 +71,5 @@ const SupplierEngine = {
     }
 };
 
-// Make it global so the button can see it
+// CRITICAL: This makes the button able to find the code
 window.SupplierEngine = SupplierEngine;
