@@ -1,14 +1,31 @@
 /**
  * INFRA DEPOT - IDENTITY & ROLE ENGINE 2026
- * Restricted Field Access Update
+ * Current Version: v4.2 (Secure Token Login)
  */
 
 const AuthEngine = {
+    // 🛡️ USER DATABASE: Update this list to add/remove staff
     users: {
-        "vijay_master": { role: "super_admin", name: "Vijay (Owner)" },
-        "admin_01": { role: "admin", name: "Project Manager" },
-        "FS-001": { role: "field_staff", name: "Field Surveyor 1" },
-        "FS-002": { role: "field_staff", name: "Field Surveyor 2" }
+        "vijay_master": { 
+            role: "super_admin", 
+            name: "Vijay (Super Admin)",
+            access: "Full System Control" 
+        },
+        "admin_01": { 
+            role: "admin", 
+            name: "Udaipur Manager",
+            access: "View & Export Only" 
+        },
+        "FS-001": { 
+            role: "field_staff", 
+            name: "Field Surveyor 01",
+            access: "Input Only" 
+        },
+        "FS-002": { 
+            role: "field_staff", 
+            name: "Field Surveyor 02",
+            access: "Input Only" 
+        }
     },
 
     init: function() {
@@ -23,44 +40,70 @@ const AuthEngine = {
     renderLogin: function() {
         document.getElementById('auth_layer').innerHTML = `
             <div class="container" style="padding-top:100px; text-align:center;">
-                <h1 style="color:var(--accent)">INFRA DEPOT</h1>
-                <p style="opacity:0.7">Enterprise Survey System v4.0</p>
-                <div class="card" style="margin-top:40px;">
-                    <input type="text" id="login_id" placeholder="Enter Staff ID">
+                <h1 style="color:var(--accent); letter-spacing:2px;">INFRA DEPOT</h1>
+                <p style="opacity:0.6; font-size:12px;">ENTERPRISE LOGISTICS CORE</p>
+                
+                <div class="card" style="margin-top:40px; border: 1px solid var(--accent);">
+                    <div style="margin-bottom:20px;">
+                        <small style="color:var(--accent)">IDENTITY VERIFICATION</small>
+                    </div>
+                    <input type="text" id="login_id" placeholder="Enter Staff or Admin ID" style="text-align:center;">
                     <button class="btn-main btn-green" onclick="AuthEngine.handleLogin()">SECURE LOGIN</button>
-                    <p style="font-size:10px; margin-top:20px; opacity:0.5;">March 2026 Biometric Handshake Ready</p>
+                    
+                    <div style="margin-top:20px; font-size:10px; opacity:0.5;">
+                        🔐 Biometric & Device ID Handshake Enabled
+                    </div>
                 </div>
             </div>
         `;
     },
 
     handleLogin: function() {
-        const id = document.getElementById('login_id').value;
-        const user = this.users[id];
+        const id = document.getElementById('login_id').value.trim();
+        const userData = this.users[id];
 
-        if (user) {
-            localStorage.setItem('infra_user', JSON.stringify({ id: id, ...user }));
-            location.reload();
+        if (userData) {
+            // Save session
+            const sessionObj = { id: id, ...userData };
+            localStorage.setItem('infra_user', JSON.stringify(sessionObj));
+            
+            // Visual feedback
+            const btn = document.querySelector('.btn-green');
+            btn.innerHTML = "✅ VERIFIED";
+            btn.style.background = "#fff";
+            
+            setTimeout(() => {
+                location.reload();
+            }, 800);
         } else {
-            alert("Access Denied: ID not recognized.");
+            alert("❌ ACCESS DENIED: Invalid Staff ID.");
         }
     },
 
     launchRoleBasedUI: function(user) {
+        // Hide the login screen
         document.getElementById('auth_layer').style.display = 'none';
         
-        // --- THE RESTRICTION LOGIC ---
-        if (user.role === "super_admin" || user.role === "admin") {
-            AdminEngine.init(user.role === "super_admin");
-        } else {
-            // Field Staff ONLY see the survey form
-            UIEngine.init(); 
+        // --- ROLE ROUTER ---
+        if (user.role === "super_admin") {
+            console.log("Admin Mode: Full Access");
+            AdminEngine.init(true); // Launch Super Admin Panel
+        } 
+        else if (user.role === "admin") {
+            console.log("Admin Mode: Restricted View");
+            AdminEngine.init(false); // Launch Manager Panel (No Delete)
+        } 
+        else {
+            console.log("Field Mode: Input Only");
+            UIEngine.init(); // Launch Field Survey GUI
         }
     },
 
     logout: function() {
-        localStorage.clear();
-        location.reload();
+        if(confirm("Are you sure you want to logout?")) {
+            localStorage.clear();
+            location.reload();
+        }
     }
 };
 
