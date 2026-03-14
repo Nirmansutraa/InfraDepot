@@ -3,14 +3,14 @@
  */
 export const StorageEngine = {
     syncToCloud: async function() {
-        console.log("Storage: Syncing survey to cloud...");
+        console.log("Storage: Syncing survey...");
         
         const name = document.getElementById('firm_name')?.value;
         const lat = document.getElementById('survey_lat')?.value;
         const lng = document.getElementById('survey_lng')?.value;
 
         if (!name || !lat || !lng) {
-            return alert("Please fill all fields and capture GPS!");
+            return alert("Please enter Firm Name and Capture GPS first!");
         }
 
         try {
@@ -24,13 +24,12 @@ export const StorageEngine = {
             });
 
             alert("✅ Survey Synced Successfully!");
-            location.reload(); // Clear form
+            location.reload(); 
         } catch (e) {
-            console.error(e);
-            alert("Error syncing data.");
+            console.error("Sync Error:", e);
+            alert("Failed to sync. Check your internet connection.");
         }
     }
 };
 
-// CRITICAL: Make it globally accessible
 window.StorageEngine = StorageEngine;
