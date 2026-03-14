@@ -15,7 +15,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxshUBG10A8",
@@ -28,8 +27,7 @@
 
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
-        window.auth = getAuth(app);
-        console.log("InfraDepot: Firebase Connected.");
+        console.log("🚀 INFRA-DEPOT: CLOUD ENGINE READY");
     </script>
 
     <script src="js/auth.js"></script>
@@ -41,16 +39,5 @@
 <body style="background: #0a0e12; color: white;">
     <div id="auth_layer"></div>
     <div id="app_layer" style="display:none;"></div>
-
-    <script>
-        // PWA Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log("PWA: Ready."))
-                    .catch(err => console.log("SW Error", err));
-            });
-        }
-    </script>
 </body>
 </html>
