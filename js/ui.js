@@ -1,10 +1,20 @@
 /**
- * INFRA DEPOT - ENTERPRISE UI ENGINE (PHASE 2)
- * Features: Prime Locations, Nested Materials & Brands
+ * INFRA DEPOT - ENTERPRISE UI ENGINE (FINAL PRODUCTION)
  */
 
 const UIEngine = {
-    selectedMaterials: {}, // Stores variety and brand selections
+    photos: [],
+    locations: [
+        "Hiran Magri", "Fatehsagar", "Sukher", "Bhuwana", "Panchwati", "Mulla Talai", "Goverdhan Vilas", "Pratap Nagar", "Savina", "Shobhagpura", "Debari", "Udaisagar", "Bedla", "Badi", "Rampura", "Titardi", "Kaladwas", "Madri", "Surajpole", "Delhi Gate", "City Station", "Ayad", "Pulla", "Sobhagpura", "New Bhupalpura", "Old Bhupalpura", "Shastri Circle", "University Road", "Thokar Chouraha", "Ganapati Nagar", "Transport Nagar", "Balicha", "Kaya", "Bari", "Lakhawali", "Kavita", "Amberi", "Bhuwana Bypass", "Loyra", "Zinc Smelter", "Chitrakoot Nagar", "Navratna Complex", "Mahaveer Nagar", "Keshav Nagar", "Sajjan Nagar", "Mallatalai", "Rani Road", "Fatehpura", "Bedwas", "Gajrapole"
+    ],
+    materials: {
+        "Sand": { vars: ["River Sand", "M-Sand", "P-Sand", "Crushed Sand", "Plaster Sand", "Screened Sand", "Filter Sand", "Coarse Sand", "Fine Sand", "Pit Sand"], brands: ["Local", "Premium", "Washed", "Dredged", "Industrial"] },
+        "Aggregates": { vars: ["10mm", "20mm", "40mm", "60mm", "Grit", "Dust", "GSB", "WMM", "Soling", "Ballast"], brands: ["Crushed Blue", "Black Trap", "Granite", "River Stone", "Mixed"] },
+        "Masonry Stone": { vars: ["Khanda", "Gittli", "Face Stone", "Random Rubble", "Ashlar", "Block Stone", "Slate", "Marble Waste", "Basalt", "Limestone"], brands: ["Udaipur Local", "Rajsamand", "Bhilwara", "Jodhpur", "Dholpur"] },
+        "TMT Steel": { vars: ["8mm", "10mm", "12mm", "16mm", "20mm", "25mm", "32mm", "Binding Wire", "Mesh", "Rods"], brands: ["TATA Tiscon", "JSW Neo", "Jindal Panther", "Sail", "Vizag Steel", "Kamdhenu", "Rathi", "SRMB", "Electrosteel", "Amba"] },
+        "Cement": { vars: ["OPC 43", "OPC 53", "PPC", "White Cement", "Sulphate Resistant", "Low Heat", "Rapid Hardening", "Hydrophobic", "Oil Well", "Colored"], brands: ["Ambuja", "Ultratech", "JK Lakshmi", "Wonder", "Binani", "Shree Cement", "ACC", "Sanghi", "Dalmia", "JK Super"] },
+        "Bricks": { vars: ["Red Clay", "Fly Ash", "Concrete Blocks", "AAC Blocks", "CLC Blocks", "Solid Bricks", "Hollow Bricks", "Fire Bricks", "Paver Blocks", "Stone Bricks"], brands: ["Local Kiln", "Standard", "Machine Made", "Fly-Ash Premium", "AAC Gold"] }
+    },
 
     init: function() {
         const appLayer = document.getElementById('app_layer');
@@ -12,132 +22,138 @@ const UIEngine = {
 
         appLayer.innerHTML = `
             <div class="container">
-                <div class="card dashboard-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; background:var(--accent-glow); color:black; font-weight:bold; padding:15px; border-radius:15px;">
-                    <div class="mis-stat"><small>TODAY</small><div id="stat_today">...</div></div>
-                    <div class="mis-stat"><small>YEAR</small><div id="stat_year">...</div></div>
+                <div class="card dashboard-grid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; background:var(--accent-glow); color:black; font-weight:bold; padding:10px; border-radius:12px; text-align:center;">
+                    <div><small>TODAY</small><div id="stat_today">...</div></div>
+                    <div><small>WEEK</small><div id="stat_week">...</div></div>
+                    <div><small>MONTH</small><div id="stat_month">...</div></div>
+                    <div><small>YEAR</small><div id="stat_year">...</div></div>
                 </div>
 
                 <div class="card">
                     <div class="section-label"><span>01</span> BUSINESS IDENTITY</div>
-                    <input type="text" id="f_name" placeholder="Business Name">
+                    <input type="text" id="f_name" placeholder="Firm/Business Name">
                     <input type="text" id="o_name" placeholder="Owner Name">
                     <div style="display:flex; gap:10px; margin-top:10px;">
                         <input type="tel" id="o_mob" placeholder="Owner Mobile" oninput="UIEngine.syncWA('o')">
-                        <input type="tel" id="o_wa" placeholder="WhatsApp">
+                        <input type="tel" id="o_wa" placeholder="Owner WhatsApp">
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <input type="tel" id="m_mob" placeholder="Manager Mobile" oninput="UIEngine.syncWA('m')">
+                        <input type="tel" id="m_wa" placeholder="Manager WhatsApp">
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="section-label"><span>02</span> SUPPLY AREA (UDAIPUR)</div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <div class="section-label"><span>02</span> SUPPLY AREA & GPS</div>
+                    <div id="map_display" style="width:100%; height:140px; border-radius:10px; margin-bottom:10px;"></div>
+                    <button class="btn-main btn-gray" onclick="MapEngine.captureGPS()">📍 CAPTURE GPS & ADDRESS</button>
+                    <textarea id="form_address" placeholder="Address auto-fill..." readonly style="margin-top:10px; font-size:11px;"></textarea>
+                    
+                    <div style="display:flex; gap:10px; margin: 15px 0;">
                         <label class="check-box"><input type="checkbox" id="area_full"> Whole Udaipur</label>
                         <label class="check-box"><input type="checkbox" id="area_radius"> 25km Radius</label>
                     </div>
-                    <small style="color:var(--accent-glow)">TOP 50 PRIME LOCATIONS</small>
-                    <div id="location_grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; height:150px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; margin-top:5px; border:1px solid var(--glass-border);">
-                        </div>
+                    <div id="location_grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; height:120px; overflow-y:auto; background:rgba(0,0,0,0.2); padding:8px; border-radius:8px;">
+                        ${this.locations.map(l => `<label style="font-size:10px;"><input type="checkbox" class="loc-check" value="${l}"> ${l}</label>`).join('')}
+                    </div>
                 </div>
 
                 <div class="card">
-                    <div class="section-label"><span>03</span> MATERIAL & BRAND SELECTION</div>
-                    <div id="material_container">
-                        ${['Sand', 'Aggregates', 'Masonry Stone', 'TMT Steel', 'Cement', 'Bricks'].map(m => `
-                            <div class="material-block" style="margin-bottom:10px;">
-                                <label class="check-box" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:block;">
-                                    <input type="checkbox" onchange="UIEngine.toggleMaterial('${m}', this.checked)"> <b>${m}</b>
+                    <div class="section-label"><span>03</span> MATERIAL & BRANDS</div>
+                    <div id="material_engine">
+                        ${Object.keys(this.materials).map(m => `
+                            <div class="mat-box" style="border-bottom:1px solid #333; padding:10px 0;">
+                                <label style="display:flex; justify-content:space-between; align-items:center;">
+                                    <b>${m}</b>
+                                    <input type="checkbox" class="mat-main-check" value="${m}" onchange="UIEngine.toggleMat('${m}', this.checked)">
                                 </label>
-                                <div id="nested_${m.replace(' ', '_')}" style="display:none; padding-left:20px; margin-top:10px;"></div>
+                                <div id="sub_${m.replace(' ', '')}" style="display:none; padding:10px 0 0 15px;"></div>
                             </div>
                         `).join('')}
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="section-label"><span>04</span> PHOTOS (MAX 10)</div>
-                    <div id="photo_preview_grid" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-bottom:10px;"></div>
-                    <button class="btn-main" style="background:#34495e;" onclick="document.getElementById('photo_input').click()">📸 ADD LIVE PHOTO</button>
-                    <input type="file" id="photo_input" accept="image/*" capture="camera" multiple style="display:none;" onchange="UIEngine.handlePhotos(this)">
+                    <div class="section-label"><span>04</span> PHOTOS (MAX 10 - 512KB Limit)</div>
+                    <div id="photo_grid" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-bottom:10px;"></div>
+                    <button class="btn-main" onclick="document.getElementById('p_in').click()">📸 TAKE TAGGED PHOTO</button>
+                    <input type="file" id="p_in" accept="image/*" capture="camera" multiple style="display:none;" onchange="UIEngine.compressAndAdd(this)">
                 </div>
 
                 <div class="card">
-                    <div class="section-label"><span>05</span> FLEET SIZE</div>
+                    <div class="section-label"><span>05</span> FLEET SYSTEM (0-20)</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        ${['Tractor', 'Mini Truck', 'Truck', 'Dumper', 'Mini Dumper', 'Trailer'].map(f => this.renderFleet(f, 'fl_' + f.toLowerCase().replace(' ', ''))).join('')}
+                        ${['Tractor', 'Mini Truck', 'Truck', 'Dumper', 'Mini Dumper', 'Trailer'].map(f => this.renderFleet(f)).join('')}
                     </div>
                 </div>
 
-                <button id="sync_btn" class="btn-main btn-green" onclick="window.SupplierEngine.syncToCloud()">🚀 FINAL SUBMISSION</button>
+                <button id="sync_btn" class="btn-main btn-green" onclick="window.SupplierEngine.syncToCloud()">🚀 SUBMIT BUSINESS SURVEY</button>
             </div>
         `;
 
-        this.injectLocations();
-        setTimeout(() => {
-            MapEngine.init();
-            SupplierEngine.loadDashboardStats();
-        }, 600);
+        setTimeout(() => { MapEngine.init(); SupplierEngine.loadDashboardStats(); }, 600);
     },
 
-    injectLocations: function() {
-        const locs = ['Hiran Magri', 'Fatehsagar', 'Sector 14', 'Sukher', 'Bhuwana', 'Panchwati', 'Mulla Talai', 'Goverdhan Vilas', 'Pratap Nagar', 'Savina', 'Shobhagpura', 'Debari', 'Udaisagar', 'Bedla', 'Badi', 'Rampura', 'Titardi', 'Kaladwas', 'Madri', 'Surajpole'];
-        const grid = document.getElementById('location_grid');
-        grid.innerHTML = locs.map(l => `<label style="font-size:11px;"><input type="checkbox" class="loc-check" value="${l}"> ${l}</label>`).join('');
-    },
-
-    toggleMaterial: function(m, checked) {
-        const container = document.getElementById(`nested_${m.replace(' ', '_')}`);
-        if (!checked) {
-            container.style.display = 'none';
-            return;
-        }
-        container.style.display = 'block';
-        
-        // Example Varieties for demo (We can add all 10 later)
-        const varieties = m === 'Cement' ? ['OPC 43', 'OPC 53', 'PPC'] : ['Premium', 'Standard', 'Local'];
-        const brands = ['Ambuja', 'Ultratech', 'JK Lakshmi', 'Wonder', 'Binani'];
-
-        container.innerHTML = `
-            <small style="color:var(--accent-glow)">Varieties:</small>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:5px;">
-                ${varieties.map(v => `<label style="font-size:11px;"><input type="checkbox" value="${v}"> ${v}</label>`).join('')}
+    toggleMat: function(m, show) {
+        const div = document.getElementById('sub_' + m.replace(' ', ''));
+        if (!show) { div.style.display = 'none'; return; }
+        div.style.display = 'block';
+        const data = this.materials[m];
+        div.innerHTML = `
+            <small style="color:var(--accent-glow)">Varieties</small>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:10px;">
+                ${data.vars.map(v => `<label style="font-size:10px;"><input type="checkbox" class="v-check" data-mat="${m}" value="${v}"> ${v}</label>`).join('')}
             </div>
-            <small style="color:var(--accent-glow); margin-top:10px; display:block;">Brands:</small>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:5px;">
-                ${brands.map(b => `<label style="font-size:11px;"><input type="checkbox" value="${b}"> ${b}</label>`).join('')}
+            <small style="color:var(--accent-glow)">Top Brands</small>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                ${data.brands.map(b => `<label style="font-size:10px;"><input type="checkbox" class="b-check" data-mat="${m}" value="${b}"> ${b}</label>`).join('')}
             </div>
         `;
     },
 
-    syncWA: function(type) {
-        document.getElementById(type + '_wa').value = document.getElementById(type + '_mob').value;
+    syncWA: function(t) { document.getElementById(t + '_wa').value = document.getElementById(t + '_mob').value; },
+
+    renderFleet: function(n) {
+        const id = 'fl_' + n.toLowerCase().replace(' ', '');
+        return `<div class="counter-box" style="padding:10px;"><small>${n}</small><br><div style="display:flex; justify-content:center; align-items:center; gap:8px;"><button onclick="UIEngine.step('${id}',-1)">-</button><b id="${id}">0</b><button onclick="UIEngine.step('${id}',1)">+</button></div></div>`;
     },
 
-    renderFleet: function(name, id) {
-        return `<div class="counter-box" style="padding:10px;"><small>${name}</small><br><div style="display:flex; justify-content:center; align-items:center; gap:10px;"><button class="btn-circle" onclick="UIEngine.step('${id}',-1)">-</button><b id="${id}">0</b><button class="btn-circle" onclick="UIEngine.step('${id}',1)">+</button></div></div>`;
+    step: function(id, v) {
+        let b = document.getElementById(id);
+        let c = parseInt(b.innerText);
+        if (c + v >= 0 && c + v <= 20) b.innerText = c + v;
     },
 
-    step: function(id, val) {
-        let el = document.getElementById(id);
-        let cur = parseInt(el.innerText);
-        if(cur + val >= 0 && cur + val <= 20) el.innerText = cur + val;
-    },
-
-    photos: [],
-    handlePhotos: function(input) {
-        Array.from(input.files).forEach(file => {
-            if(this.photos.length >= 10) return;
+    compressAndAdd: function(input) {
+        const files = Array.from(input.files);
+        files.forEach(file => {
+            if (this.photos.length >= 10) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                this.photos.push(e.target.result);
-                this.renderPhotoGrid();
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width, height = img.height;
+                    const max = 800; // Limit size
+                    if (width > height) { if (width > max) { height *= max / width; width = max; } }
+                    else { if (height > max) { width *= max / height; height = max; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // 60% quality = ~100-300KB
+                    this.photos.push(dataUrl);
+                    this.renderPhotoGrid();
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         });
     },
 
     renderPhotoGrid: function() {
-        document.getElementById('photo_preview_grid').innerHTML = this.photos.map((src, i) => `
-            <div style="position:relative; width:100%; padding-top:100%; background:url(${src}) center/cover; border-radius:4px; border:1px solid var(--accent-glow);">
-                <div onclick="UIEngine.removePhoto(${i})" style="position:absolute; top:-5px; right:-5px; background:red; color:white; width:18px; height:18px; font-size:12px; text-align:center; border-radius:50%; cursor:pointer; line-height:18px;">×</div>
+        document.getElementById('photo_grid').innerHTML = this.photos.map((src, i) => `
+            <div style="position:relative; width:100%; padding-top:100%; background:url(${src}) center/cover; border-radius:4px;">
+                <div onclick="UIEngine.removePhoto(${i})" style="position:absolute; top:0; right:0; background:red; color:white; width:16px; height:16px; font-size:12px; border-radius:50%; text-align:center; cursor:pointer;">×</div>
             </div>
         `).join('');
     },
