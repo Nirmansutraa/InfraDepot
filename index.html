@@ -9,28 +9,26 @@
     <meta name="theme-color" content="#0a0e12">
     <link rel="stylesheet" href="css/components.css">
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Your web app's Firebase configuration from your screenshot
         const firebaseConfig = {
             apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxshUBG10A8",
             authDomain: "infradepo.firebaseapp.com",
             projectId: "infradepo",
             storageBucket: "infradepo.firebasestorage.app",
             messagingSenderId: "733942710671",
-            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa",
-            measurementId: "G-FT60ZNKS6P"
+            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
         };
 
-        // Initialize Firebase and make services global for our other JS files
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
         window.auth = getAuth(app);
-        
-        console.log("InfraDepot: Cloud Engine Connected Successfully.");
     </script>
 
     <script src="js/auth.js"></script>
@@ -39,19 +37,8 @@
     <script src="js/app.js"></script>
     <script src="js/supplier.js"></script>
 </head>
-<body style="background: #0a0e12; color: white; margin: 0; font-family: 'Inter', sans-serif;">
+<body style="background: #0a0e12; color: white;">
     <div id="auth_layer"></div>
-    
     <div id="app_layer" style="display:none;"></div>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log("PWA: Ready for offline operation."))
-                    .catch(err => console.error("PWA: Worker failed", err));
-            });
-        }
-    </script>
 </body>
 </html>
