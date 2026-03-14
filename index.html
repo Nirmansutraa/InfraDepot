@@ -2,66 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>InfraDepot Intelligence</title>
-
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+    <title>InfraDepot | Intelligence</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#d35400">
+    <meta name="theme-color" content="#0a0e12">
 
-    <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/components.css">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // IMPORTANT: Replace the values below with your actual Firebase Project keys
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
             projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
             appId: "YOUR_APP_ID"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        
+        // 2026 SECURITY: App Check (Prevents unauthorized API usage)
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true; // Set to false in production
+        initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_KEY'),
+            isTokenAutoRefreshEnabled: true
+        });
 
-        // Make Firebase available to your other scripts
-        window.db = db;
-        window.auth = auth;
+        window.db = getFirestore(app);
+        window.auth = getAuth(app);
     </script>
 
-    <script src="data/materials.js"></script>
-    <script src="data/fleet.js"></script>
-    <script src="js/materialsEngine.js"></script>
-    <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/ui.js"></script>
-    <script src="js/supplier.js"></script>
     <script src="js/map.js"></script>
     <script src="js/app.js"></script>
-
 </head>
-<body>
-
+<body style="background: #0a0e12; overflow-x: hidden;">
     <div id="auth_layer"></div>
-
-    <div id="app_layer"></div>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('InfraDepot PWA: Service Worker Active'))
-                    .catch(err => console.error('PWA Error:', err));
-            });
-        }
-    </script>
-
+    <div id="app_layer" style="display:none;"></div>
 </body>
 </html>
