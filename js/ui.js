@@ -1,30 +1,37 @@
+/**
+ * INFRA DEPOT - UI ENGINE 
+ * Fix: Script Injection & Layout
+ */
+
 const UIEngine = {
     init: function() {
         const appLayer = document.getElementById('app_layer');
         appLayer.style.display = 'block';
-        
-        // Ensure Leaflet is loaded for maps
-        if (!document.getElementById('leaflet-css')) {
-            const link = document.createElement('link');
-            link.id = 'leaflet-css';
-            link.rel = 'stylesheet';
-            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-            document.head.appendChild(link);
-        }
 
+        // 1. Inject Leaflet Resources if missing
+        this.injectDependencies();
+
+        // 2. Build the UI
         appLayer.innerHTML = `
             <div class="container">
                 <div class="top-nav" style="display:flex; justify-content:space-between; align-items:center; padding-bottom:15px;">
-                    <div><small style="color:var(--text-secondary)">LOGGED IN AS</small><br><b style="color:var(--accent-glow)">${localStorage.getItem('infra_session')}</b></div>
+                    <div><small style="color:var(--text-secondary)">LOGGED IN AS</small><br><b style="color:var(--accent-glow)">${localStorage.getItem('infra_session') || 'FS-001'}</b></div>
                     <button class="btn-circle" style="background:#e74c3c" onclick="App.logout()">×</button>
                 </div>
 
                 <div class="card">
                     <div class="section-label"><span>01</span> LOCATION & MAP</div>
-                    <div id="map_display" style="width:100%; height:180px; border-radius:16px; margin-bottom:12px; background:#111;"></div>
-                    <input type="text" id="form_coords" placeholder="Capture Coordinates" readonly>
-                    <button class="btn-main btn-gray" style="margin-top:10px;" onclick="MapEngine.captureGPS()">📍 CAPTURE GPS</button>
-                    <textarea id="form_address" placeholder="Address auto-fill..." style="margin-top:10px;"></textarea>
+                    <div id="map_display" style="width:100%; height:200px; border-radius:16px; margin-bottom:12px; background:#111; border: 1px solid var(--glass-border);"></div>
+                    
+                    <label>COORDINATES</label>
+                    <input type="text" id="form_coords" placeholder="Waiting for GPS..." readonly>
+                    
+                    <button class="btn-main btn-gray" style="margin-top:10px; border: 1px solid var(--accent-glow);" onclick="MapEngine.captureGPS()">
+                        📍 CAPTURE GPS & ADDRESS
+                    </button>
+                    
+                    <label style="margin-top:15px; display:block;">AUTO-FILLED ADDRESS</label>
+                    <textarea id="form_address" placeholder="Address will appear here..." style="width:100%; border-radius:12px; padding:10px; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--glass-border);"></textarea>
                 </div>
 
                 <div class="card">
@@ -57,7 +64,22 @@ const UIEngine = {
             </div>
         `;
 
-        setTimeout(() => MapEngine.init(), 100);
+        // 3. Start Map Engine
+        setTimeout(() => MapEngine.init(), 500);
+    },
+
+    injectDependencies: function() {
+        if (!document.getElementById('leaflet-css')) {
+            const css = document.createElement('link');
+            css.id = 'leaflet-css';
+            css.rel = 'stylesheet';
+            css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(css);
+
+            const js = document.createElement('script');
+            js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            document.head.appendChild(js);
+        }
     },
 
     step: function(id, val) {
