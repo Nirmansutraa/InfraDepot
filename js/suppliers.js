@@ -1,19 +1,18 @@
 /**
  * INFRA DEPOT - CLOUD SYNC ENGINE
- * Fix: Global Availability & Test Mode Logic
+ * March 2026 Production Edition
  */
+console.log("✅ SupplierEngine: Script Loaded and Ready.");
 
 const SupplierEngine = {
-    // Collect data from the UI
     packageData: function() {
         return {
             timestamp: new Date().toISOString(),
             staffId: localStorage.getItem('infra_session') || "GUEST",
-            firmName: document.querySelector('input[placeholder*="Firm Name"]')?.value || "Unnamed Firm",
-            mobile: document.querySelector('input[placeholder="+91"]')?.value || "No Mobile",
+            firmName: document.querySelector('input[placeholder*="Firm Name"]')?.value || "Unnamed",
             location: {
                 coords: document.getElementById('form_coords')?.value || "0,0",
-                address: document.getElementById('form_address')?.value || "No Address"
+                address: document.getElementById('form_address')?.value || ""
             },
             fleet: {
                 mini_truck: document.getElementById('c1')?.innerText || "0",
@@ -22,54 +21,35 @@ const SupplierEngine = {
         };
     },
 
-    // Send to Firebase
     syncToCloud: async function() {
-        console.log("Sync initiated...");
+        console.log("Button Pressed: Attempting Cloud Sync...");
         const syncBtn = document.getElementById('sync_btn');
         
         if (syncBtn) {
-            syncBtn.innerHTML = "🌀 CONNECTING...";
+            syncBtn.innerHTML = "🌀 SYNCING...";
             syncBtn.disabled = true;
         }
 
         try {
-            // 1. Check if Firebase is ready
-            if (!window.db) {
-                throw new Error("Cloud connection not established. Check index.html keys.");
-            }
-
-            // 2. Load Firestore library
             const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
             
-            // 3. Prepare Data
             const data = this.packageData();
-
-            // 4. Submit to 'surveys' collection
-            const docRef = await addDoc(collection(window.db, "surveys"), data);
+            await addDoc(collection(window.db, "surveys"), data);
             
-            console.log("Success! ID:", docRef.id);
-
-            if (syncBtn) {
-                syncBtn.innerHTML = "✅ SYNCED SUCCESS";
-                syncBtn.style.background = "#2dd4bf";
-            }
-
-            setTimeout(() => {
-                alert("Cloud Sync Successful!");
-                location.reload(); 
-            }, 1000);
+            console.log("Cloud Upload Successful!");
+            alert("SUCCESS! Survey saved to Cloud.");
+            location.reload();
 
         } catch (error) {
-            console.error("Sync Error:", error);
-            alert("Sync Failed: " + error.message);
-            
+            console.error("Cloud Error:", error);
+            alert("Cloud Error: " + error.message);
             if (syncBtn) {
-                syncBtn.innerHTML = "🚀 RETRY SYNC";
+                syncBtn.innerHTML = "🚀 RETRY";
                 syncBtn.disabled = false;
             }
         }
     }
 };
 
-// CRITICAL: This makes the button able to find the code
+// This line allows the HTML button to find the function
 window.SupplierEngine = SupplierEngine;
