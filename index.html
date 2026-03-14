@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
-    <title>InfraDepot | Intelligence</title>
+    <title>InfraDepot | Enterprise Intelligence</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0e12">
     <link rel="stylesheet" href="css/components.css">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -24,22 +27,36 @@
 
         const app = initializeApp(firebaseConfig);
         
-        // 🚀 OFFLINE PERSISTENCE ENABLED HERE
+        // 🚀 ENABLING OFFLINE STORAGE FOR UDAIPUR FIELD WORK
         window.db = initializeFirestore(app, {
             localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
         });
 
-        console.log("🚀 INFRA-DEPOT: OFFLINE-READY ENGINE ACTIVE");
+        console.log("🚀 INFRA-DEPOT: ENTERPRISE CORE ONLINE");
     </script>
 
     <script src="js/auth.js"></script>
     <script src="js/map.js"></script>
     <script src="js/suppliers.js"></script> 
     <script src="js/ui.js"></script>
+    <script src="js/admin.js"></script>
     <script src="js/app.js"></script>
 </head>
-<body style="background: #0a0e12; color: white;">
+<body style="background: #0a0e12; color: white; overflow-x: hidden;">
+
     <div id="auth_layer"></div>
+
     <div id="app_layer" style="display:none;"></div>
+
+    <script>
+        // Start the system when the page is fully loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.App) {
+                window.App.init();
+            } else {
+                console.error("Critical Failure: Identity Engine not found.");
+            }
+        });
+    </script>
 </body>
 </html>
