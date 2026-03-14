@@ -1,1 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfraDepot | Command Center</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/admin-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+</head>
+<body>
 
+    <div class="admin-wrapper">
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">🏗️</span>
+                <span class="logo-text">InfraDepot</span>
+            </div>
+            <nav class="menu">
+                <button class="menu-item active" onclick="AdminCore.switchTab('dashboard')">📊 Dashboard</button>
+                <button class="menu-item" onclick="AdminCore.switchTab('suppliers')">🏢 Suppliers</button>
+                <button class="menu-item" onclick="AdminCore.switchTab('materials')">🧱 Materials</button>
+                <button class="menu-item" onclick="AdminCore.switchTab('staff')">👥 Staff Team</button>
+                <button class="menu-item" onclick="AdminCore.switchTab('visits')">📍 Field Visits</button>
+                <button class="menu-item" onclick="AdminCore.switchTab('analytics')">📈 Analytics</button>
+            </nav>
+            <div class="sidebar-footer">
+                <button onclick="AdminCore.logout()" class="logout-btn">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-box">
+                    <input type="text" placeholder="Search suppliers, brands, or staff...">
+                </div>
+                <div class="admin-profile">
+                    <span id="admin-name">Super Admin</span>
+                    <div class="avatar">SA</div>
+                </div>
+            </header>
+
+            <section id="content-area">
+                </section>
+        </main>
+    </div>
+
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/admin-core.js"></script>
+</body>
+</html>
