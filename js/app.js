@@ -1,41 +1,33 @@
 /**
- * INFRA DEPOT - MASTER CONTROLLER v6.3
+ * INFRA DEPOT - MASTER CONTROLLER v1.4
  */
+import { AuthEngine } from './auth.js';
+import { AdminEngine } from './admin.js';
+import { UIEngine } from './ui.js';
 
-const AppEngine = {
+const App = {
     init: function() {
         console.log("InfraDepot: System Booting...");
         
-        // 1. Check if a user session exists in local storage
-        const session = localStorage.getItem('infra_user');
+        // Setup a single clean viewport
+        const body = document.body;
+        body.innerHTML = '<div id="main_viewport" style="width:100%; min-height:100vh;"></div>';
         
-        if (!session) {
-            console.log("App: No session. Loading Auth Layer...");
-            // Load only Auth (Login Screen)
-            if (window.AuthEngine) {
-                window.AuthEngine.init();
+        const user = JSON.parse(localStorage.getItem('infra_user'));
+
+        if (user) {
+            console.log("App: Session active. Launching Dashboard...");
+            if (user.role === 'admin' || user.id === 'vijay_master') {
+                AdminEngine.init(true);
+            } else {
+                UIEngine.init();
             }
         } else {
-            console.log("App: Session active. Verifying Role...");
-            try {
-                const user = JSON.parse(session);
-                // Load the appropriate Dashboard
-                if (window.AuthEngine) {
-                    window.AuthEngine.launchRoleBasedUI(user);
-                }
-            } catch (e) {
-                console.error("Session Corrupt. Resetting...");
-                localStorage.clear();
-                location.reload();
-            }
+            console.log("App: No session. Loading Auth Layer...");
+            AuthEngine.init();
         }
     }
 };
 
-// Start the engine only after all scripts and Firebase are ready
-window.addEventListener('load', () => {
-    // Small delay to ensure Firebase (window.db) is initialized
-    setTimeout(() => {
-        AppEngine.init();
-    }, 500);
-});
+// Launch
+window.addEventListener('DOMContentLoaded', () => App.init());
