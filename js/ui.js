@@ -1,3 +1,7 @@
+/**
+ * INFRA DEPOT - UI ENGINE
+ */
+
 const UIEngine = {
     init: function() {
         const appLayer = document.getElementById('app_layer');
@@ -12,17 +16,12 @@ const UIEngine = {
 
                 <div class="card">
                     <div class="section-label"><span>01</span> LOCATION & MAP</div>
-                    <div id="map_display" style="width:100%; height:200px; border-radius:16px; margin-bottom:12px; background:#111; border:1px solid var(--glass-border); position: relative; z-index: 1;"></div>
-                    
-                    <label>COORDINATES</label>
+                    <div id="map_display" style="width:100%; height:200px; border-radius:16px; margin-bottom:12px; background:#111; border:1px solid var(--glass-border); z-index: 1;"></div>
                     <input type="text" id="form_coords" placeholder="Coordinates" readonly>
-                    
                     <button class="btn-main btn-gray" style="margin-top:10px; border: 1px solid var(--accent-glow);" onclick="MapEngine.captureGPS()">
                         📍 CAPTURE GPS & ADDRESS
                     </button>
-                    
-                    <label style="margin-top:15px; display:block;">AUTO-FILLED ADDRESS</label>
-                    <textarea id="form_address" placeholder="Address auto-fill..." style="width:100%; border-radius:12px; padding:10px; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--glass-border);"></textarea>
+                    <textarea id="form_address" placeholder="Address auto-fill..." style="margin-top:10px;"></textarea>
                 </div>
 
                 <div class="card">
@@ -40,12 +39,11 @@ const UIEngine = {
                 </div>
 
                 <div class="footer-actions">
-                    <button class="btn-main btn-green" onclick="SupplierEngine.syncToCloud()">🚀 SYNC TO CLOUD</button>
+                    <button id="sync_btn" class="btn-main btn-green" onclick="window.SupplierEngine.syncToCloud()">🚀 SYNC TO CLOUD</button>
                 </div>
             </div>
         `;
 
-        // Wait for HTML to settle, then boot map
         setTimeout(() => MapEngine.init(), 600);
     },
 
@@ -55,3 +53,5 @@ const UIEngine = {
         el.innerText = Math.max(0, current + val);
     }
 };
+
+window.UIEngine = UIEngine;
