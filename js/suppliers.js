@@ -1,69 +1,76 @@
 /**
- * INFRA DEPOT - CLOUD & HISTORY ENGINE
+ * INFRA DEPOT - ANALYTICS & ADVANCED SYNC
  */
 
 const SupplierEngine = {
-    packageData: function() {
-        return {
-            timestamp: new Date().toISOString(),
-            staffId: localStorage.getItem('infra_session') || "FS-001",
-            firmName: document.querySelector('input[placeholder*="Firm Name"]')?.value || "Unnamed",
-            location: {
-                coords: document.getElementById('form_coords')?.value || "0,0",
-                address: document.getElementById('form_address')?.value || ""
-            },
-            fleet: {
-                mini_truck: document.getElementById('c1')?.innerText || "0",
-                dumper: document.getElementById('c2')?.innerText || "0"
-            }
-        };
+    loadDashboardStats: async function() {
+        try {
+            const { collection, getDocs, query, where } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+            const q = query(collection(window.db, "surveys"));
+            const snap = await getDocs(q);
+            
+            let stats = { today: 0, week: 0, month: 0, year: 0 };
+            const now = new Date();
+
+            snap.forEach(doc => {
+                const data = doc.data();
+                const d = new Date(data.timestamp);
+                
+                if (d.toDateString() === now.toDateString()) stats.today++;
+                if (now - d < 7 * 24 * 60 * 60 * 1000) stats.week++;
+                if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) stats.month++;
+                if (d.getFullYear() === now.getFullYear()) stats.year++;
+            });
+
+            document.getElementById('stat_today').innerText = stats.today;
+            document.getElementById('stat_week').innerText = stats.week;
+            document.getElementById('stat_month').innerText = stats.month;
+            document.getElementById('stat_year').innerText = stats.year;
+        } catch (e) { console.error("Stats Error:", e); }
     },
 
     syncToCloud: async function() {
         const syncBtn = document.getElementById('sync_btn');
-        if (syncBtn) { syncBtn.innerHTML = "🌀 SYNCING..."; syncBtn.disabled = true; }
+        syncBtn.innerHTML = "🌀 UPLOADING PHOTOS & DATA...";
+        syncBtn.disabled = true;
 
         try {
             const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-            const data = this.packageData();
-            await addDoc(collection(window.db, "surveys"), data);
             
-            alert("SUCCESS! Survey saved to Cloud.");
-            this.loadHistory(); // Refresh the list after saving
+            const payload = {
+                timestamp: new Date().toISOString(),
+                firmName: document.getElementById('f_name').value,
+                owner: {
+                    name: document.getElementById('o_name').value,
+                    mob: document.getElementById('o_mob').value,
+                    wa: document.getElementById('o_wa').value
+                },
+                manager: {
+                    mob: document.getElementById('m_mob').value,
+                    wa: document.getElementById('m_wa').value
+                },
+                location: {
+                    address: document.getElementById('form_address').value,
+                    isFullUdaipur: document.getElementById('area_full').checked,
+                    is25kmRadius: document.getElementById('area_radius').checked
+                },
+                fleet: {
+                    tractor: document.getElementById('fl_trac').innerText,
+                    mini_truck: document.getElementById('fl_mini').innerText,
+                    truck: document.getElementById('fl_truck').innerText,
+                    dumper: document.getElementById('fl_dump').innerText,
+                    trailer: document.getElementById('fl_trail').innerText
+                },
+                photos: UIEngine.photos // Base64 encoded images
+            };
+
+            await addDoc(collection(window.db, "surveys"), payload);
+            alert("MIS DATA SYNCED SUCCESSFULLY!");
             location.reload();
         } catch (error) {
-            alert("Cloud Error: " + error.message);
-            if (syncBtn) { syncBtn.innerHTML = "🚀 RETRY"; syncBtn.disabled = false; }
-        }
-    },
-
-    // NEW: Function to pull data back from Firebase
-    loadHistory: async function() {
-        const historyBox = document.getElementById('history_list');
-        if (!historyBox) return;
-
-        try {
-            const { collection, query, orderBy, limit, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-            
-            const q = query(collection(window.db, "surveys"), orderBy("timestamp", "desc"), limit(3));
-            const querySnapshot = await getDocs(q);
-            
-            let html = "";
-            querySnapshot.forEach((doc) => {
-                const item = doc.data();
-                html += `
-                    <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:8px; border-left:4px solid var(--accent-glow);">
-                        <div style="font-size:12px; color:var(--accent-glow)">${item.timestamp.split('T')[0]}</div>
-                        <div style="font-weight:bold;">${item.firmName}</div>
-                        <div style="font-size:11px; color:#aaa;">🚚 ${item.fleet.mini_truck} Mini | 🚛 ${item.fleet.dumper} Dumper</div>
-                    </div>
-                `;
-            });
-            historyBox.innerHTML = html || "No recent surveys found.";
-        } catch (e) {
-            console.error("History Load Error:", e);
+            alert("Error: " + error.message);
+            syncBtn.disabled = false;
         }
     }
 };
-
 window.SupplierEngine = SupplierEngine;
