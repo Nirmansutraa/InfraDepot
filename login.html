@@ -8,9 +8,9 @@
 </head>
 <body class="bg-slate-950 flex items-center justify-center min-h-screen font-sans">
 
-    <div class="max-w-md w-full p-8 bg-white rounded-[2rem] shadow-2xl border border-slate-800">
+    <div class="max-w-md w-full p-8 bg-white rounded-[2.5rem] shadow-2xl border border-slate-200">
         <div class="text-center mb-10">
-            <div class="text-4xl mb-4">🏗️</div>
+            <div class="text-5xl mb-4">🏗️</div>
             <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase">InfraDepot</h1>
             <p class="text-slate-400 text-[10px] font-bold tracking-widest uppercase mt-2">Intelligence Access Point</p>
         </div>
@@ -27,68 +27,97 @@
                 <div class="h-[1px] bg-slate-100 flex-1"></div>
             </div>
 
-            <div class="space-y-3">
-                <input type="tel" id="phone-number" placeholder="+91 XXXX-XXXXXX" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
+            <div id="phone-input-area" class="space-y-3">
+                <input type="tel" id="phone-number" placeholder="+91 XXXX-XXXXXX" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900">
                 <button id="otp-request" class="w-full bg-slate-900 text-white font-bold p-4 rounded-2xl hover:bg-black transition-all shadow-lg shadow-slate-200">
                     Request Staff OTP
                 </button>
             </div>
 
             <div id="otp-area" class="hidden mt-4 space-y-3">
-                <input type="text" id="otp-code" placeholder="Enter 6-digit OTP" class="w-full p-4 bg-indigo-50 border border-indigo-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" id="otp-code" placeholder="Enter 6-digit OTP" class="w-full p-4 bg-indigo-50 border border-indigo-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900">
                 <button id="otp-verify" class="w-full bg-indigo-600 text-white font-bold p-4 rounded-2xl hover:bg-indigo-700">Verify Identity</button>
             </div>
         </div>
 
-        <div id="recaptcha-container"></div>
+        <div id="recaptcha-container" class="mt-4"></div>
         
-        <p class="text-center text-[9px] text-slate-400 mt-8 leading-relaxed">
-            UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED.<br>ALL GEOGRAPHIC DATA POINTS ARE LOGGED.
+        <p class="text-center text-[9px] text-slate-400 mt-10 leading-relaxed uppercase tracking-widest font-bold">
+            All activity is logged to Cloud Intelligence.<br>Udaipur Regional Server 01
         </p>
     </div>
 
     <script type="module">
         import { auth, db } from './js/firebase-config.js';
         import { 
-            GoogleAuthProvider, signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber 
+            GoogleAuthProvider, signInWithRedirect, getRedirectResult, 
+            RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // --- GOOGLE ADMIN LOGIN ---
-        document.getElementById('google-login').onclick = async () => {
-            const provider = new GoogleAuthProvider();
-            try {
-                const result = await signInWithPopup(auth, provider);
-                const userDoc = await getDoc(doc(db, "users", result.user.uid));
-                
-                if (userDoc.exists() && userDoc.data().role === 'admin') {
+        // 1. Handle Automatic Redirect Result (For Admin)
+        getRedirectResult(auth).then(async (result) => {
+            if (result && result.user) {
+                checkAccess(result.user);
+            }
+        }).catch(e => console.error("Redirect Error:", e));
+
+        // 2. Check Role and Route
+        async function checkAccess(user) {
+            console.log("Verifying UID:", user.uid);
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                if (data.role === 'admin') {
                     window.location.href = "admin.html";
-                } else {
-                    alert("SECURITY ALERT: User ID not found in Admin Registry.");
-                    await auth.signOut();
+                } else if (data.role === 'staff') {
+                    window.location.href = "capture.html";
                 }
-            } catch (e) { alert("Auth Error: " + e.message); }
+            } else {
+                alert("ACCESS DENIED: Your UID is not registered in the system. Please check Firestore.");
+                await auth.signOut();
+            }
+        }
+
+        // --- GOOGLE ADMIN LOGIN TRIGGER ---
+        document.getElementById('google-login').onclick = () => {
+            const provider = new GoogleAuthProvider();
+            signInWithRedirect(auth, provider);
         };
 
         // --- PHONE OTP STAFF LOGIN ---
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { 'size': 'invisible' });
 
         document.getElementById('otp-request').onclick = async () => {
-            const phone = document.getElementById('phone-number').value;
+            const phone = document.getElementById('phone-number').value.trim();
+            if(!phone.startsWith('+91')) return alert("Enter number starting with +91");
+            
             try {
                 window.confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
                 document.getElementById('otp-area').classList.remove('hidden');
-                alert("OTP Sent to Field Device.");
-            } catch (e) { alert("OTP Error: " + e.message); }
+                document.getElementById('phone-input-area').classList.add('opacity-50');
+                alert("OTP Dispatched to field device.");
+            } catch (e) { alert("OTP Dispatch Failed: " + e.message); }
         };
 
         document.getElementById('otp-verify').onclick = async () => {
-            const code = document.getElementById('otp-code').value;
+            const code = document.getElementById('otp-code').value.trim();
             try {
-                await window.confirmationResult.confirm(code);
-                window.location.href = "capture.html";
+                const result = await window.confirmationResult.confirm(code);
+                checkAccess(result.user);
             } catch (e) { alert("Invalid OTP Verification."); }
         };
+
+        // Persistence Check: Redirect if already logged in
+        onAuthStateChanged(auth, (user) => {
+            if(user) {
+                // To prevent infinite loop, don't check if we just landed here
+                if(!document.referrer.includes(window.location.hostname)) {
+                    checkAccess(user);
+                }
+            }
+        });
     </script>
 </body>
 </html>
