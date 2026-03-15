@@ -6,118 +6,77 @@
     <title>InfraDepot | Secure Gateway</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 flex items-center justify-center min-h-screen font-sans">
+<body class="bg-slate-950 flex items-center justify-center min-h-screen">
 
-    <div class="max-w-md w-full p-8 bg-white rounded-[2.5rem] shadow-2xl border border-slate-200">
+    <div class="max-w-md w-full p-10 bg-white rounded-[2.5rem] shadow-2xl">
         <div class="text-center mb-10">
-            <div class="text-5xl mb-4">🏗️</div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tighter uppercase">InfraDepot</h1>
-            <p class="text-slate-400 text-[10px] font-bold tracking-widest uppercase mt-2">Intelligence Access Point</p>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tighter uppercase">InfraDepot</h1>
+            <p class="text-slate-400 text-[10px] font-bold tracking-widest uppercase mt-2">Udaipur Regional Server</p>
         </div>
 
-        <div class="space-y-4">
-            <button id="google-login" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-100 p-4 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
-                Super Admin Login
-            </button>
+        <button id="google-login" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-100 p-4 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition-all">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
+            Super Admin Login
+        </button>
 
-            <div class="flex items-center gap-4 my-8">
-                <div class="h-[1px] bg-slate-100 flex-1"></div>
-                <span class="text-[10px] font-black text-slate-300 uppercase">Field Operations</span>
-                <div class="h-[1px] bg-slate-100 flex-1"></div>
-            </div>
-
-            <div id="phone-input-area" class="space-y-3">
-                <input type="tel" id="phone-number" placeholder="+91 XXXX-XXXXXX" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900">
-                <button id="otp-request" class="w-full bg-slate-900 text-white font-bold p-4 rounded-2xl hover:bg-black transition-all shadow-lg shadow-slate-200">
-                    Request Staff OTP
-                </button>
-            </div>
-
-            <div id="otp-area" class="hidden mt-4 space-y-3">
-                <input type="text" id="otp-code" placeholder="Enter 6-digit OTP" class="w-full p-4 bg-indigo-50 border border-indigo-100 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900">
-                <button id="otp-verify" class="w-full bg-indigo-600 text-white font-bold p-4 rounded-2xl hover:bg-indigo-700">Verify Identity</button>
-            </div>
+        <div id="debug-box" class="mt-6 p-4 bg-slate-100 rounded-xl text-[10px] font-mono text-slate-500 overflow-hidden">
+            System Status: Standing by...
         </div>
-
-        <div id="recaptcha-container" class="mt-4"></div>
-        
-        <p class="text-center text-[9px] text-slate-400 mt-10 leading-relaxed uppercase tracking-widest font-bold">
-            All activity is logged to Cloud Intelligence.<br>Udaipur Regional Server 01
-        </p>
     </div>
 
     <script type="module">
-        import { auth, db } from './js/firebase-config.js';
-        import { 
-            GoogleAuthProvider, signInWithRedirect, getRedirectResult, 
-            RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // 1. IMPORT DIRECTLY
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 1. Handle Automatic Redirect Result (For Admin)
-        getRedirectResult(auth).then(async (result) => {
-            if (result && result.user) {
-                checkAccess(result.user);
-            }
-        }).catch(e => console.error("Redirect Error:", e));
+        // 2. YOUR EXACT CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
+            authDomain: "infradepo.firebaseapp.com",
+            projectId: "infradepo",
+            storageBucket: "infradepo.firebasestorage.app",
+            messagingSenderId: "733942710671",
+            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
+        };
 
-        // 2. Check Role and Route
-        async function checkAccess(user) {
-            console.log("Verifying UID:", user.uid);
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            
-            if (userDoc.exists()) {
-                const data = userDoc.data();
-                if (data.role === 'admin') {
-                    window.location.href = "admin.html";
-                } else if (data.role === 'staff') {
-                    window.location.href = "capture.html";
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const log = (msg) => document.getElementById('debug-box').innerText = "LOG: " + msg;
+
+        // 3. THE HANDSHAKE LOGIC
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                log("User Detected: " + user.uid);
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                
+                if (userDoc.exists()) {
+                    if (userDoc.data().role === 'admin') {
+                        log("Role: Admin. Redirecting...");
+                        window.location.href = "admin.html";
+                    } else {
+                        log("Role: " + userDoc.data().role + ". Moving to Capture...");
+                        window.location.href = "capture.html";
+                    }
+                } else {
+                    log("ERROR: UID " + user.uid + " NOT IN FIRESTORE.");
+                    alert("UID NOT REGISTERED: " + user.uid);
                 }
             } else {
-                alert("ACCESS DENIED: Your UID is not registered in the system. Please check Firestore.");
-                await auth.signOut();
-            }
-        }
-
-        // --- GOOGLE ADMIN LOGIN TRIGGER ---
-        document.getElementById('google-login').onclick = () => {
-            const provider = new GoogleAuthProvider();
-            signInWithRedirect(auth, provider);
-        };
-
-        // --- PHONE OTP STAFF LOGIN ---
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { 'size': 'invisible' });
-
-        document.getElementById('otp-request').onclick = async () => {
-            const phone = document.getElementById('phone-number').value.trim();
-            if(!phone.startsWith('+91')) return alert("Enter number starting with +91");
-            
-            try {
-                window.confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
-                document.getElementById('otp-area').classList.remove('hidden');
-                document.getElementById('phone-input-area').classList.add('opacity-50');
-                alert("OTP Dispatched to field device.");
-            } catch (e) { alert("OTP Dispatch Failed: " + e.message); }
-        };
-
-        document.getElementById('otp-verify').onclick = async () => {
-            const code = document.getElementById('otp-code').value.trim();
-            try {
-                const result = await window.confirmationResult.confirm(code);
-                checkAccess(result.user);
-            } catch (e) { alert("Invalid OTP Verification."); }
-        };
-
-        // Persistence Check: Redirect if already logged in
-        onAuthStateChanged(auth, (user) => {
-            if(user) {
-                // To prevent infinite loop, don't check if we just landed here
-                if(!document.referrer.includes(window.location.hostname)) {
-                    checkAccess(user);
-                }
+                log("Ready for Login.");
             }
         });
+
+        document.getElementById('google-login').onclick = async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                log("Opening Google...");
+                await signInWithPopup(auth, provider);
+            } catch (e) {
+                log("Error: " + e.message);
+            }
+        };
     </script>
 </body>
 </html>
