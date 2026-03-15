@@ -1,115 +1,123 @@
-/**
- * INFRA DEPOT - SYNC ENGINE v3.0
- * Purpose: Handles Offline Data Capture & Cloud Synchronization
- */
-import { db, storage } from './firebase-config.js';
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfraDepot | Field Capture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen p-6">
 
-export const SyncEngine = {
-    /**
-     * [cite: 152-155, 277-282, 372-375]
-     * Generates a structured ID: SUP + CITY + SERIAL
-     */
-    generateID: function(cityCode = "UPR") {
-        const serial = Math.floor(100000 + Math.random() * 900000);
-        return `SUP-${cityCode}-${serial}`;
-    },
+    <header class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-black tracking-tighter text-emerald-400 uppercase">InfraDepot</h1>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Field Intelligence Unit</p>
+        </div>
+        <button onclick="location.reload()" class="bg-slate-800 p-2 rounded-lg text-xs">🔄 Refresh</button>
+    </header>
 
-    /**
-     * [cite: 141, 260, 418]
-     * Compresses images to ~500KB before uploading to save data
-     */
-    compressImage: async function(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1200;
-                    let width = img.width;
-                    let height = img.height;
+    <div class="max-w-md mx-auto space-y-6">
+        <section class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-xl">
+            <label class="text-[10px] font-bold uppercase text-slate-400 block mb-2">Shop/Firm Name</label>
+            <input type="text" id="firm-name" placeholder="Enter Shop Name" class="w-full bg-slate-950 border border-slate-700 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 text-white">
+        </section>
 
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.7);
-                };
-            };
-        });
-    },
+        <section class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-xl">
+            <label class="text-[10px] font-bold uppercase text-slate-400 block mb-2">Primary Material</label>
+            <select id="material-type" class="w-full bg-slate-950 border border-slate-700 p-4 rounded-2xl outline-none mb-4 text-white">
+                <option value="Cement">Cement</option>
+                <option value="Steel">Steel (Saria)</option>
+                <option value="Bricks">Bricks/AAC Blocks</option>
+            </select>
+            
+            <label class="text-[10px] font-bold uppercase text-slate-400 block mb-2">Brand</label>
+            <input type="text" id="brand-name" placeholder="e.g. UltraTech, Wonder" class="w-full bg-slate-950 border border-slate-700 p-4 rounded-2xl outline-none text-white">
+        </section>
 
-    /**
-     * [cite: 76-90, 231-244, 419-450]
-     * The Master Upload Function
-     */
-    uploadSupplier: async function(formData, photoFiles) {
-        console.log("Sync: Starting upload process...");
-        const user = JSON.parse(localStorage.getItem('infra_user'));
+        <section id="gps-card" class="bg-slate-800 p-6 rounded-3xl border border-rose-900/50 shadow-xl flex items-center justify-between transition-all">
+            <div>
+                <h3 class="font-bold text-sm">GPS Precision Lock</h3>
+                <p id="gps-status" class="text-[10px] text-rose-400 uppercase font-black italic">Searching for satellites...</p>
+            </div>
+            <div id="gps-indicator" class="w-4 h-4 rounded-full bg-rose-500 animate-pulse"></div>
+        </section>
 
-        try {
-            // 1. Upload Photos to Firebase Storage [cite: 98, 261, 418]
-            const photoUrls = [];
-            for (const file of photoFiles) {
-                const compressed = await this.compressImage(file);
-                const storageRef = ref(storage, `supplier_photos/${Date.now()}_${file.name}`);
-                const snapshot = await uploadBytes(storageRef, compressed);
-                const url = await getDownloadURL(snapshot.ref);
-                photoUrls.push(url);
+        <button id="submit-survey" disabled class="w-full bg-slate-700 text-slate-400 font-black p-5 rounded-3xl text-lg transition-all cursor-not-allowed">
+            WAITING FOR GPS...
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
+            authDomain: "infradepo.firebaseapp.com",
+            projectId: "infradepo",
+            storageBucket: "infradepo.firebasestorage.app",
+            messagingSenderId: "733942710671",
+            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let coords = null;
+        let currentUser = null;
+
+        // Security: Ensure only authorized staff can see this
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                currentUser = user;
             }
+        });
 
-            // 2. Build the Intelligence Document [cite: 58-68, 76-90, 469-478]
-            const supplierData = {
-                supplierID: this.generateID("UPR"), // [cite: 153, 280, 373]
-                firmName: formData.firmName,         // [cite: 79, 233, 385]
-                ownerName: formData.ownerName,       // [cite: 80, 234, 386]
-                phone: formData.phone,               // [cite: 81, 235, 387]
-                
-                // Material Intelligence [cite: 83-84, 241-243, 419-427]
-                materials: formData.selectedMaterials, 
-                brands: formData.selectedBrands,
+        // High-Accuracy GPS Logic
+        navigator.geolocation.watchPosition((pos) => {
+            coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            const btn = document.getElementById('submit-survey');
+            const card = document.getElementById('gps-card');
+            
+            document.getElementById('gps-status').innerText = "LOCATION LOCKED (" + pos.coords.accuracy.toFixed(1) + "m)";
+            document.getElementById('gps-status').classList.replace('text-rose-400', 'text-emerald-400');
+            document.getElementById('gps-indicator').classList.replace('bg-rose-500', 'bg-emerald-500');
+            card.classList.replace('border-rose-900/50', 'border-emerald-900/50');
+            
+            btn.disabled = false;
+            btn.innerText = "UPLOAD INTELLIGENCE";
+            btn.classList.replace('bg-slate-700', 'bg-emerald-500');
+            btn.classList.replace('text-slate-400', 'text-slate-900');
+        }, (err) => {
+            alert("GPS Error: Please turn on Location/High Accuracy.");
+        }, { enableHighAccuracy: true });
 
-                // Fleet Intelligence [cite: 85, 301-312, 440-450]
-                fleet: formData.fleetCounts,
+        document.getElementById('submit-survey').onclick = async () => {
+            const firm = document.getElementById('firm-name').value.trim();
+            const brand = document.getElementById('brand-name').value.trim();
+            
+            if(!firm || !brand) return alert("All fields are mandatory for Market Intelligence.");
 
-                // Geographic Intelligence [cite: 86-89, 245-252, 401-410]
-                location: formData.coords, 
-                address: formData.address,
-
-                // Metadata [cite: 216-219, 470-478]
-                capturedBy: user.id || "Unknown",
-                staffUID: user.uid || "N/A",
-                timestamp: serverTimestamp(),
-                photos: photoUrls,
-                verificationStatus: "pending" // [cite: 66, 124, 318]
-            };
-
-            // 3. Save to Firestore [cite: 19, 95, 191]
-            const docRef = await addDoc(collection(db, "suppliers"), supplierData);
-            console.log("Sync Success! Document ID:", docRef.id);
-            return { success: true, id: docRef.id };
-
-        } catch (error) {
-            console.error("Sync Error:", error);
-            // [cite: 94, 266, 480]
-            this.saveToOfflineStorage(formData); 
-            return { success: false, message: "Saved Offline. Will sync later." };
-        }
-    },
-
-    saveToOfflineStorage: function(data) {
-        // Logic to save to IndexedDB as per [cite: 25, 197, 266]
-        console.warn("Sync: Internet unavailable. Data saved to IndexedDB.");
-        alert("Offline: Data saved on phone. It will upload when you have internet.");
-    }
-};
-
-window.SyncEngine = SyncEngine;
+            try {
+                document.getElementById('submit-survey').innerText = "SYNCING...";
+                await addDoc(collection(db, "surveys"), {
+                    firmName: firm,
+                    material: document.getElementById('material-type').value,
+                    brand: brand,
+                    location: coords,
+                    capturedBy: currentUser.uid,
+                    timestamp: serverTimestamp()
+                });
+                alert("SUCCESS: Data uploaded to Udaipur HQ.");
+                location.reload();
+            } catch (e) {
+                alert("Upload Failed: " + e.message);
+            }
+        };
+    </script>
+</body>
+</html>
