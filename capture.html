@@ -1,0 +1,15 @@
+<div class="pwa-container">
+    <section id="identity-layer">
+        <input type="text" id="firmName" placeholder="Firm Name" required> <input type="text" id="ownerName" placeholder="Owner Full Name"> <input type="tel" id="phone" placeholder="Owner Phone" required> </section>
+
+    <section id="gps-verification">
+        <button onclick="GPS.capture()" class="btn-gps">📍 Capture GPS Verification</button> <div id="gps-status">Coordinates: Waiting...</div> </section>
+
+    <section id="material-intelligence">
+        <select id="primary-material" onchange="Materials.loadVarieties()">
+            <option value="cement">Cement</option> <option value="steel">Steel</option> <option value="sand">Sand</option> </select>
+        <div id="variety-selection"></div> <div id="brand-selection"></div> </section>
+
+    <section id="photo-verification">
+        <button onclick="Camera.open('exterior')">📸 Shop Exterior</button> <button onclick="Camera.open('stock')">📸 Stock Yard</button> </section>
+</div>
