@@ -1,133 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | Field Capture</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>InfraDepot Capture</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:#f4f6f9;
+}
+
+header{
+background:#0b1b33;
+color:white;
+padding:16px;
+font-size:18px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.container{
+padding:20px;
+max-width:600px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+input, select{
+
+width:100%;
+padding:12px;
+margin-bottom:12px;
+border-radius:6px;
+border:1px solid #ddd;
+font-size:14px;
+
+}
+
+button{
+
+padding:12px 20px;
+border:none;
+background:#0b1b33;
+color:white;
+border-radius:6px;
+cursor:pointer;
+
+}
+
+.logout{
+
+background:#d9534f;
+
+}
+
+.status{
+
+margin-top:10px;
+font-size:13px;
+color:#666;
+
+}
+
+</style>
+
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen p-6">
 
-    <div id="capture-status" class="fixed top-0 left-0 w-full bg-indigo-600 text-white text-[10px] font-black text-center py-2 uppercase tracking-widest z-50">
-        Identifying Field Agent...
-    </div>
+<body>
 
-    <header class="mb-8 mt-8 flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-black tracking-tighter text-emerald-400 uppercase">InfraDepot</h1>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Udaipur Field Unit</p>
-        </div>
-        <div id="user-role" class="bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-[10px] font-bold text-emerald-500">CHECKING...</div>
-    </header>
+<header>
 
-    <div class="max-w-md mx-auto space-y-6">
-        <section class="bg-slate-900 p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl">
-            <label class="text-[10px] font-bold uppercase text-slate-500 block mb-2 ml-2">Shop/Firm Name</label>
-            <input type="text" id="firm-name" placeholder="e.g. Udaipur Cement Store" class="w-full bg-black border border-slate-800 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 text-white">
-        </section>
+<div>InfraDepot – Supplier Capture</div>
 
-        <section class="bg-slate-900 p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl">
-            <label class="text-[10px] font-bold uppercase text-slate-500 block mb-2 ml-2">Material Type</label>
-            <select id="material-type" class="w-full bg-black border border-slate-800 p-4 rounded-2xl outline-none mb-4 text-white">
-                <option value="Cement">Cement</option>
-                <option value="Steel">Steel (Saria)</option>
-                <option value="Bricks">Bricks/Blocks</option>
-            </select>
-            
-            <label class="text-[10px] font-bold uppercase text-slate-500 block mb-2 ml-2">Brand Name</label>
-            <input type="text" id="brand-name" placeholder="e.g. UltraTech" class="w-full bg-black border border-slate-800 p-4 rounded-2xl outline-none text-white">
-        </section>
+<button class="logout" onclick="logout()">Logout</button>
 
-        <section id="gps-card" class="bg-slate-900 p-6 rounded-[2.5rem] border border-rose-900/30 shadow-2xl flex items-center justify-between">
-            <div>
-                <h3 class="font-bold text-sm">Satellite Link</h3>
-                <p id="gps-text" class="text-[10px] text-rose-500 uppercase font-black italic">Awaiting GPS Lock...</p>
-            </div>
-            <div id="gps-dot" class="w-3 h-3 rounded-full bg-rose-600 animate-ping"></div>
-        </section>
+</header>
 
-        <button id="submit-btn" disabled class="w-full bg-slate-800 text-slate-500 font-black p-5 rounded-[2rem] text-lg transition-all shadow-xl shadow-emerald-900/10">
-            LOCKING GPS...
-        </button>
-    </div>
+<div class="container">
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<div class="card">
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
-            authDomain: "infradepo.firebaseapp.com",
-            projectId: "infradepo",
-            storageBucket: "infradepo.firebasestorage.app",
-            messagingSenderId: "733942710671",
-            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
-        };
+<h3>Supplier Information</h3>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+<input id="firm" placeholder="Firm Name">
 
-        let coords = null;
-        const status = document.getElementById('capture-status');
+<input id="owner" placeholder="Owner Name">
 
-        // 🛡️ SECURITY HANDSHAKE
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                status.innerText = "NO SESSION: GOING TO LOGIN...";
-                window.location.href = "login.html";
-            } else {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const role = userDoc.data().role;
-                    document.getElementById('user-role').innerText = role.toUpperCase();
-                    status.innerText = "AGENT VERIFIED: " + user.uid;
-                    status.className = "fixed top-0 left-0 w-full bg-emerald-600 text-white text-[10px] font-black text-center py-2 uppercase tracking-widest z-50";
-                } else {
-                    alert("UNAUTHORIZED: Your UID is not in the system. \nUID: " + user.uid);
-                    window.location.href = "login.html";
-                }
-            }
-        });
+<input id="phone" placeholder="Phone Number">
 
-        // 🛰️ GPS ENGINE
-        navigator.geolocation.watchPosition((pos) => {
-            coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            document.getElementById('gps-text').innerText = "LINK ACTIVE (" + pos.coords.accuracy.toFixed(0) + "m)";
-            document.getElementById('gps-text').className = "text-[10px] text-emerald-400 uppercase font-black";
-            document.getElementById('gps-dot').className = "w-3 h-3 rounded-full bg-emerald-500";
-            document.getElementById('gps-card').className = "bg-slate-900 p-6 rounded-[2.5rem] border border-emerald-900/30 shadow-2xl flex items-center justify-between";
-            
-            const btn = document.getElementById('submit-btn');
-            btn.disabled = false;
-            btn.innerText = "UPLOAD INTELLIGENCE";
-            btn.className = "w-full bg-emerald-500 text-slate-950 font-black p-5 rounded-[2rem] text-lg shadow-xl shadow-emerald-500/20";
-        }, null, { enableHighAccuracy: true });
+<input id="whatsapp" placeholder="WhatsApp Number">
 
-        // ☁️ CLOUD SYNC
-        document.getElementById('submit-btn').onclick = async () => {
-            const firm = document.getElementById('firm-name').value;
-            const brand = document.getElementById('brand-name').value;
-            
-            if(!firm || !brand) return alert("Fill all details!");
+<input id="address" placeholder="Business Address">
 
-            try {
-                document.getElementById('submit-btn').innerText = "SYNCING...";
-                await addDoc(collection(db, "surveys"), {
-                    firmName: firm,
-                    material: document.getElementById('material-type').value,
-                    brand: brand,
-                    location: coords,
-                    capturedBy: auth.currentUser.uid,
-                    timestamp: serverTimestamp()
-                });
-                alert("SUCCESS: Data sent to Udaipur HQ!");
-                location.reload();
-            } catch (e) {
-                alert("SYNC FAILED: " + e.message);
-            }
-        };
-    </script>
+<select id="material">
+
+<option value="">Material Category</option>
+<option>Sand</option>
+<option>Aggregates</option>
+<option>Cement</option>
+<option>Steel</option>
+
+</select>
+
+<button onclick="saveSupplier()">Save Supplier</button>
+
+<div class="status" id="status"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const session = localStorage.getItem("infraDepotUser");
+
+if(!session){
+
+window.location.href="login.html";
+
+}
+
+function logout(){
+
+localStorage.removeItem("infraDepotUser");
+
+window.location.href="login.html";
+
+}
+
+function saveSupplier(){
+
+const firm=document.getElementById("firm").value;
+
+const owner=document.getElementById("owner").value;
+
+const phone=document.getElementById("phone").value;
+
+const whatsapp=document.getElementById("whatsapp").value;
+
+const address=document.getElementById("address").value;
+
+const material=document.getElementById("material").value;
+
+if(firm=="" || owner==""){
+
+document.getElementById("status").innerText="Enter required fields";
+
+return;
+
+}
+
+const supplier={
+
+firm,
+owner,
+phone,
+whatsapp,
+address,
+material,
+capturedBy:session,
+timestamp:new Date().toISOString()
+
+};
+
+console.log("Supplier Captured:",supplier);
+
+document.getElementById("status").innerText="Supplier saved (local test mode)";
+
+}
+
+</script>
+
 </body>
+
 </html>
