@@ -3,24 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | Gateway</title>
+    <title>Nirmansutra | InfraDepot Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); }
+        /* Styling for the specific branding requirement */
+        .infra { color: #94a3b8; } /* Slate 400 (Grey) */
+        .depot { color: #f97316; } /* Orange 500 */
+    </style>
 </head>
-<body class="bg-slate-950 flex items-center justify-center min-h-screen">
+<body class="bg-slate-950 text-slate-200 overflow-x-hidden min-h-screen">
 
-    <div class="max-w-md w-full p-10 bg-white rounded-[3rem] shadow-2xl text-center">
-        <h1 class="text-3xl font-black text-slate-900 tracking-tighter uppercase mb-2">InfraDepot</h1>
-        <p class="text-slate-400 text-[10px] font-bold tracking-widest uppercase mb-10 text-center">Udaipur Regional Server 2.0</p>
-        
-        <button id="login-btn" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-100 p-4 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
-            Authenticate with Google
-        </button>
-
-        <div id="status" class="mt-8 p-4 bg-slate-50 rounded-2xl text-[10px] font-mono text-slate-400 uppercase tracking-widest">
-            System Standby...
+    <nav class="flex justify-between items-center p-8 max-w-7xl mx-auto">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center font-black text-slate-950 shadow-lg shadow-emerald-500/20">N</div>
+            <span class="text-2xl font-black tracking-tighter text-white">NIRMANSUTRA</span>
         </div>
-    </div>
+        <div class="text-right">
+            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">System Engine</span>
+            <div class="text-lg font-black tracking-tight uppercase leading-none">
+                <span class="infra">Infra</span><span class="depot">Depot</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-8 pt-12 pb-20 grid lg:grid-cols-2 gap-20 items-center">
+        
+        <div class="space-y-10">
+            <div class="space-y-4">
+                <h2 class="text-6xl md:text-7xl font-black text-white leading-[0.9] tracking-tighter">
+                    Digitalizing <br><span class="text-emerald-500 italic">Udaipur's</span> <br>Real Estate.
+                </h2>
+                <p class="text-lg text-slate-400 max-w-md leading-relaxed">
+                    Nirmansutra leverages <span class="infra font-bold">Infra</span><span class="depot font-bold">Depot</span> technology to map retailers, track materials, and optimize the construction supply chain across the Mewar region.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="glass p-6 rounded-[2rem] border border-white/5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-3 text-emerald-500 text-xl">🛡️</div>
+                    <div class="text-white font-black text-sm uppercase italic">Administrators</div>
+                    <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest leading-relaxed">Global Command, RBAC Management, & Market Analytics.</p>
+                </div>
+                <div class="glass p-6 rounded-[2rem] border border-white/5">
+                    <div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center mb-3 text-orange-500 text-xl">📍</div>
+                    <div class="text-white font-black text-sm uppercase italic">Field Staff</div>
+                    <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest leading-relaxed">GPS Mapping, Material Logging, & Retailer Surveys.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative">
+            <div class="absolute inset-0 bg-emerald-500/10 blur-[120px] -z-10"></div>
+            <div class="glass p-10 md:p-14 rounded-[4rem] border border-white/10 shadow-3xl">
+                <div class="text-center mb-12">
+                    <div class="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Access Portal</div>
+                    <h3 class="text-3xl font-black text-white tracking-tighter italic">
+                        <span class="infra">Infra</span><span class="depot">Depot</span> Terminal
+                    </h3>
+                </div>
+
+                <div class="space-y-6">
+                    <button id="login-btn" class="group w-full flex items-center justify-center gap-4 bg-white text-slate-950 font-black p-5 rounded-[2rem] hover:bg-emerald-400 transition-all active:scale-95">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-6 h-6">
+                        AUTHORIZE ACCOUNT
+                    </button>
+
+                    <div class="flex items-center gap-4 px-4">
+                        <div class="h-[1px] flex-1 bg-white/5"></div>
+                        <span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Multi-Role Support</span>
+                        <div class="h-[1px] flex-1 bg-white/5"></div>
+                    </div>
+
+                    <div id="status-card" class="bg-slate-950/60 p-6 rounded-3xl border border-white/5">
+                        <div id="status-text" class="text-[10px] font-mono text-center text-slate-500 uppercase tracking-[0.2em]">Ready for handshake...</div>
+                    </div>
+                </div>
+
+                <p class="text-center text-[9px] text-slate-600 mt-10 uppercase font-black tracking-widest">
+                    Security Policy: Role-Based Access Control Active
+                </p>
+            </div>
+        </div>
+    </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -39,33 +106,38 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const statusBox = document.getElementById('status');
+        const log = (m) => document.getElementById('status-text').innerText = m;
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                statusBox.innerText = "Verifying Credentials...";
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                
-                if (userDoc.exists()) {
-                    const role = userDoc.data().role;
-                    statusBox.innerText = "Role: " + role + ". Launching...";
-                    // Redirect based on role
-                    setTimeout(() => {
-                        window.location.href = (role === 'admin') ? "admin.html" : "capture.html";
-                    }, 1000);
-                } else {
-                    statusBox.innerHTML = `<span class="text-rose-500">UID NOT REGISTERED:</span><br>${user.uid}`;
-                    console.error("Access Denied: UID not in users collection.");
+                log("Verifying Role Permissions...");
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const role = userDoc.data().role;
+                        log("ACCESS GRANTED: " + role.toUpperCase());
+                        
+                        setTimeout(() => {
+                            if (role === 'admin' || role === 'super_admin') {
+                                window.location.href = "admin.html";
+                            } else {
+                                window.location.href = "capture.html";
+                            }
+                        }, 1000);
+                    } else {
+                        log("DENIED: UID NOT REGISTERED");
+                        alert("Access Denied. Please send your UID to the Super Admin: " + user.uid);
+                    }
+                } catch (e) {
+                    log("CLOUD ERROR: " + e.code);
                 }
             } else {
-                statusBox.innerText = "Ready for Login";
+                log("Awaiting Command...");
             }
         });
 
         document.getElementById('login-btn').onclick = () => {
-            signInWithPopup(auth, new GoogleAuthProvider()).catch(e => {
-                statusBox.innerText = "Error: " + e.message;
-            });
+            signInWithPopup(auth, new GoogleAuthProvider());
         };
     </script>
 </body>
