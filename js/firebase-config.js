@@ -1,26 +1,23 @@
-/**
- * INFRA DEPOT - CLOUD CONNECT v1.0
- * Verified Web Configuration
- */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
-    authDomain: "infradepo.firebaseapp.com",
-    projectId: "infradepo",
-    storageBucket: "infradepo.firebasestorage.app",
-    messagingSenderId: "733942710671",
-    appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa",
-    measurementId: "G-FT60ZNKS6P"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "nirmansutraa.firebaseapp.com",
+  projectId: "nirmansutraa",
+  storageBucket: "nirmansutraa.appspot.com",
+  messagingSenderId: "YOUR_ID",
+  appId: "YOUR_APP_ID"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
-// Make DB globally available to Auth and Admin engines
-window.db = db;
+// EXPORT these so other files can see them [cite: 191-192]
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+export const auth = getAuth(app);
 
 console.log("Firebase: Infrastructure Connected Successfully.");
