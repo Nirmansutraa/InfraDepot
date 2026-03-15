@@ -1,22 +1,35 @@
 /**
- * INFRA DEPOT - MASTER ADMIN CORE v3.1
- * Purpose: Unified Dashboard, Staff Mgmt, and Material Intelligence
+ * INFRA DEPOT - MASTER INTELLIGENCE ENGINE CORE v3.4
+ * FULL COMPLEX LOGIC: Team Management, Material Taxonomy, and Operational Monitoring
  */
-import { db } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import { 
-    collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp 
+    collection, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy, getDoc 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const AdminCore = {
     init: function() {
-        console.log("Admin Intelligence Engine: Online");
-        this.renderDashboard();
+        // [cite: 210-215]
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists() && userDoc.data().role === 'admin') {
+                    console.log("INTELLIGENCE ACCESS: GRANTED (SUPER ADMIN)");
+                    this.renderDashboard();
+                } else {
+                    alert("SECURITY BREACH: You are logged in but do not have 'admin' privileges in Firestore [cite: 135-138].");
+                    window.location.href = "login.html";
+                }
+            } else {
+                window.location.href = "login.html";
+            }
+        });
     },
 
-    // --- MODULE NAVIGATION [cite: 201-208] ---
     switchTab: function(tab) {
         const container = document.getElementById('content-area');
-        container.innerHTML = `<div class="p-10 text-center opacity-50">Syncing Cloud Data...</div>`;
+        container.innerHTML = `<div class="p-10 text-center animate-pulse text-slate-400">Querying Intelligence Matrix...</div>`;
         
         if (tab === 'dashboard') this.renderDashboard();
         if (tab === 'staff') this.renderStaffMgmt();
@@ -24,122 +37,105 @@ const AdminCore = {
         if (tab === 'monitoring') this.renderFieldMonitoring();
     },
 
-    // --- STAFF MANAGEMENT [cite: 52, 135-136, 325-326] ---
+    // --- MODULE: STAFF AUTHORIZATION [cite: 71-75, 212-219, 369] ---
     renderStaffMgmt: async function() {
-        const container = document.getElementById('content-area');
-        container.innerHTML = `
-            <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border-2 border-blue-50">
-                <h3 class="font-bold text-gray-800 mb-4 uppercase text-xs tracking-widest">➕ Create Staff Access</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input type="text" id="new_staff_id" placeholder="Staff ID (e.g. FS101)" class="p-3 border rounded-lg bg-gray-50">
-                    <input type="text" id="new_staff_pass" placeholder="Password" class="p-3 border rounded-lg bg-gray-50">
-                    <button id="save-staff-btn" class="bg-blue-600 text-white font-bold rounded-lg p-3 hover:bg-blue-700">Add to Team</button>
+        document.getElementById('content-area').innerHTML = `
+            <div class="bg-white p-8 rounded-3xl shadow-sm mb-8 border border-slate-100">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Staff Access Control</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <input type="text" id="staff_id" placeholder="Staff UID (e.g. FS101)" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="staff_pass" placeholder="Access Password" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button id="btn-save-staff" class="bg-indigo-600 text-white font-bold p-4 rounded-2xl hover:bg-indigo-700 transition-all">Authorize Staff</button>
                 </div>
             </div>
-            <div id="user_list" class="bg-white rounded-xl shadow-sm divide-y"></div>
+            <div id="staff_list" class="bg-white rounded-3xl shadow-sm divide-y border border-slate-50 overflow-hidden"></div>
         `;
-
-        document.getElementById('save-staff-btn').addEventListener('click', () => this.saveUser());
-        this.loadUsers();
+        document.getElementById('btn-save-staff').onclick = () => this.saveStaff();
+        this.loadStaff();
     },
 
-    saveUser: async function() {
-        const id = document.getElementById('new_staff_id').value.trim();
-        const pass = document.getElementById('new_staff_pass').value.trim();
-        if(!id || !pass) return alert("Fill all fields");
+    saveStaff: async function() {
+        const id = document.getElementById('staff_id').value.trim();
+        const pass = document.getElementById('staff_pass').value.trim();
+        if(!id || !pass) return alert("Validation Failed: UID and Password required.");
 
         try {
-            await setDoc(doc(db, "users", id), { password: pass, role: 'staff', createdAt: Date.now() });
-            alert("✅ Staff access granted!");
+            await setDoc(doc(db, "users", id), { password: pass, role: 'staff', createdAt: serverTimestamp() });
+            alert(`SUCCESS: Staff member ${id} authorized [cite: 216-217].`);
             this.renderStaffMgmt();
-        } catch (e) { alert("Error: " + e.message); }
+        } catch (e) { alert("PERMISSION DENIED: " + e.message); }
     },
 
-    loadUsers: async function() {
+    loadStaff: async function() {
         const snap = await getDocs(collection(db, "users"));
         let html = "";
         snap.forEach(u => {
-            html += `<div class="p-4 flex justify-between"><span><b>${u.id}</b></span><button onclick="AdminCore.deleteUser('${u.id}')" class="text-red-400">🗑️</button></div>`;
+            if(u.data().role === 'staff') {
+                html += `<div class="p-6 flex justify-between items-center hover:bg-slate-50">
+                    <div class="font-bold text-slate-700">${u.id}</div>
+                    <button onclick="AdminCore.deleteUser('${u.id}')" class="text-rose-400 font-bold text-xs uppercase">Revoke Access</button>
+                </div>`;
+            }
         });
-        document.getElementById('user_list').innerHTML = html || `<div class="p-10 text-center">No staff yet.</div>`;
+        document.getElementById('staff_list').innerHTML = html || `<div class="p-10 text-center text-slate-300 italic">No staff mapped in intelligence base[cite: 319].</div>`;
     },
 
-    // --- MATERIAL INTELLIGENCE [cite: 53-54, 287-290, 419-427] ---
+    // --- MODULE: MATERIAL TAXONOMY [cite: 53-54, 287-290, 419-427] ---
     renderMaterialsMgmt: function() {
-        const container = document.getElementById('content-area');
-        container.innerHTML = `
-            <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border-2 border-emerald-50">
-                <h3 class="font-bold text-gray-800 mb-4 uppercase text-xs tracking-widest">🧱 Supply Chain Control</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] text-gray-400 font-bold">SELECT CATEGORY [cite: 421-425]</label>
-                        <select id="mat-category" class="w-full p-3 border rounded-lg bg-gray-50 mt-1">
+        document.getElementById('content-area').innerHTML = `
+            <div class="bg-white p-8 rounded-3xl shadow-sm mb-8 border border-slate-100">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Supply Chain Intelligence</h3>
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <select id="intel_cat" class="p-4 bg-slate-50 border rounded-2xl outline-none">
                             <option value="cement">Cement</option>
                             <option value="steel">Steel</option>
                             <option value="sand">Sand</option>
-                            <option value="stone">Stone/Aggregates</option>
                         </select>
+                        <input type="text" id="intel_brand" placeholder="Brand Name (e.g. UltraTech)" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
-                    <div>
-                        <label class="text-[10px] text-gray-400 font-bold">BRAND NAME [cite: 289, 427]</label>
-                        <input type="text" id="brand-name" placeholder="e.g. UltraTech, Ambuja, TATA Tiscon" class="w-full p-3 border rounded-lg bg-gray-50 mt-1">
-                    </div>
-                    <button id="save-brand-btn" class="w-full bg-slate-900 text-white font-bold rounded-lg p-4 hover:bg-black transition-all">
-                        Add to Global Intelligence List
-                    </button>
+                    <button id="btn-save-intel" class="w-full bg-slate-900 text-white font-bold p-5 rounded-2xl hover:bg-black transition-all">Inject Brand Intelligence</button>
                 </div>
             </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm text-center">
-                <p class="text-xs text-gray-400">Brands added here will automatically appear in the staff capture form[cite: 177, 354].</p>
-            </div>
         `;
-
-        // The specific fix for your 'Add Material' button
-        document.getElementById('save-brand-btn').addEventListener('click', () => this.saveBrand());
+        document.getElementById('btn-save-intel').onclick = () => this.saveIntel();
     },
 
-    saveBrand: async function() {
-        const category = document.getElementById('mat-category').value;
-        const brand = document.getElementById('brand-name').value.trim();
-
-        if(!brand) return alert("⚠️ Please enter a Brand Name.");
+    saveIntel: async function() {
+        const cat = document.getElementById('intel_cat').value;
+        const brand = document.getElementById('intel_brand').value.trim();
+        if(!brand) return alert("Validation Failed: Brand name required[cite: 427].");
 
         try {
-            // [cite: 278-282, 288-289]
-            const brandId = `${category}_${brand.toLowerCase().replace(/\s/g, '_')}`;
-            await setDoc(doc(db, "brands", brandId), {
-                parentMaterial: category,
-                name: brand,
-                status: "active",
-                addedAt: serverTimestamp()
-            });
-
-            alert(`✅ ${brand} added to ${category} list!`);
-            document.getElementById('brand-name').value = ""; // Clear input
-        } catch (e) {
-            console.error(e);
-            alert("❌ Database Error: " + e.message);
-        }
+            const intelId = `${cat}_${brand.toLowerCase().replace(/\s/g, '_')}`;
+            await setDoc(doc(db, "brands", intelId), { parentMaterial: cat, brandName: brand, status: "verified", updatedAt: serverTimestamp() });
+            alert(`SUCCESS: ${brand} injected into ${cat} matrix[cite: 289].`);
+            document.getElementById('intel_brand').value = "";
+        } catch (e) { alert("PERMISSION DENIED: " + e.message); }
     },
 
-    // --- DASHBOARD [cite: 121-124, 314-318] ---
+    // --- DASHBOARD & MONITORING [cite: 9, 121-124, 208, 314-320] ---
     renderDashboard: async function() {
-        const container = document.getElementById('content-area');
-        container.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500">
-                    <div class="text-xs font-bold text-gray-400 uppercase">Total Suppliers</div>
-                    <div id="count-total" class="text-3xl font-black tracking-tighter">0</div>
+        const snap = await getDocs(collection(db, "suppliers"));
+        document.getElementById('content-area').innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div class="bg-white p-8 rounded-3xl shadow-sm border-l-8 border-indigo-600">
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Intelligence Mapped</div>
+                    <div class="text-4xl font-black text-slate-900 mt-2">${snap.size}</div>
                 </div>
             </div>
-            <div id="admin_map" class="mt-6 h-96 rounded-2xl shadow-sm bg-gray-100 border"></div>
+            <div id="admin_map" class="h-[500px] w-full rounded-3xl shadow-sm border border-slate-50"></div>
         `;
-        this.initMap();
+        this.initMap(snap);
     },
 
-    initMap: function() {
-        this.map = L.map('admin_map').setView([24.5854, 73.7125], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+    initMap: function(snap) {
+        const map = L.map('admin_map').setView([24.5854, 73.7125], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            if(d.location) L.marker([d.location.lat, d.location.lng]).addTo(map).bindPopup(`<b class="text-indigo-600">${d.firmName}</b>`);
+        });
     }
 };
 
