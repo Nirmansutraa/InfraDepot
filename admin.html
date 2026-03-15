@@ -6,49 +6,78 @@
     <title>InfraDepot | Admin Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        .sidebar-item:hover { background: #1e293b; color: white; }
-        .active-tab { border-left: 4px solid #10b981; background: #1e293b; color: white; }
-    </style>
 </head>
 <body class="bg-slate-50 flex font-sans">
-
-    <div id="auth-status" class="fixed top-4 right-4 bg-black text-white p-2 px-4 rounded-full text-[10px] z-50 shadow-2xl font-mono border border-slate-700">
-        Checking Intelligence...
-    </div>
 
     <aside class="w-64 bg-slate-900 h-screen sticky top-0 text-slate-300 hidden md:flex flex-col">
         <div class="p-6 text-emerald-500 font-black text-xl border-b border-slate-800">🏗️ InfraDepot</div>
         <nav class="mt-6 flex-1">
-            <a href="#" onclick="AdminCore.switchTab('dashboard')" class="sidebar-item p-4 flex items-center gap-3 active-tab transition-all">📊 Dashboard</a>
-            <a href="#" onclick="AdminCore.switchTab('staff')" class="sidebar-item p-4 flex items-center gap-3 transition-all">👥 Staff Mgmt</a>
-            <a href="#" onclick="AdminCore.switchTab('materials')" class="sidebar-item p-4 flex items-center gap-3 transition-all">🧱 Materials</a>
-            <a href="#" onclick="AdminCore.switchTab('monitoring')" class="sidebar-item p-4 flex items-center gap-3 transition-all">🗺️ Monitoring</a>
+            <button onclick="renderDashboard()" class="w-full text-left p-4 hover:bg-slate-800 transition-all">📊 Dashboard</button>
+            <button onclick="renderStaff()" class="w-full text-left p-4 hover:bg-slate-800 transition-all">👥 Staff Mgmt</button>
         </nav>
-        <div class="p-4 border-t border-slate-800">
-            <button onclick="auth.signOut()" class="w-full p-2 text-xs bg-slate-800 hover:bg-rose-900 rounded-lg transition-colors font-bold uppercase tracking-widest">Logout System</button>
-        </div>
     </aside>
 
     <main class="flex-1 p-8">
         <header class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Market Intelligence Dashboard</h1>
-            <div id="user-badge" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-3 py-1 rounded-full border shadow-sm">Super Admin</div>
+            <h1 class="text-2xl font-black text-slate-800">Udaipur Market Dashboard</h1>
+            <div id="auth-status" class="bg-black text-white px-4 py-1 rounded-full text-[10px] font-mono">Initializing...</div>
         </header>
 
         <div id="content-area">
-            <div class="animate-pulse flex space-y-6 flex-col">
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="h-32 bg-slate-200 rounded-2xl"></div>
-                    <div class="h-32 bg-slate-200 rounded-2xl"></div>
-                </div>
-                <div class="h-[500px] bg-slate-200 rounded-3xl"></div>
-            </div>
+            <div class="p-20 text-center text-slate-400 italic">Waiting for Identity Verification...</div>
         </div>
     </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module" src="./js/firebase-config.js"></script>
-    <script type="module" src="./js/admin-core.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
+            authDomain: "infradepo.firebaseapp.com",
+            projectId: "infradepo",
+            storageBucket: "infradepo.firebasestorage.app",
+            messagingSenderId: "733942710671",
+            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const statusEl = document.getElementById('auth-status');
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("Logged in as:", user.uid);
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                
+                if (userDoc.exists() && userDoc.data().role === 'admin') {
+                    statusEl.innerText = "ADMIN ACTIVE: " + (userDoc.data().name || "Vijay");
+                    window.renderDashboard();
+                } else {
+                    statusEl.innerText = "ACCESS DENIED: " + user.uid;
+                    alert("Your UID is not an Admin in Firestore: " + user.uid);
+                    window.location.href = "login.html";
+                }
+            } else {
+                statusEl.innerText = "NO SESSION FOUND";
+                window.location.href = "login.html";
+            }
+        });
+
+        window.renderDashboard = function() {
+            const container = document.getElementById('content-area');
+            container.innerHTML = `<div id="admin_map" class="h-96 w-full rounded-2xl shadow-sm border bg-slate-200"></div>`;
+            const map = L.map('admin_map').setView([24.5854, 73.7125], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        };
+
+        window.renderStaff = function() {
+            document.getElementById('content-area').innerHTML = `<div class="bg-white p-6 rounded-xl border">Staff Management Loaded</div>`;
+        };
+    </script>
 </body>
 </html>
