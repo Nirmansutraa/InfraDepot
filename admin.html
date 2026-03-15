@@ -3,49 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | Admin HQ</title>
+    <title>InfraDepot | HQ Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-    <div id="system-log" class="fixed bottom-0 left-0 w-full bg-black/80 text-emerald-400 p-2 text-[10px] font-mono z-50 border-t border-emerald-900/30">
-        System Status: Booting Engine...
-    </div>
-
     <div id="status-bar" class="bg-indigo-600 text-white text-center py-2 text-[10px] font-black uppercase tracking-widest">
-        Intelligence Link: Initializing...
+        System Status: Initializing Intelligence Core...
     </div>
 
-    <div class="p-6 max-w-6xl mx-auto">
-        <header class="mb-10 flex justify-between items-center">
-            <h1 class="text-3xl font-black text-emerald-400">INFRADEPOT <span class="text-white font-light text-xl">| Udaipur HQ</span></h1>
-            <div id="user-display" class="bg-slate-900 px-4 py-2 rounded-xl text-xs font-bold border border-slate-800">Searching...</div>
-        </header>
+    <div class="p-10 max-w-5xl mx-auto text-center">
+        <h1 class="text-4xl font-black text-emerald-400 mb-2">INFRADEPOT</h1>
+        <p class="text-slate-500 font-mono text-xs uppercase tracking-[0.3em] mb-12">Udaipur Regional Server 01</p>
 
-        <div id="main-display" class="bg-slate-900 rounded-[2.5rem] p-8 border border-slate-800 shadow-2xl min-h-[500px] flex items-center justify-center">
-            <div id="loader" class="text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-emerald-500 mx-auto mb-4"></div>
-                <p class="text-slate-500 font-mono text-sm">Awaiting Cloud Handshake...</p>
+        <div id="display-engine" class="bg-slate-900 border border-slate-800 rounded-[3rem] p-12 shadow-2xl min-h-[400px] flex items-center justify-center">
+            <div id="loading-zone">
+                <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-emerald-500 mx-auto mb-4"></div>
+                <p class="text-slate-400 font-bold italic">Awaiting Cloud Handshake...</p>
             </div>
-            <div id="map" class="w-full h-[500px] rounded-3xl hidden"></div>
+            <div id="map" class="w-full h-[500px] rounded-[2rem] hidden"></div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script type="module">
-        const logger = document.getElementById('system-log');
-        const updateLog = (msg) => { logger.innerText = "SYSTEM LOG: " + msg; console.log(msg); };
-
-        // 1. EMERGENCY LOAD CHECK
-        updateLog("Loading Firebase Modules...");
+        // --- 1. EMERGENCY POP-UP ---
+        alert("ENGINE STARTING: If you see this, your code is RUNNING!");
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        updateLog("Firebase Modules Loaded Successfully.");
 
         const firebaseConfig = {
             apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
@@ -56,49 +45,34 @@
             appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
         };
 
-        try {
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-            updateLog("Firebase App Initialized.");
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-            onAuthStateChanged(auth, async (user) => {
-                const bar = document.getElementById('status-bar');
-                const userBox = document.getElementById('user-display');
-
-                if (user) {
-                    updateLog("User Identity Detected: " + user.uid);
-                    try {
-                        const userDoc = await getDoc(doc(db, "users", user.uid));
-                        if (userDoc.exists() && userDoc.data().role === 'admin') {
-                            updateLog("Admin Privileges Verified. Loading Dashboard...");
-                            bar.innerText = "ACCESS GRANTED: SUPER ADMIN";
-                            bar.className = "bg-emerald-500 text-slate-900 text-center py-2 text-[10px] font-black uppercase tracking-widest";
-                            userBox.innerText = userDoc.data().name || "VIJAY";
-                            
-                            document.getElementById('loader').classList.add('hidden');
-                            document.getElementById('map').classList.remove('hidden');
-                            
-                            const map = L.map('map').setView([24.5854, 73.7125], 13);
-                            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-                            updateLog("Udaipur Intelligence Map Active.");
-                        } else {
-                            updateLog("DENIED: UID Not in Admin Registry.");
-                            bar.innerText = "ACCESS DENIED";
-                            bar.className = "bg-rose-600 text-white text-center py-2 text-[10px] font-black uppercase tracking-widest";
-                            setTimeout(() => window.location.href = "login.html", 3000);
-                        }
-                    } catch (e) {
-                        updateLog("FIRESTORE ERROR: " + e.message);
-                    }
+        onAuthStateChanged(auth, async (user) => {
+            const bar = document.getElementById('status-bar');
+            if (user) {
+                alert("USER FOUND: " + user.uid);
+                
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists() && userDoc.data().role === 'admin') {
+                    bar.innerText = "ACCESS GRANTED: ADMIN ACTIVE";
+                    bar.className = "bg-emerald-500 text-slate-900 text-center py-2 text-[10px] font-black uppercase tracking-widest";
+                    
+                    document.getElementById('loading-zone').classList.add('hidden');
+                    document.getElementById('map').classList.remove('hidden');
+                    
+                    const map = L.map('map').setView([24.5854, 73.7125], 13);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
                 } else {
-                    updateLog("No Active Session. Redirecting to Login...");
+                    alert("DENIED: You are logged in but not an Admin in Firestore.");
                     window.location.href = "login.html";
                 }
-            });
-        } catch (err) {
-            updateLog("CRITICAL INITIALIZATION ERROR: " + err.message);
-        }
+            } else {
+                alert("NO SESSION: Moving to login page.");
+                window.location.href = "login.html";
+            }
+        });
     </script>
 </body>
 </html>
