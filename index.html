@@ -1,114 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>InfraDepot</title>
-
-<link rel="manifest" href="manifest.json">
-
-<style>
-
-body{
-margin:0;
-padding:0;
-font-family:Arial, Helvetica, sans-serif;
-background:#0b1b33;
-color:white;
-display:flex;
-align-items:center;
-justify-content:center;
-height:100vh;
-}
-
-.container{
-text-align:center;
-}
-
-.logo{
-font-size:42px;
-font-weight:700;
-letter-spacing:2px;
-margin-bottom:10px;
-}
-
-.subtitle{
-opacity:0.7;
-font-size:14px;
-margin-bottom:30px;
-}
-
-.loader{
-margin-top:20px;
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfraDepot | Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-slate-950 flex items-center justify-center min-h-screen">
 
-<body>
+    <div class="max-w-md w-full p-10 bg-white rounded-[3rem] shadow-2xl text-center">
+        <h1 class="text-3xl font-black text-slate-900 tracking-tighter uppercase mb-2">InfraDepot</h1>
+        <p class="text-slate-400 text-[10px] font-bold tracking-widest uppercase mb-10 text-center">Udaipur Regional Server 2.0</p>
+        
+        <button id="login-btn" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-100 p-4 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
+            Authenticate with Google
+        </button>
 
-<div class="container">
+        <div id="status" class="mt-8 p-4 bg-slate-50 rounded-2xl text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+            System Standby...
+        </div>
+    </div>
 
-<div class="logo">
-INFRADEPOT
-</div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-<div class="subtitle">
-Construction Supply Intelligence Engine
-</div>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
+            authDomain: "infradepo.firebaseapp.com",
+            projectId: "infradepo",
+            storageBucket: "infradepo.firebasestorage.app",
+            messagingSenderId: "733942710671",
+            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
+        };
 
-<div class="loader">
-Loading system...
-</div>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const statusBox = document.getElementById('status');
 
-</div>
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                statusBox.innerText = "Verifying Credentials...";
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                
+                if (userDoc.exists()) {
+                    const role = userDoc.data().role;
+                    statusBox.innerText = "Role: " + role + ". Launching...";
+                    // Redirect based on role
+                    setTimeout(() => {
+                        window.location.href = (role === 'admin') ? "admin.html" : "capture.html";
+                    }, 1000);
+                } else {
+                    statusBox.innerHTML = `<span class="text-rose-500">UID NOT REGISTERED:</span><br>${user.uid}`;
+                    console.error("Access Denied: UID not in users collection.");
+                }
+            } else {
+                statusBox.innerText = "Ready for Login";
+            }
+        });
 
-
-<script>
-
-function routeUser(){
-
-const session = localStorage.getItem("infraDepotUser");
-
-if(session){
-
-window.location.href="capture.html";
-
-}else{
-
-window.location.href="login.html";
-
-}
-
-}
-
-setTimeout(routeUser,1200);
-
-</script>
-
-
-<script>
-
-if('serviceWorker' in navigator){
-
-navigator.serviceWorker.register('sw.js')
-.then(function(reg){
-
-console.log("Service Worker Registered");
-
-}).catch(function(err){
-
-console.log("Service Worker Failed",err);
-
-});
-
-}
-
-</script>
-
-
+        document.getElementById('login-btn').onclick = () => {
+            signInWithPopup(auth, new GoogleAuthProvider()).catch(e => {
+                statusBox.innerText = "Error: " + e.message;
+            });
+        };
+    </script>
 </body>
 </html>
