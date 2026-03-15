@@ -1,30 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>InfraDepot | Intelligence</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        body { margin:0; background:#f3f4f6; font-family: sans-serif; }
-        .card { background:#fff; padding:20px; border-radius:12px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
-        .section-label { color:#f59e0b; font-size:10px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; }
-        .dashboard-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px; }
-        .stat { background:#fff; padding:15px; border-radius:10px; text-align:center; border:1px solid #eee; }
-        input, select, textarea { width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box; font-size:16px; }
-        .btn-main { width:100%; padding:15px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; display:block; }
-    </style>
-</head>
-<body>
-    <div id="main_viewport"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/map.js"></script>
-    <script type="module" src="js/storage.js"></script>
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/admin.js"></script>
-    <script type="module" src="js/ui.js"></script>
-    <script type="module" src="js/app.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>InfraDepot</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+
+body{
+margin:0;
+padding:0;
+font-family:Arial, Helvetica, sans-serif;
+background:#0b1b33;
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+height:100vh;
+}
+
+.container{
+text-align:center;
+}
+
+.logo{
+font-size:42px;
+font-weight:700;
+letter-spacing:2px;
+margin-bottom:10px;
+}
+
+.subtitle{
+opacity:0.7;
+font-size:14px;
+margin-bottom:30px;
+}
+
+.loader{
+margin-top:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+INFRADEPOT
+</div>
+
+<div class="subtitle">
+Construction Supply Intelligence Engine
+</div>
+
+<div class="loader">
+Loading system...
+</div>
+
+</div>
+
+
+<script>
+
+function routeUser(){
+
+const session = localStorage.getItem("infraDepotUser");
+
+if(session){
+
+window.location.href="capture.html";
+
+}else{
+
+window.location.href="login.html";
+
+}
+
+}
+
+setTimeout(routeUser,1200);
+
+</script>
+
+
+<script>
+
+if('serviceWorker' in navigator){
+
+navigator.serviceWorker.register('sw.js')
+.then(function(reg){
+
+console.log("Service Worker Registered");
+
+}).catch(function(err){
+
+console.log("Service Worker Failed",err);
+
+});
+
+}
+
+</script>
+
+
 </body>
 </html>
