@@ -3,38 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | HQ Dashboard</title>
+    <title>InfraDepot | HQ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>#map { height: 600px; width: 100%; z-index: 1; border-radius: 2rem; }</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-slate-950 text-slate-100 flex min-h-screen">
 
-    <div id="status-bar" class="bg-indigo-600 text-white text-center py-2 text-[10px] font-black uppercase tracking-widest">
-        System Status: Initializing Intelligence Core...
-    </div>
-
-    <div class="p-10 max-w-5xl mx-auto text-center">
-        <h1 class="text-4xl font-black text-emerald-400 mb-2">INFRADEPOT</h1>
-        <p class="text-slate-500 font-mono text-xs uppercase tracking-[0.3em] mb-12">Udaipur Regional Server 01</p>
-
-        <div id="display-engine" class="bg-slate-900 border border-slate-800 rounded-[3rem] p-12 shadow-2xl min-h-[400px] flex items-center justify-center">
-            <div id="loading-zone">
-                <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-emerald-500 mx-auto mb-4"></div>
-                <p class="text-slate-400 font-bold italic">Awaiting Cloud Handshake...</p>
-            </div>
-            <div id="map" class="w-full h-[500px] rounded-[2rem] hidden"></div>
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-6 sticky top-0 h-screen">
+        <div class="mb-10">
+            <h1 class="text-xl font-black text-emerald-400">INFRADEPOT</h1>
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">Regional HQ</p>
         </div>
-    </div>
+        
+        <nav class="space-y-2 flex-1">
+            <button onclick="window.location.reload()" class="w-full text-left p-4 rounded-2xl bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">📍 Intel Map</button>
+            <div class="p-4 text-slate-600 text-[10px] font-bold uppercase tracking-widest">Tools Coming Soon...</div>
+        </nav>
+
+        <div class="pt-6 border-t border-slate-800">
+            <div id="user-display" class="text-xs font-bold text-slate-400 truncate">Checking...</div>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8">
+        <div class="bg-slate-900 rounded-[3rem] p-4 border border-slate-800 shadow-2xl relative">
+            <div id="map"></div>
+        </div>
+    </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script type="module">
-        // --- 1. EMERGENCY POP-UP ---
-        alert("ENGINE STARTING: If you see this, your code is RUNNING!");
-
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
@@ -49,30 +51,29 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        onAuthStateChanged(auth, async (user) => {
-            const bar = document.getElementById('status-bar');
+        const map = L.map('map').setView([24.5854, 73.7125], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+
+        onAuthStateChanged(auth, (user) => {
             if (user) {
-                alert("USER FOUND: " + user.uid);
-                
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists() && userDoc.data().role === 'admin') {
-                    bar.innerText = "ACCESS GRANTED: ADMIN ACTIVE";
-                    bar.className = "bg-emerald-500 text-slate-900 text-center py-2 text-[10px] font-black uppercase tracking-widest";
-                    
-                    document.getElementById('loading-zone').classList.add('hidden');
-                    document.getElementById('map').classList.remove('hidden');
-                    
-                    const map = L.map('map').setView([24.5854, 73.7125], 13);
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-                } else {
-                    alert("DENIED: You are logged in but not an Admin in Firestore.");
-                    window.location.href = "login.html";
-                }
+                document.getElementById('user-display').innerText = "ADMIN: " + user.email;
+                loadPins();
             } else {
-                alert("NO SESSION: Moving to login page.");
-                window.location.href = "login.html";
+                window.location.href = "index.html";
             }
         });
+
+        function loadPins() {
+            onSnapshot(collection(db, "surveys"), (snap) => {
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(d.location) {
+                        L.marker([d.location.lat, d.location.lng]).addTo(map)
+                            .bindPopup(`<b>${d.firmName}</b><br>${d.brand}`);
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>
