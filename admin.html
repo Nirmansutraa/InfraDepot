@@ -3,32 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | Admin Intelligence</title>
+    <title>InfraDepot | Intelligence Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #admin_map { height: 500px; width: 100%; border-radius: 1.5rem; }
+    </style>
 </head>
-<body class="bg-slate-50 flex font-sans">
+<body class="bg-slate-900 text-slate-100 font-sans">
 
-    <aside class="w-64 bg-slate-900 h-screen sticky top-0 text-slate-300 hidden md:flex flex-col">
-        <div class="p-6 text-emerald-500 font-black text-xl border-b border-slate-800">🏗️ InfraDepot</div>
-        <nav class="mt-6 flex-1">
-            <button onclick="renderDashboard()" class="w-full text-left p-4 hover:bg-slate-800 transition-all">📊 Dashboard</button>
-            <button onclick="renderStaff()" class="w-full text-left p-4 hover:bg-slate-800 transition-all">👥 Staff Mgmt</button>
-        </nav>
-    </aside>
+    <div id="auth-status" class="bg-emerald-500 text-slate-900 text-center py-2 text-[10px] font-black uppercase tracking-[0.2em]">
+        System Initializing...
+    </div>
 
-    <main class="flex-1 p-8">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-black text-slate-800">Udaipur Market Dashboard</h1>
-            <div id="auth-status" class="bg-black text-white px-4 py-1 rounded-full text-[10px] font-mono">Initializing...</div>
-        </header>
+    <div class="flex">
+        <aside class="w-64 bg-slate-950 h-screen p-6 border-r border-slate-800 hidden md:block">
+            <h2 class="text-emerald-400 font-black text-xl mb-10">🏗️ INFRADEPOT</h2>
+            <nav class="space-y-4">
+                <div class="text-emerald-500 bg-slate-900 p-4 rounded-xl font-bold">📊 Dashboard</div>
+                <div class="text-slate-500 p-4 hover:text-slate-300 cursor-pointer">👥 Staff Management</div>
+            </nav>
+        </aside>
 
-        <div id="content-area">
-            <div class="p-20 text-center text-slate-400 italic">Waiting for Identity Verification...</div>
-        </div>
-    </main>
+        <main class="flex-1 p-10">
+            <h1 class="text-3xl font-black mb-8 tracking-tighter">Market Intelligence: Udaipur</h1>
+            
+            <div id="content-area" class="space-y-6">
+                <div class="bg-slate-800 p-8 rounded-[2rem] border border-slate-700">
+                    <div id="admin_map"></div>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -47,37 +56,34 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const statusEl = document.getElementById('auth-status');
+        console.log("Admin Engine: Logic Loaded"); // This SHOULD show in console now
 
         onAuthStateChanged(auth, async (user) => {
+            const statusBox = document.getElementById('auth-status');
+            
             if (user) {
-                console.log("Logged in as:", user.uid);
+                console.log("Checking UID:", user.uid);
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 
                 if (userDoc.exists() && userDoc.data().role === 'admin') {
-                    statusEl.innerText = "ADMIN ACTIVE: " + (userDoc.data().name || "Vijay");
-                    window.renderDashboard();
+                    statusBox.innerText = "ACCESS GRANTED: WELCOME " + (userDoc.data().name || "VIJAY");
+                    statusBox.className = "bg-emerald-500 text-slate-900 text-center py-2 text-[10px] font-black uppercase";
+                    loadMap();
                 } else {
-                    statusEl.innerText = "ACCESS DENIED: " + user.uid;
-                    alert("Your UID is not an Admin in Firestore: " + user.uid);
-                    window.location.href = "login.html";
+                    statusBox.innerText = "ACCESS DENIED: NOT AN ADMIN";
+                    statusBox.className = "bg-rose-600 text-white text-center py-2 text-[10px] font-black uppercase";
+                    setTimeout(() => window.location.href = "login.html", 3000);
                 }
             } else {
-                statusEl.innerText = "NO SESSION FOUND";
+                statusBox.innerText = "NO SESSION: REDIRECTING...";
                 window.location.href = "login.html";
             }
         });
 
-        window.renderDashboard = function() {
-            const container = document.getElementById('content-area');
-            container.innerHTML = `<div id="admin_map" class="h-96 w-full rounded-2xl shadow-sm border bg-slate-200"></div>`;
+        function loadMap() {
             const map = L.map('admin_map').setView([24.5854, 73.7125], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        };
-
-        window.renderStaff = function() {
-            document.getElementById('content-area').innerHTML = `<div class="bg-white p-6 rounded-xl border">Staff Management Loaded</div>`;
-        };
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        }
     </script>
 </body>
 </html>
