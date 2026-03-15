@@ -3,42 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | Intelligence Dashboard</title>
+    <title>InfraDepot | Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        #admin_map { height: 500px; width: 100%; border-radius: 1.5rem; }
-    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans">
+<body class="bg-slate-900 text-slate-100 min-h-screen">
 
-    <div id="auth-status" class="bg-emerald-500 text-slate-900 text-center py-2 text-[10px] font-black uppercase tracking-[0.2em]">
-        System Initializing...
+    <div id="status-bar" class="bg-blue-600 text-white text-center py-2 text-[10px] font-black uppercase tracking-widest">
+        Engine Status: Connecting...
     </div>
 
-    <div class="flex">
-        <aside class="w-64 bg-slate-950 h-screen p-6 border-r border-slate-800 hidden md:block">
-            <h2 class="text-emerald-400 font-black text-xl mb-10">🏗️ INFRADEPOT</h2>
-            <nav class="space-y-4">
-                <div class="text-emerald-500 bg-slate-900 p-4 rounded-xl font-bold">📊 Dashboard</div>
-                <div class="text-slate-500 p-4 hover:text-slate-300 cursor-pointer">👥 Staff Management</div>
-            </nav>
-        </aside>
+    <div class="p-6 max-w-6xl mx-auto">
+        <header class="mb-10 flex justify-between items-center">
+            <h1 class="text-3xl font-black text-emerald-400 italic">INFRADEPOT <span class="text-white not-italic font-light">| HQ</span></h1>
+            <div id="user-display" class="bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold border border-slate-700">Checking Identity...</div>
+        </header>
 
-        <main class="flex-1 p-10">
-            <h1 class="text-3xl font-black mb-8 tracking-tighter">Market Intelligence: Udaipur</h1>
-            
-            <div id="content-area" class="space-y-6">
-                <div class="bg-slate-800 p-8 rounded-[2rem] border border-slate-700">
-                    <div id="admin_map"></div>
-                </div>
+        <div id="main-display" class="bg-slate-800 rounded-[2.5rem] p-8 border border-slate-700 shadow-2xl min-h-[500px] flex items-center justify-center">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+                <p class="text-slate-400 font-mono text-sm">Synchronizing with Intelligence Cloud...</p>
             </div>
-        </main>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+
     <script type="module">
+        // LOAD FIREBASE
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -56,34 +48,39 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        console.log("Admin Engine: Logic Loaded"); // This SHOULD show in console now
+        console.log("FIREBASE INITIALIZED"); // SHOULD APPEAR IN CONSOLE
 
         onAuthStateChanged(auth, async (user) => {
-            const statusBox = document.getElementById('auth-status');
-            
+            const bar = document.getElementById('status-bar');
+            const display = document.getElementById('main-display');
+            const userBox = document.getElementById('user-display');
+
             if (user) {
-                console.log("Checking UID:", user.uid);
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                
-                if (userDoc.exists() && userDoc.data().role === 'admin') {
-                    statusBox.innerText = "ACCESS GRANTED: WELCOME " + (userDoc.data().name || "VIJAY");
-                    statusBox.className = "bg-emerald-500 text-slate-900 text-center py-2 text-[10px] font-black uppercase";
-                    loadMap();
-                } else {
-                    statusBox.innerText = "ACCESS DENIED: NOT AN ADMIN";
-                    statusBox.className = "bg-rose-600 text-white text-center py-2 text-[10px] font-black uppercase";
-                    setTimeout(() => window.location.href = "login.html", 3000);
+                console.log("USER DETECTED:", user.uid);
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists() && userDoc.data().role === 'admin') {
+                        bar.innerText = "ACCESS GRANTED: SUPER ADMIN ACTIVE";
+                        bar.className = "bg-emerald-500 text-slate-900 text-center py-2 text-[10px] font-black uppercase tracking-widest";
+                        userBox.innerText = "WELCOME, " + (userDoc.data().name || "VIJAY");
+                        
+                        // LOAD MAP
+                        display.innerHTML = '<div id="map" class="w-full h-[500px] rounded-3xl"></div>';
+                        const map = L.map('map').setView([24.5854, 73.7125], 13);
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+                    } else {
+                        bar.innerText = "ACCESS DENIED: NOT AUTHORIZED";
+                        bar.className = "bg-rose-600 text-white text-center py-2 text-[10px] font-black uppercase tracking-widest";
+                        display.innerHTML = '<div class="text-rose-500 font-bold text-xl uppercase">Intrusion Detected. UID not in Admin Registry.</div>';
+                    }
+                } catch (err) {
+                    bar.innerText = "CLOUD ERROR: " + err.code;
                 }
             } else {
-                statusBox.innerText = "NO SESSION: REDIRECTING...";
+                bar.innerText = "NO SESSION: REDIRECTING...";
                 window.location.href = "login.html";
             }
         });
-
-        function loadMap() {
-            const map = L.map('admin_map').setView([24.5854, 73.7125], 13);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-        }
     </script>
 </body>
 </html>
