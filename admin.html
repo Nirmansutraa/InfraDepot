@@ -3,40 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | HQ</title>
+    <title>Nirmansutra | InfraDepot Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>#map { height: 600px; width: 100%; z-index: 1; border-radius: 2rem; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); }
+        /* Styling for the specific branding requirement */
+        .infra { color: #94a3b8; } /* Slate 400 (Grey) */
+        .depot { color: #f97316; } /* Orange 500 */
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 flex min-h-screen">
+<body class="bg-slate-950 text-slate-200 overflow-x-hidden min-h-screen">
 
-    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-6 sticky top-0 h-screen">
-        <div class="mb-10">
-            <h1 class="text-xl font-black text-emerald-400">INFRADEPOT</h1>
-            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">Regional HQ</p>
+    <nav class="flex justify-between items-center p-8 max-w-7xl mx-auto">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center font-black text-slate-950 shadow-lg shadow-emerald-500/20">N</div>
+            <span class="text-2xl font-black tracking-tighter text-white">NIRMANSUTRA</span>
         </div>
+        <div class="text-right">
+            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">System Engine</span>
+            <div class="text-lg font-black tracking-tight uppercase leading-none">
+                <span class="infra">Infra</span><span class="depot">Depot</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-8 pt-12 pb-20 grid lg:grid-cols-2 gap-20 items-center">
         
-        <nav class="space-y-2 flex-1">
-            <button onclick="window.location.reload()" class="w-full text-left p-4 rounded-2xl bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">📍 Intel Map</button>
-            <div class="p-4 text-slate-600 text-[10px] font-bold uppercase tracking-widest">Tools Coming Soon...</div>
-        </nav>
+        <div class="space-y-10">
+            <div class="space-y-4">
+                <h2 class="text-6xl md:text-7xl font-black text-white leading-[0.9] tracking-tighter">
+                    Digitalizing <br><span class="text-emerald-500 italic">Udaipur's</span> <br>Real Estate.
+                </h2>
+                <p class="text-lg text-slate-400 max-w-md leading-relaxed">
+                    Nirmansutra leverages <span class="infra font-bold">Infra</span><span class="depot font-bold">Depot</span> technology to map retailers, track materials, and optimize the construction supply chain across the Mewar region.
+                </p>
+            </div>
 
-        <div class="pt-6 border-t border-slate-800">
-            <div id="user-display" class="text-xs font-bold text-slate-400 truncate">Checking...</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="glass p-6 rounded-[2rem] border border-white/5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-3 text-emerald-500 text-xl">🛡️</div>
+                    <div class="text-white font-black text-sm uppercase italic">Administrators</div>
+                    <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest leading-relaxed">Global Command, RBAC Management, & Market Analytics.</p>
+                </div>
+                <div class="glass p-6 rounded-[2rem] border border-white/5">
+                    <div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center mb-3 text-orange-500 text-xl">📍</div>
+                    <div class="text-white font-black text-sm uppercase italic">Field Staff</div>
+                    <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest leading-relaxed">GPS Mapping, Material Logging, & Retailer Surveys.</p>
+                </div>
+            </div>
         </div>
-    </aside>
 
-    <main class="flex-1 p-8">
-        <div class="bg-slate-900 rounded-[3rem] p-4 border border-slate-800 shadow-2xl relative">
-            <div id="map"></div>
+        <div class="relative">
+            <div class="absolute inset-0 bg-emerald-500/10 blur-[120px] -z-10"></div>
+            <div class="glass p-10 md:p-14 rounded-[4rem] border border-white/10 shadow-3xl">
+                <div class="text-center mb-12">
+                    <div class="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Access Portal</div>
+                    <h3 class="text-3xl font-black text-white tracking-tighter italic">
+                        <span class="infra">Infra</span><span class="depot">Depot</span> Terminal
+                    </h3>
+                </div>
+
+                <div class="space-y-6">
+                    <button id="login-btn" class="group w-full flex items-center justify-center gap-4 bg-white text-slate-950 font-black p-5 rounded-[2rem] hover:bg-emerald-400 transition-all active:scale-95">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-6 h-6">
+                        AUTHORIZE ACCOUNT
+                    </button>
+
+                    <div class="flex items-center gap-4 px-4">
+                        <div class="h-[1px] flex-1 bg-white/5"></div>
+                        <span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Multi-Role Support</span>
+                        <div class="h-[1px] flex-1 bg-white/5"></div>
+                    </div>
+
+                    <div id="status-card" class="bg-slate-950/60 p-6 rounded-3xl border border-white/5">
+                        <div id="status-text" class="text-[10px] font-mono text-center text-slate-500 uppercase tracking-[0.2em]">Ready for handshake...</div>
+                    </div>
+                </div>
+
+                <p class="text-center text-[9px] text-slate-600 mt-10 uppercase font-black tracking-widest">
+                    Security Policy: Role-Based Access Control Active
+                </p>
+            </div>
         </div>
     </main>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
@@ -50,30 +106,39 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const log = (m) => document.getElementById('status-text').innerText = m;
 
-        const map = L.map('map').setView([24.5854, 73.7125], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                document.getElementById('user-display').innerText = "ADMIN: " + user.email;
-                loadPins();
+                log("Verifying Role Permissions...");
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const role = userDoc.data().role;
+                        log("ACCESS GRANTED: " + role.toUpperCase());
+                        
+                        setTimeout(() => {
+                            if (role === 'admin' || role === 'super_admin') {
+                                window.location.href = "admin.html";
+                            } else {
+                                window.location.href = "capture.html";
+                            }
+                        }, 1000);
+                    } else {
+                        log("DENIED: UID NOT REGISTERED");
+                        alert("Access Denied. Please send your UID to the Super Admin: " + user.uid);
+                    }
+                } catch (e) {
+                    log("CLOUD ERROR: " + e.code);
+                }
             } else {
-                window.location.href = "index.html";
+                log("Awaiting Command...");
             }
         });
 
-        function loadPins() {
-            onSnapshot(collection(db, "surveys"), (snap) => {
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    if(d.location) {
-                        L.marker([d.location.lat, d.location.lng]).addTo(map)
-                            .bindPopup(`<b>${d.firmName}</b><br>${d.brand}`);
-                    }
-                });
-            });
-        }
+        document.getElementById('login-btn').onclick = () => {
+            signInWithPopup(auth, new GoogleAuthProvider());
+        };
     </script>
 </body>
 </html>
