@@ -1,112 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nirmansutra | Enterprise Gateway</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: #f8fafc; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .loader { border-top-color: #f97316; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body class="flex items-center justify-center min-h-screen p-6">
-
-    <div id="login-card" class="glass max-w-md w-full p-10 rounded-[2.5rem] text-center shadow-2xl">
-        <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-3xl mx-auto mb-6">N</div>
-        <h1 class="text-3xl font-black tracking-tighter mb-2 italic">NIRMANSUTRA</h1>
-        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-10">InfraSegment Intelligence</p>
-        
-        <button id="google-login" class="w-full bg-white text-slate-950 font-black py-4 rounded-xl flex items-center justify-center gap-4 hover:bg-orange-500 transition-all text-xs uppercase tracking-widest">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
-            Sign in with Google
-        </button>
-        
-        <div id="auth-msg" class="mt-6 text-[10px] font-bold text-rose-500 uppercase hidden">Access Denied: Contact Vijay</div>
-    </div>
-
-    <div id="setup-gate" class="fixed inset-0 bg-slate-950 z-50 hidden flex items-center justify-center p-6">
-        <div class="glass max-w-md w-full p-10 rounded-[2.5rem]">
-            <h2 class="text-xl font-black text-orange-500 mb-2 uppercase italic">Security Update</h2>
-            <p class="text-[10px] text-slate-500 font-bold uppercase mb-8">First login detected. Complete your agent profile.</p>
-            
-            <div class="space-y-4">
-                <input type="tel" id="setup-whatsapp" placeholder="WhatsApp Number" class="w-full p-4 rounded-xl bg-slate-900 border border-white/10 outline-none text-sm">
-                <input type="text" id="setup-uid" placeholder="Your Security UID (Auto)" class="w-full p-4 rounded-xl bg-slate-800 border border-white/5 outline-none text-[10px] font-mono text-slate-500" readonly>
-                <button onclick="finalizeProfile()" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-xl text-xs uppercase tracking-widest">Activate My ID</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
-            authDomain: "infradepo.firebaseapp.com",
-            projectId: "infradepo",
-            storageBucket: "infradepo.firebasestorage.app",
-            messagingSenderId: "733942710671",
-            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        document.getElementById('google-login').onclick = () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
-        };
-
+// --- CORRECTED AUTH & REDIRECT LOGIC ---
         auth.onAuthStateChanged(async (user) => {
+            const authMsg = document.getElementById('auth-msg');
+            
             if (user) {
-                // 1. CHECK IF EMAIL IS AUTHORIZED
-                const userDoc = await db.collection("users").where("email", "==", user.email).get();
-                
-                if (userDoc.empty) {
-                    document.getElementById('auth-msg').classList.remove('hidden');
-                    auth.signOut();
-                    return;
-                }
+                try {
+                    // 1. SHOW LOADING STATUS
+                    authMsg.innerText = "Verifying Identity...";
+                    authMsg.classList.remove('hidden', 'text-rose-500');
+                    authMsg.classList.add('text-orange-500');
 
-                const userData = userDoc.docs[0].data();
-                const docId = userDoc.docs[0].id;
+                    // 2. FETCH USER DATA (Check both 'users' and 'authorized_emails')
+                    const userRef = db.collection("users").doc(user.uid);
+                    const doc = await userRef.get();
 
-                // 2. CHECK "FORCE PROFILE UPDATE" FLAG
-                if (userData.mustCompleteProfile !== false) {
-                    document.getElementById('setup-gate').classList.remove('hidden');
-                    document.getElementById('setup-uid').value = user.uid;
-                    window.currentDocId = docId;
-                } else {
-                    // 3. ROLE-BASED REDIRECTION
-                    if (userData.role === 'super_admin' || userData.role === 'admin') {
-                        window.location.href = "admin.html";
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        
+                        // 3. CHECK FOR FORCE PROFILE UPDATE
+                        if (userData.mustCompleteProfile === true) {
+                            document.getElementById('setup-gate').classList.remove('hidden');
+                            document.getElementById('setup-uid').value = user.uid;
+                            window.currentDocId = user.uid;
+                        } else {
+                            // 4. SMART REDIRECT BASED ON ROLE
+                            if (userData.role === 'super_admin' || userData.role === 'admin') {
+                                window.location.href = "admin.html";
+                            } else {
+                                window.location.href = "capture.html";
+                            }
+                        }
                     } else {
-                        window.location.href = "capture.html";
+                        // 5. IF USER NOT IN DB (SECURITY BOUNCE)
+                        authMsg.innerText = "UID NOT AUTHORIZED. CONTACT HQ.";
+                        authMsg.classList.add('text-rose-500');
+                        setTimeout(() => auth.signOut(), 3000);
                     }
+                } catch (error) {
+                    console.error("Auth Error:", error);
+                    authMsg.innerText = "Database Connection Error.";
+                    authMsg.classList.add('text-rose-500');
                 }
+            } else {
+                // If logged out, stay on login-card
+                document.getElementById('login-card').classList.remove('hidden');
             }
         });
-
-        async function finalizeProfile() {
-            const wa = document.getElementById('setup-whatsapp').value;
-            if(!wa) return alert("WhatsApp is required for field coordination.");
-
-            await db.collection("users").doc(window.currentDocId).update({
-                whatsapp: wa,
-                uid: auth.currentUser.uid,
-                mustCompleteProfile: false, // LOCK OPENED
-                activatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            alert("Identity Verified. Welcome to Nirmansutra.");
-            location.reload();
-        }
-    </script>
-</body>
-</html>
