@@ -3,109 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nirmansutra | Global Market Intelligence</title>
+    <title>Nirmansutra | Enterprise Gateway</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .bg-grid { background-image: radial-gradient(circle, #1e293b 1px, transparent 1px); background-size: 30px 30px; }
-        .glass-card { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .infra { color: #94a3b8; } /* International Slate Grey */
-        .depot { color: #f97316; } /* Industrial Orange */
-        .gradient-text { background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: #f8fafc; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .loader { border-top-color: #f97316; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-[#020617] text-slate-300 antialiased overflow-x-hidden">
+<body class="flex items-center justify-center min-h-screen p-6">
 
-    <div class="fixed inset-0 bg-grid -z-10 opacity-20"></div>
-    <div class="fixed top-0 -left-1/4 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[160px] -z-10"></div>
-    <div class="fixed bottom-0 -right-1/4 w-[600px] h-[600px] bg-orange-500/5 rounded-full blur-[160px] -z-10"></div>
-
-    <nav class="sticky top-0 z-50 border-b border-white/5 bg-slate-950/50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-8 h-20 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center font-black text-slate-950 shadow-lg shadow-emerald-500/20">N</div>
-                <span class="text-xl font-black tracking-tighter text-white">NIRMANSUTRA</span>
-            </div>
-            <div class="flex items-center gap-6">
-                <div class="hidden md:block text-right">
-                    <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Core Engine</span>
-                    <span class="text-md font-black uppercase"><span class="infra">Infra</span><span class="depot">Depot</span></span>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto px-8 py-20 lg:py-32 grid lg:grid-cols-12 gap-12 items-center">
+    <div id="login-card" class="glass max-w-md w-full p-10 rounded-[2.5rem] text-center shadow-2xl">
+        <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-3xl mx-auto mb-6">N</div>
+        <h1 class="text-3xl font-black tracking-tighter mb-2 italic">NIRMANSUTRA</h1>
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-10">InfraSegment Intelligence</p>
         
-        <div class="lg:col-span-7 space-y-10">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-widest">
-                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                Udaipur Pilot Phase Active
-            </div>
+        <button id="google-login" class="w-full bg-white text-slate-950 font-black py-4 rounded-xl flex items-center justify-center gap-4 hover:bg-orange-500 transition-all text-xs uppercase tracking-widest">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
+            Sign in with Google
+        </button>
+        
+        <div id="auth-msg" class="mt-6 text-[10px] font-bold text-rose-500 uppercase hidden">Access Denied: Contact Vijay</div>
+    </div>
+
+    <div id="setup-gate" class="fixed inset-0 bg-slate-950 z-50 hidden flex items-center justify-center p-6">
+        <div class="glass max-w-md w-full p-10 rounded-[2.5rem]">
+            <h2 class="text-xl font-black text-orange-500 mb-2 uppercase italic">Security Update</h2>
+            <p class="text-[10px] text-slate-500 font-bold uppercase mb-8">First login detected. Complete your agent profile.</p>
             
-            <h1 class="text-6xl lg:text-8xl font-black gradient-text tracking-tighter leading-[0.9]">
-                Construction <br>Intelligence <br><span class="text-white">Redefined.</span>
-            </h1>
-
-            <p class="text-xl text-slate-400 max-w-xl leading-relaxed">
-                A unified ecosystem for Udaipur's real estate supply chain. Powered by <span class="infra font-bold">Infra</span><span class="depot font-bold text-orange-500">Depot</span> for real-time field data and role-based operational control.
-            </p>
-
-            <div class="grid sm:grid-cols-2 gap-8 pt-6">
-                <div class="space-y-2">
-                    <div class="text-white font-bold text-sm uppercase flex items-center gap-2">
-                        <span class="text-emerald-500">✔</span> High-Accuracy GPS
-                    </div>
-                    <p class="text-xs text-slate-500 uppercase font-medium tracking-wide">Live retailer mapping with sub-5m precision.</p>
-                </div>
-                <div class="space-y-2">
-                    <div class="text-white font-bold text-sm uppercase flex items-center gap-2">
-                        <span class="text-emerald-500">✔</span> Enterprise RBAC
-                    </div>
-                    <p class="text-xs text-slate-500 uppercase font-medium tracking-wide">Multi-tier access for admins, staff, and field units.</p>
-                </div>
+            <div class="space-y-4">
+                <input type="tel" id="setup-whatsapp" placeholder="WhatsApp Number" class="w-full p-4 rounded-xl bg-slate-900 border border-white/10 outline-none text-sm">
+                <input type="text" id="setup-uid" placeholder="Your Security UID (Auto)" class="w-full p-4 rounded-xl bg-slate-800 border border-white/5 outline-none text-[10px] font-mono text-slate-500" readonly>
+                <button onclick="finalizeProfile()" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-xl text-xs uppercase tracking-widest">Activate My ID</button>
             </div>
         </div>
+    </div>
 
-        <div class="lg:col-span-5 relative">
-            <div class="glass-card p-10 md:p-14 rounded-[3rem] shadow-2xl relative overflow-hidden border-white/10">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-right from-emerald-500 to-orange-500"></div>
-                
-                <div class="mb-10 text-center">
-                    <h2 class="text-2xl font-black text-white tracking-tighter italic uppercase">Terminal Login</h2>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-2">Secure Authentication Proxy</p>
-                </div>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-                <div class="space-y-4">
-                    <button id="login-btn" class="w-full bg-white hover:bg-emerald-400 text-slate-950 font-black py-5 rounded-2xl transition-all flex items-center justify-center gap-4 group">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
-                        SIGN IN WITH GOOGLE
-                    </button>
-
-                    <div class="flex items-center gap-4 py-4">
-                        <div class="h-[1px] flex-1 bg-white/5"></div>
-                        <span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Select Access Role</span>
-                        <div class="h-[1px] flex-1 bg-white/5"></div>
-                    </div>
-
-                    <div id="status-display" class="bg-black/40 border border-white/5 p-5 rounded-2xl text-center">
-                        <p id="status-text" class="text-[10px] font-mono text-slate-500 uppercase tracking-widest">System Ready</p>
-                    </div>
-                </div>
-
-                <div class="mt-10 pt-6 border-t border-white/5 text-center">
-                    <span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Powered by Nirmansutra Analytics</span>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
             authDomain: "infradepo.firebaseapp.com",
@@ -114,36 +54,59 @@
             messagingSenderId: "733942710671",
             appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
         };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const log = (m) => document.getElementById('status-text').innerText = m;
+        document.getElementById('google-login').onclick = () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider);
+        };
 
-        onAuthStateChanged(auth, async (user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
-                log("Verifying Security Role...");
-                try {
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
-                    if (userDoc.exists()) {
-                        const role = userDoc.data().role;
-                        log("Success: " + role.toUpperCase());
-                        setTimeout(() => {
-                            if (role === 'admin' || role === 'super_admin') window.location.href = "admin.html";
-                            else window.location.href = "capture.html";
-                        }, 800);
+                // 1. CHECK IF EMAIL IS AUTHORIZED
+                const userDoc = await db.collection("users").where("email", "==", user.email).get();
+                
+                if (userDoc.empty) {
+                    document.getElementById('auth-msg').classList.remove('hidden');
+                    auth.signOut();
+                    return;
+                }
+
+                const userData = userDoc.docs[0].data();
+                const docId = userDoc.docs[0].id;
+
+                // 2. CHECK "FORCE PROFILE UPDATE" FLAG
+                if (userData.mustCompleteProfile !== false) {
+                    document.getElementById('setup-gate').classList.remove('hidden');
+                    document.getElementById('setup-uid').value = user.uid;
+                    window.currentDocId = docId;
+                } else {
+                    // 3. ROLE-BASED REDIRECTION
+                    if (userData.role === 'super_admin' || userData.role === 'admin') {
+                        window.location.href = "admin.html";
                     } else {
-                        log("Access Denied: Unregistered");
-                        alert("Please provide this UID to Vijay: " + user.uid);
+                        window.location.href = "capture.html";
                     }
-                } catch (e) { log("Error: " + e.code); }
+                }
             }
         });
 
-        document.getElementById('login-btn').onclick = () => {
-            log("Authenticating...");
-            signInWithPopup(auth, new GoogleAuthProvider());
-        };
+        async function finalizeProfile() {
+            const wa = document.getElementById('setup-whatsapp').value;
+            if(!wa) return alert("WhatsApp is required for field coordination.");
+
+            await db.collection("users").doc(window.currentDocId).update({
+                whatsapp: wa,
+                uid: auth.currentUser.uid,
+                mustCompleteProfile: false, // LOCK OPENED
+                activatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            alert("Identity Verified. Welcome to Nirmansutra.");
+            location.reload();
+        }
     </script>
 </body>
 </html>
