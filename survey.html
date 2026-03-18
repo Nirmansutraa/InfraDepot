@@ -1,307 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>InfraDepot Survey</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-<style>
-body { font-family: Arial; background:#f4f6f9; margin:0; }
-.container { padding:10px; }
-.card { background:#fff; padding:12px; margin-bottom:12px; border-radius:10px; }
-.section-title { font-size:12px; color:#888; margin-bottom:8px; }
-input { width:100%; padding:10px; margin:5px 0; border-radius:8px; border:1px solid #ccc; }
-.row { display:flex; gap:8px; }
-.dark-box { background:#0f1b2d; color:#00ffcc; padding:15px; border-radius:8px; text-align:center; }
-.map { height:150px; border-radius:8px; margin-bottom:10px; }
-.btn { padding:12px; border:none; border-radius:8px; width:100%; margin-top:5px; }
-.btn-dark { background:#0f1b2d; color:white; }
-.btn-green { background:#2ecc71; color:white; }
-.material { background:#0f1b2d; color:white; padding:10px; margin-bottom:6px; border-radius:8px; }
-.counter { display:flex; justify-content:space-between; margin-bottom:8px; }
-.counter button { width:30px; height:30px; }
-.hidden { display:none; }
-.photo-preview img { width:70px; margin:5px; border-radius:6px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfraDepot | Advanced Field Survey</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; }
+        .container { padding:10px; max-width: 600px; margin: auto; }
+        .card { background:#fff; padding:15px; margin-bottom:12px; border-radius:12px; border: 1px solid #eee; }
+        .section-title { font-size:11px; font-weight: bold; color:#FF5A00; margin-bottom:8px; text-transform: uppercase; letter-spacing: 1px; }
+        input, select { width:100%; padding:10px; margin:5px 0; border-radius:8px; border:1px solid #ccc; font-size:14px; outline: none; }
+        input:focus { border-color: #FF5A00; }
+        .row { display:flex; gap:8px; }
+        .map { height:150px; border-radius:10px; margin-bottom:10px; border: 1px solid #ddd; }
+        .btn { padding:12px; border:none; border-radius:8px; width:100%; margin-top:5px; font-weight: bold; cursor: pointer; }
+        .btn-dark { background:#0f1b2d; color:white; }
+        .btn-orange { background:#FF5A00; color:white; }
+        .material-box { background:#0f1b2d; color:white; padding:12px; margin-bottom:6px; border-radius:10px; }
+        .counter { display:flex; justify-content:space-between; align-items: center; padding: 5px 0; }
+        .counter button { width:32px; height:32px; border-radius: 5px; background: #eee; font-weight: bold; }
+        .hidden { display:none; }
+        .photo-preview img { width:75px; height: 75px; object-fit: cover; margin:5px; border-radius:8px; border: 2px solid #FF5A00; }
+        #loading-overlay { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    </style>
 </head>
-
 <body>
 
-<div class="container">
+    <div id="loading-overlay">
+        <div class="w-10 h-10 border-4 border-gray-200 border-t-[#FF5A00] rounded-full animate-spin mb-4"></div>
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Securing Connection...</p>
+    </div>
 
-<!-- CONTACT -->
-<div class="card">
-<div class="section-title">CONTACT</div>
+    <div class="container">
+        <div class="card">
+            <div class="section-title">Supplier Contact</div>
+            <input id="firmName" placeholder="Firm Name (Required)">
+            <input id="ownerName" placeholder="Owner Name">
+            <div class="row">
+                <input id="ownerPhone" placeholder="Phone" oninput="syncWhatsApp('owner')">
+                <input id="ownerWhatsapp" placeholder="WhatsApp">
+            </div>
+            <input id="address" placeholder="Main Office Address">
+        </div>
 
-<input id="ownerName" placeholder="Owner Name">
+        <div class="card">
+            <div class="section-title">Geotagging</div>
+            <div id="map" class="map"></div>
+            <button class="btn btn-dark" onclick="captureGPS()">📍 CAPTURE GPS</button>
+            <input id="coordinates" readonly placeholder="Lat, Lng" class="bg-gray-50 mt-2 italic text-gray-400">
+        </div>
 
-<div class="row">
-<input id="ownerPhone" placeholder="Phone" oninput="syncWhatsApp('owner')">
-<input id="ownerWhatsapp" placeholder="WhatsApp">
-</div>
+        <div class="card">
+            <div class="section-title">Business Photos (Max 10)</div>
+            <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)" class="text-xs">
+            <div id="photos" class="photo-preview flex flex-wrap mt-2"></div>
+        </div>
 
-<input id="managerName" placeholder="Manager Name">
+        <div class="card">
+            <div class="section-title">Materials Handled</div>
+            <div id="materialsContainer"></div>
+        </div>
 
-<div class="row">
-<input id="managerPhone" placeholder="Phone" oninput="syncWhatsApp('manager')">
-<input id="managerWhatsapp" placeholder="WhatsApp">
-</div>
+        <div class="card">
+            <div class="section-title">Transport Fleet</div>
+            <div id="fleetContainer"></div>
+        </div>
 
-<input id="address" placeholder="Main Office Address">
+        <div class="card">
+            <button class="btn bg-gray-500 text-white" onclick="saveLocal()">💾 SAVE OFFLINE</button>
+            <button id="sync-btn" class="btn btn-orange shadow-lg" onclick="syncCloud()">🚀 SYNC TO CLOUD</button>
+        </div>
+    </div>
 
-</div>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<!-- GPS -->
-<div class="card">
-<div class="section-title">GPS</div>
+    <script>
+        // CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
+            authDomain: "infradepo.firebaseapp.com",
+            projectId: "infradepo",
+            storageBucket: "infradepo.firebasestorage.app",
+            messagingSenderId: "733942710671",
+            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
 
-<div id="map" class="map"></div>
+        // RBAC Check
+        auth.onAuthStateChanged(user => {
+            if(!user) window.location.href = "index.html";
+            else document.getElementById('loading-overlay').style.display = 'none';
+        });
 
-<button class="btn btn-dark" onclick="captureGPS()">Capture GPS</button>
-<input id="coordinates">
+        // MAP
+        let map = L.map('map').setView([24.5854, 73.7125], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        let marker;
 
-</div>
+        function captureGPS() {
+            navigator.geolocation.getCurrentPosition(async pos => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                document.getElementById("coordinates").value = lat + "," + lng;
+                if (marker) map.removeLayer(marker);
+                marker = L.marker([lat, lng]).addTo(map);
+                map.setView([lat, lng], 16);
 
-<!-- PHOTO -->
-<div class="card">
-<div class="section-title">Business Photos (Max 10)</div>
+                try {
+                    let res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                    let data = await res.json();
+                    document.getElementById("address").value = data.display_name;
+                } catch(e) {}
+            });
+        }
 
-<input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)">
-<div id="photos" class="photo-preview"></div>
+        // PHOTO
+        let photos = [];
+        function handlePhoto(e) {
+            if (photos.length >= 10) return alert("Max 10 photos");
+            let file = e.target.files[0];
+            if(!file) return;
 
-</div>
+            compressImage(file).then(blob => {
+                let reader = new FileReader();
+                reader.onload = function() {
+                    photos.push({
+                        data: reader.result,
+                        time: new Date().toISOString()
+                    });
+                    renderPhotos();
+                };
+                reader.readAsDataURL(blob);
+            });
+        }
 
-<!-- MATERIAL -->
-<div class="card">
-<div class="section-title">Materials</div>
+        function renderPhotos() {
+            const div = document.getElementById("photos");
+            div.innerHTML = "";
+            photos.forEach(p => {
+                const img = document.createElement("img");
+                img.src = p.data;
+                div.appendChild(img);
+            });
+        }
 
-<div id="materialsContainer"></div>
+        function compressImage(file) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.src = URL.createObjectURL(file);
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d");
+                    const scale = Math.min(1, 800 / img.width);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => resolve(blob), "image/jpeg", 0.7);
+                };
+            });
+        }
 
-</div>
+        // MATERIALS
+        const materialsData = {
+            "Sand": ["River Sand", "M-Sand", "Plaster Sand"],
+            "Aggregates": ["10mm", "20mm", "40mm"],
+            "Masonry": ["Granite", "Limestone", "Sandstone"],
+            "Steel": ["Fe500", "Fe550"],
+            "Cement": ["OPC", "PPC"]
+        };
 
-<!-- FLEET -->
-<div class="card">
-<div class="section-title">Fleet</div>
-<div id="fleetContainer"></div>
-</div>
+        const mContainer = document.getElementById('materialsContainer');
+        Object.keys(materialsData).forEach(mat => {
+            const div = document.createElement('div');
+            div.className = "material-box";
+            div.innerHTML = `
+                <label class="flex gap-2 items-center text-sm font-bold"><input type="checkbox" class="data-mat-parent" value="${mat}" onchange="toggleMaterial('${mat}')"> ${mat}</label>
+                <div id="sub_${mat}" class="hidden pl-6 mt-2 space-y-1">
+                    ${materialsData[mat].map(v => `<label class="block text-xs"><input type="checkbox" class="data-mat-child" data-parent="${mat}" value="${v}"> ${v}</label>`).join('')}
+                </div>`;
+            mContainer.appendChild(div);
+        });
 
-<!-- ACTION -->
-<div class="card">
-<button class="btn" onclick="saveLocal()">SAVE LOCAL</button>
-<button class="btn btn-green" onclick="syncCloud()">SYNC CLOUD</button>
-</div>
+        function toggleMaterial(mat) {
+            document.getElementById(`sub_${mat}`).classList.toggle('hidden');
+        }
 
-</div>
+        // FLEET
+        const fleetList = ["Tractor", "Mini Truck", "Truck", "Dumper", "Trailer"];
+        const fContainer = document.getElementById('fleetContainer');
+        fleetList.forEach(f => {
+            const id = f.replace(" ", "");
+            fContainer.innerHTML += `
+                <div class="counter text-sm font-bold text-gray-700 border-b pb-2 mb-2">${f}
+                    <div>
+                        <button onclick="update('${id}', -1)">-</button>
+                        <span id="${id}" class="mx-4 data-fleet" data-name="${f}">0</span>
+                        <button onclick="update('${id}', 1)">+</button>
+                    </div>
+                </div>`;
+        });
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        function update(id, val) {
+            let el = document.getElementById(id);
+            let v = parseInt(el.innerText) + val;
+            if (v >= 0) el.innerText = v;
+        }
 
-<script>
-// ================= MAP =================
-let map = L.map('map').setView([24.5854,73.7125],13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let marker;
+        function syncWhatsApp(type) {
+            const phone = document.getElementById(type + "Phone").value;
+            const wa = document.getElementById(type + "Whatsapp");
+            if(!wa.dataset.modified) wa.value = phone;
+        }
 
-function captureGPS(){
-navigator.geolocation.getCurrentPosition(async pos=>{
-let lat=pos.coords.latitude;
-let lng=pos.coords.longitude;
+        // CLOUD SYNC
+        async function syncCloud() {
+            const firm = document.getElementById("firmName").value;
+            if(!firm) return alert("Firm Name is required.");
 
-document.getElementById("coordinates").value=lat+","+lng;
+            const btn = document.getElementById('sync-btn');
+            btn.innerText = "⌛ SYNCING...";
+            btn.disabled = true;
 
-if(marker) map.removeLayer(marker);
-marker=L.marker([lat,lng]).addTo(map);
-map.setView([lat,lng],15);
+            const data = {
+                firmName: firm,
+                ownerName: document.getElementById("ownerName").value,
+                ownerPhone: document.getElementById("ownerPhone").value,
+                ownerWhatsapp: document.getElementById("ownerWhatsapp").value,
+                address: document.getElementById("address").value,
+                gps: document.getElementById("coordinates").value,
+                photos: photos,
+                materials: Array.from(document.querySelectorAll('.data-mat-child:checked')).map(el => el.value),
+                fleet: Array.from(document.querySelectorAll('.data-fleet')).reduce((acc, el) => {
+                    acc[el.dataset.name] = parseInt(el.innerText);
+                    return acc;
+                }, {}),
+                status: "pending",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                capturedBy: auth.currentUser.email
+            };
 
-// Reverse Geocode
-let res=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-let data=await res.json();
-document.getElementById("address").value=data.display_name;
-});
-}
+            try {
+                await db.collection("field_data").add(data);
+                alert("✅ Sync Successful!");
+                location.reload();
+            } catch(e) {
+                alert("❌ Sync Error: " + e.message);
+                btn.innerText = "🚀 SYNC TO CLOUD";
+                btn.disabled = false;
+            }
+        }
 
-// ================= AUTO WHATSAPP =================
-function syncWhatsApp(type){
-let phone=document.getElementById(type+"Phone").value;
-let whatsapp=document.getElementById(type+"Whatsapp");
+        // OFFLINE STORAGE (INDEXED DB)
+        let idb;
+        const req = indexedDB.open("InfraDepotDB", 1);
+        req.onupgradeneeded = e => { e.target.result.createObjectStore("survey", { keyPath: "id", autoIncrement: true }); };
+        req.onsuccess = e => { idb = e.target.result; };
 
-if(!whatsapp.dataset.modified){
-whatsapp.value=phone;
-}
-}
-
-document.querySelectorAll("#ownerWhatsapp,#managerWhatsapp").forEach(el=>{
-el.addEventListener("input",()=>{el.dataset.modified=true});
-});
-
-// ================= PHOTO =================
-let photos=[];
-
-function handlePhoto(e){
-if(photos.length>=10) return alert("Max 10 photos");
-
-let file=e.target.files[0];
-compressImage(file,512).then(blob=>{
-let reader=new FileReader();
-reader.onload=function(){
-photos.push({
-data:reader.result,
-time:new Date().toISOString(),
-gps:document.getElementById("coordinates").value
-});
-
-renderPhotos();
-};
-reader.readAsDataURL(blob);
-});
-}
-
-function renderPhotos(){
-let div=document.getElementById("photos");
-div.innerHTML="";
-photos.forEach(p=>{
-let img=document.createElement("img");
-img.src=p.data;
-div.appendChild(img);
-});
-}
-
-// Compress
-function compressImage(file,maxKB){
-return new Promise(resolve=>{
-let img=new Image();
-let reader=new FileReader();
-reader.onload=e=>img.src=e.target.result;
-reader.readAsDataURL(file);
-
-img.onload=()=>{
-let canvas=document.createElement("canvas");
-let ctx=canvas.getContext("2d");
-
-canvas.width=img.width*0.6;
-canvas.height=img.height*0.6;
-
-ctx.drawImage(img,0,0,canvas.width,canvas.height);
-
-canvas.toBlob(blob=>{
-resolve(blob);
-},"image/jpeg",0.7);
-};
-});
-}
-
-// ================= MATERIAL =================
-const materialsData = {
-"Sand":["River Sand","M-Sand","Plaster Sand"],
-"Aggregates":["10mm","20mm","40mm"],
-"Masonry Stone":["Granite","Limestone","Sandstone"],
-"TMT Steel":["Fe500","Fe550","Fe600"],
-"Cement":["OPC","PPC","White Cement"],
-"Bricks":["Red Brick","Fly Ash Brick","AAC Block"]
-};
-
-let container=document.getElementById("materialsContainer");
-
-Object.keys(materialsData).forEach(mat=>{
-let div=document.createElement("div");
-div.className="material";
-
-div.innerHTML=`
-<label><input type="checkbox" onchange="toggleMaterial('${mat}')"> ${mat}</label>
-<div id="${mat}" class="hidden"></div>
-`;
-
-container.appendChild(div);
-});
-
-function toggleMaterial(mat){
-let el=document.getElementById(mat);
-if(el.classList.contains("hidden")){
-el.classList.remove("hidden");
-
-let varieties=materialsData[mat];
-el.innerHTML=varieties.map(v=>`
-<div>
-<input type="checkbox"> ${v}
-</div>
-`).join("");
-
-}else{
-el.classList.add("hidden");
-}
-}
-
-// ================= FLEET =================
-const fleet=["Tractor","Mini Truck","Truck","Mini Dumper","Dumper","Trailer"];
-let fleetDiv=document.getElementById("fleetContainer");
-
-fleet.forEach(f=>{
-let id=f.replace(" ","");
-fleetDiv.innerHTML+=`
-<div class="counter">${f}
-<div>
-<button onclick="update('${id}',-1)">-</button>
-<span id="${id}">0</span>
-<button onclick="update('${id}',1)">+</button>
-</div>
-</div>
-`;
-});
-
-function update(id,val){
-let el=document.getElementById(id);
-let v=parseInt(el.innerText);
-v+=val;
-if(v<0)v=0;
-el.innerText=v;
-}
-
-// ================= INDEXED DB =================
-let db;
-let req=indexedDB.open("InfraDepotDB",1);
-
-req.onupgradeneeded=e=>{
-db=e.target.result;
-db.createObjectStore("survey",{keyPath:"id",autoIncrement:true});
-};
-
-req.onsuccess=e=>{db=e.target.result};
-
-function saveLocal(){
-let tx=db.transaction("survey","readwrite");
-let store=tx.objectStore("survey");
-
-let data=getFormData();
-store.add(data);
-
-alert("Saved Offline");
-}
-
-// ================= FIREBASE (HOOK) =================
-function syncCloud(){
-let data=getFormData();
-
-// 🔥 Add Firebase Firestore here
-console.log("Syncing:",data);
-
-alert("Sync logic ready (connect Firebase)");
-}
-
-// ================= DATA =================
-function getFormData(){
-return{
-owner:document.getElementById("ownerName").value,
-phone:document.getElementById("ownerPhone").value,
-whatsapp:document.getElementById("ownerWhatsapp").value,
-manager:document.getElementById("managerName").value,
-gps:document.getElementById("coordinates").value,
-address:document.getElementById("address").value,
-photos:photos
-};
-}
-
-</script>
-
+        function saveLocal() {
+            const tx = idb.transaction("survey", "readwrite");
+            tx.objectStore("survey").add({ firm: document.getElementById("firmName").value, time: new Date() });
+            alert("💾 Saved Offline to Device Memory.");
+        }
+    </script>
 </body>
 </html>
