@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InfraDepot Survey</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background: #ffffff;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+}
+
+.container {
+    padding: 10px;
+}
+
+.card {
+    background: #fff;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+}
+
+.section-title {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.row {
+    display: flex;
+    gap: 8px;
+}
+
+.row input {
+    flex: 1;
+}
+
+.dark-box {
+    background: #0f1b2d;
+    color: #00ffcc;
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.map {
+    height: 150px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.btn {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    margin-top: 5px;
+}
+
+.btn-dark {
+    background: #0f1b2d;
+    color: white;
+}
+
+.btn-green {
+    background: #2ecc71;
+    color: white;
+}
+
+.material {
+    display: flex;
+    justify-content: space-between;
+    background: #0f1b2d;
+    color: white;
+    padding: 10px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+}
+
+.counter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.counter button {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: none;
+    background: #0f1b2d;
+    color: white;
+}
+
+.footer-btns {
+    display: flex;
+    gap: 10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <div>Field Staff: FS350017</div>
+    <div style="color:red;">LOGOUT</div>
+</div>
+
+<div class="container">
+
+<!-- 1 Tracking ID -->
+<div class="card">
+    <div class="section-title">1. TRACKING ID</div>
+    <div class="dark-box">ID---</div>
+</div>
+
+<!-- 2 Entity & Contacts -->
+<div class="card">
+    <div class="section-title">2. ENTITY & CONTACTS</div>
+
+    <input placeholder="Enter Firm Name">
+
+    <div class="row">
+        <input placeholder="Owner Full Name">
+    </div>
+
+    <div class="row">
+        <input placeholder="Phone">
+        <input placeholder="WhatsApp">
+    </div>
+
+    <input placeholder="Manager Name">
+
+    <div class="row">
+        <input placeholder="Phone">
+        <input placeholder="WhatsApp">
+    </div>
+
+    <input placeholder="Main Office or GPS...">
+</div>
+
+<!-- 3 GPS -->
+<div class="card">
+    <div class="section-title">3. GPS & VERIFICATION</div>
+
+    <div id="map" class="map"></div>
+
+    <button class="btn btn-dark" onclick="captureGPS()">CAPTURE GPS & ADDRESS</button>
+
+    <input id="coordinates" placeholder="Coordinates">
+
+    <button class="btn">Tap to capture Business photos</button>
+</div>
+
+<!-- 4 Materials -->
+<div class="card">
+    <div class="section-title">4. MATERIALS INTELLIGENCE</div>
+
+    <div class="material"><input type="checkbox"> Sand</div>
+    <div class="material"><input type="checkbox"> Stone</div>
+    <div class="material"><input type="checkbox"> Cement</div>
+    <div class="material"><input type="checkbox"> Steel</div>
+</div>
+
+<!-- 5 Fleet -->
+<div class="card">
+    <div class="section-title">5. TRANSPORTATION FLEET</div>
+
+    <div class="counter">Tractor 
+        <div>
+            <button onclick="updateCount('tractor', -1)">-</button>
+            <span id="tractor">0</span>
+            <button onclick="updateCount('tractor', 1)">+</button>
+        </div>
+    </div>
+
+    <div class="counter">Mini Truck 
+        <div>
+            <button onclick="updateCount('miniTruck', -1)">-</button>
+            <span id="miniTruck">0</span>
+            <button onclick="updateCount('miniTruck', 1)">+</button>
+        </div>
+    </div>
+
+    <div class="counter">Truck 
+        <div>
+            <button onclick="updateCount('truck', -1)">-</button>
+            <span id="truck">0</span>
+            <button onclick="updateCount('truck', 1)">+</button>
+        </div>
+    </div>
+
+    <div class="counter">Mini Dumper 
+        <div>
+            <button onclick="updateCount('miniDumper', -1)">-</button>
+            <span id="miniDumper">0</span>
+            <button onclick="updateCount('miniDumper', 1)">+</button>
+        </div>
+    </div>
+
+    <div class="counter">Dumper 
+        <div>
+            <button onclick="updateCount('dumper', -1)">-</button>
+            <span id="dumper">0</span>
+            <button onclick="updateCount('dumper', 1)">+</button>
+        </div>
+    </div>
+
+    <div class="counter">Trailer 
+        <div>
+            <button onclick="updateCount('trailer', -1)">-</button>
+            <span id="trailer">0</span>
+            <button onclick="updateCount('trailer', 1)">+</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- 6 Actions -->
+<div class="card">
+    <div class="section-title">6. DATA ACTIONS</div>
+
+    <div class="footer-btns">
+        <button class="btn">SAVE LOCAL</button>
+        <button class="btn btn-green">SUBMIT SYNC</button>
+    </div>
+</div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+// Map Init
+var map = L.map('map').setView([24.5854, 73.7125], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+}).addTo(map);
+
+var marker;
+
+// GPS Capture
+function captureGPS() {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+        let lat = pos.coords.latitude;
+        let lng = pos.coords.longitude;
+
+        if (marker) map.removeLayer(marker);
+
+        marker = L.marker([lat, lng]).addTo(map);
+        map.setView([lat, lng], 15);
+
+        document.getElementById("coordinates").value = lat + ", " + lng;
+    });
+}
+
+// Counter Logic
+function updateCount(id, change) {
+    let el = document.getElementById(id);
+    let value = parseInt(el.innerText);
+
+    value += change;
+    if (value < 0) value = 0;
+
+    el.innerText = value;
+}
+</script>
+
+</body>
+</html>
