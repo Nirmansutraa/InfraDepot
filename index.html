@@ -11,17 +11,13 @@
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .hero-gradient { background: radial-gradient(circle at top right, rgba(249, 115, 22, 0.08), transparent); }
         .hidden { display: none !important; }
-        .infra-text { color: #94a3b8; }
-        .depot-text { color: #f97316; }
     </style>
 </head>
 <body class="hero-gradient min-h-screen flex items-center justify-center p-6">
 
     <div id="login-card" class="max-w-md w-full glass p-10 md:p-14 rounded-[3rem] text-center shadow-2xl border border-white/5">
         <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-3xl mx-auto mb-8 shadow-lg shadow-orange-500/20">N</div>
-        <h1 class="text-3xl font-black text-white mb-2 tracking-tighter italic uppercase">
-            <span class="infra-text">Infra</span><span class="depot-text">Depot</span>
-        </h1>
+        <h1 class="text-3xl font-black text-white mb-2 tracking-tighter italic uppercase">Infra<span class="text-orange-500">Depot</span></h1>
         <p id="status-msg" class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mb-12">Authorized Terminal</p>
         
         <button id="google-login" class="w-full bg-white text-slate-950 font-black p-5 rounded-2xl flex items-center justify-center gap-4 hover:bg-orange-500 transition-all text-xs uppercase tracking-widest active:scale-95 shadow-xl">
@@ -32,15 +28,6 @@
         <div id="error-log" class="mt-8 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl hidden text-left">
             <p class="text-[9px] font-bold text-rose-500 uppercase mb-1">Security Report:</p>
             <p id="error-text" class="text-[10px] text-rose-300 font-mono leading-tight"></p>
-        </div>
-    </div>
-
-    <div id="setup-gate" class="max-w-md w-full glass p-10 md:p-14 rounded-[4rem] text-center hidden border-emerald-500/20">
-        <h3 class="text-2xl font-black text-emerald-400 mb-2 tracking-tighter uppercase italic text-center">Identity Setup</h3>
-        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-10 text-center">First Login: Activate your Field ID</p>
-        <div class="space-y-4">
-            <input type="tel" id="setup-whatsapp" placeholder="WhatsApp Number" class="w-full p-4 rounded-xl bg-slate-900 border border-white/10 outline-none text-sm text-white focus:border-orange-500">
-            <button onclick="finalizeProfile()" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-xl text-xs uppercase tracking-widest active:scale-95 transition-all">Verify & Activate</button>
         </div>
     </div>
 
@@ -63,60 +50,45 @@
 
         document.getElementById('google-login').onclick = () => {
             const provider = new firebase.auth.GoogleAuthProvider();
+            // Use signInWithPopup instead of Redirect to avoid the URL changing to login.html
             auth.signInWithPopup(provider).catch(err => showError(err.message));
         };
 
         auth.onAuthStateChanged(async (user) => {
             const statusMsg = document.getElementById('status-msg');
-            const loginCard = document.getElementById('login-card');
-            
             if (user) {
                 statusMsg.innerText = "VERIFYING SECURITY...";
-                statusMsg.classList.replace('text-slate-500', 'text-orange-500');
+                statusMsg.className = "text-[10px] text-orange-500 font-bold uppercase tracking-[0.3em] mb-12";
 
                 try {
                     const userRef = db.collection("users").doc(user.uid);
                     const doc = await userRef.get();
 
+                    let userData;
                     if (doc.exists) {
-                        const data = doc.data();
-                        if (data.mustCompleteProfile === true) {
-                            loginCard.classList.add('hidden');
-                            document.getElementById('setup-gate').classList.remove('hidden');
+                        userData = doc.data();
+                    } else {
+                        // Fallback check by email
+                        const q = await db.collection("users").where("email", "==", user.email).get();
+                        if (!q.empty) userData = q.docs[0].data();
+                    }
+
+                    if (userData) {
+                        // REDIRECT TO ADMIN OR CAPTURE ONLY
+                        if (userData.role === 'super_admin' || userData.role === 'admin') {
+                            window.location.href = "admin.html";
                         } else {
-                            // Redirect based on role
-                            window.location.href = (data.role === 'super_admin' || data.role === 'admin') ? "admin.html" : "capture.html";
+                            window.location.href = "capture.html";
                         }
                     } else {
-                        // Fallback check by Email
-                        const q = await db.collection("users").where("email", "==", user.email).get();
-                        if (!q.empty) {
-                            const d = q.docs[0].data();
-                            window.location.href = (d.role === 'super_admin' || d.role === 'admin') ? "admin.html" : "capture.html";
-                        } else {
-                            showError("Unauthorized: " + user.email);
-                            setTimeout(() => auth.signOut(), 4000);
-                        }
+                        showError("Unauthorized: " + user.email);
+                        setTimeout(() => auth.signOut(), 3000);
                     }
                 } catch (error) {
-                    showError("DB_ERROR: " + error.message);
+                    showError("DB ERROR: " + error.message);
                 }
             }
         });
-
-        async function finalizeProfile() {
-            const wa = document.getElementById('setup-whatsapp').value;
-            if(!wa || wa.length < 10) return alert("Enter valid WhatsApp number.");
-            
-            try {
-                await db.collection("users").doc(auth.currentUser.uid).update({
-                    whatsapp: wa,
-                    mustCompleteProfile: false,
-                    activatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                location.reload();
-            } catch (e) { alert("Error: " + e.message); }
-        }
 
         function showError(msg) {
             document.getElementById('error-log').classList.remove('hidden');
