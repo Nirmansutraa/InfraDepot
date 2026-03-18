@@ -1,25 +1,22 @@
-const CACHE_NAME = 'infra-depot-v2-2026';
-const OFFLINE_URLS = [
-    './',
-    './index.html',
-    './css/components.css',
-    './js/auth.js',
-    './js/app.js',
-    './js/ui.js',
-    './js/map.js'
+const CACHE_NAME = 'nirmansutra-v1';
+const ASSETS = [
+  'index.html',
+  'admin.html',
+  'survey.html',
+  'manifest.json',
+  'https://cdn.tailwindcss.com'
 ];
 
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_URLS))
-    );
+// Install Service Worker
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  );
 });
 
-// Advanced Network-First for Auth, Cache-First for Assets
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
-        })
-    );
+// Fetch Offline
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((res) => res || fetch(e.request))
+  );
 });
