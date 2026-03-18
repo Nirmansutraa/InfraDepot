@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nirmansutra | Enterprise Gateway</title>
+    
+    <script>
+        // 🛡️ REDIRECT-KILLER
+        // If the URL contains "login.html", instantly flip it to "/"
+        if (window.location.href.includes('login.html')) {
+            var cleanUrl = window.location.href.replace('login.html', 'index.html');
+            window.location.replace(cleanUrl);
+        }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -16,7 +26,7 @@
 <body class="hero-gradient min-h-screen flex items-center justify-center p-6">
 
     <div id="login-card" class="max-w-md w-full glass p-10 md:p-14 rounded-[3rem] text-center shadow-2xl border border-white/5">
-        <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-3xl mx-auto mb-8 shadow-lg shadow-orange-500/20">N</div>
+        <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-3xl mx-auto mb-8">N</div>
         <h1 class="text-3xl font-black text-white mb-2 tracking-tighter italic uppercase">Infra<span class="text-orange-500">Depot</span></h1>
         <p id="status-msg" class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mb-12">Authorized Terminal</p>
         
@@ -50,7 +60,6 @@
 
         document.getElementById('google-login').onclick = () => {
             const provider = new firebase.auth.GoogleAuthProvider();
-            // Use signInWithPopup instead of Redirect to avoid the URL changing to login.html
             auth.signInWithPopup(provider).catch(err => showError(err.message));
         };
 
@@ -58,28 +67,20 @@
             const statusMsg = document.getElementById('status-msg');
             if (user) {
                 statusMsg.innerText = "VERIFYING SECURITY...";
-                statusMsg.className = "text-[10px] text-orange-500 font-bold uppercase tracking-[0.3em] mb-12";
+                statusMsg.classList.replace('text-slate-500', 'text-orange-500');
 
                 try {
-                    const userRef = db.collection("users").doc(user.uid);
-                    const doc = await userRef.get();
+                    const doc = await db.collection("users").doc(user.uid).get();
+                    let userData = doc.exists ? doc.data() : null;
 
-                    let userData;
-                    if (doc.exists) {
-                        userData = doc.data();
-                    } else {
-                        // Fallback check by email
+                    if (!userData) {
                         const q = await db.collection("users").where("email", "==", user.email).get();
                         if (!q.empty) userData = q.docs[0].data();
                     }
 
                     if (userData) {
-                        // REDIRECT TO ADMIN OR CAPTURE ONLY
-                        if (userData.role === 'super_admin' || userData.role === 'admin') {
-                            window.location.href = "admin.html";
-                        } else {
-                            window.location.href = "capture.html";
-                        }
+                        // SEND TO ADMIN OR CAPTURE (NO LOGIN.HTML ALLOWED)
+                        window.location.href = (userData.role === 'super_admin' || userData.role === 'admin') ? "admin.html" : "capture.html";
                     } else {
                         showError("Unauthorized: " + user.email);
                         setTimeout(() => auth.signOut(), 3000);
