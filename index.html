@@ -4,16 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nirmansutra | Enterprise Gateway</title>
-    
-    <script>
-        // 🛡️ REDIRECT-KILLER
-        // If the URL contains "login.html", instantly flip it to "/"
-        if (window.location.href.includes('login.html')) {
-            var cleanUrl = window.location.href.replace('login.html', 'index.html');
-            window.location.replace(cleanUrl);
-        }
-    </script>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -26,9 +16,9 @@
 <body class="hero-gradient min-h-screen flex items-center justify-center p-6">
 
     <div id="login-card" class="max-w-md w-full glass p-10 md:p-14 rounded-[3rem] text-center shadow-2xl border border-white/5">
-        <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-3xl mx-auto mb-8">N</div>
-        <h1 class="text-3xl font-black text-white mb-2 tracking-tighter italic uppercase">Infra<span class="text-orange-500">Depot</span></h1>
-        <p id="status-msg" class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mb-12">Authorized Terminal</p>
+        <div class="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-3xl mx-auto mb-8 shadow-lg shadow-orange-500/20">N</div>
+        <h1 class="text-3xl font-black text-white mb-2 tracking-tighter italic uppercase text-center">Infra<span class="text-orange-500">Depot</span></h1>
+        <p id="status-msg" class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mb-12 text-center">Verifying Session...</p>
         
         <button id="google-login" class="w-full bg-white text-slate-950 font-black p-5 rounded-2xl flex items-center justify-center gap-4 hover:bg-orange-500 transition-all text-xs uppercase tracking-widest active:scale-95 shadow-xl">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5">
@@ -66,28 +56,41 @@
         auth.onAuthStateChanged(async (user) => {
             const statusMsg = document.getElementById('status-msg');
             if (user) {
-                statusMsg.innerText = "VERIFYING SECURITY...";
-                statusMsg.classList.replace('text-slate-500', 'text-orange-500');
+                statusMsg.innerText = "ACCESS GRANTED. ROUTING...";
+                statusMsg.className = "text-[10px] text-emerald-400 font-bold uppercase tracking-[0.3em] mb-12 text-center";
 
                 try {
-                    const doc = await db.collection("users").doc(user.uid).get();
+                    // 1. Fetch the user document
+                    const userRef = db.collection("users").doc(user.uid);
+                    const doc = await userRef.get();
+
                     let userData = doc.exists ? doc.data() : null;
 
+                    // 2. Backup check by email if UID doc isn't found
                     if (!userData) {
                         const q = await db.collection("users").where("email", "==", user.email).get();
                         if (!q.empty) userData = q.docs[0].data();
                     }
 
+                    // 3. THE MASTER ROUTER
                     if (userData) {
-                        // SEND TO ADMIN OR CAPTURE (NO LOGIN.HTML ALLOWED)
-                        window.location.href = (userData.role === 'super_admin' || userData.role === 'admin') ? "admin.html" : "capture.html";
+                        const role = userData.role;
+                        console.log("User Role detected:", role);
+                        
+                        if (role === 'super_admin' || role === 'admin') {
+                            window.location.replace("admin.html");
+                        } else {
+                            window.location.replace("capture.html");
+                        }
                     } else {
-                        showError("Unauthorized: " + user.email);
+                        showError("Unauthorized Account. Contact Vijay.");
                         setTimeout(() => auth.signOut(), 3000);
                     }
                 } catch (error) {
-                    showError("DB ERROR: " + error.message);
+                    showError("Routing Error: " + error.message);
                 }
+            } else {
+                statusMsg.innerText = "Authorized Terminal Only";
             }
         });
 
@@ -95,7 +98,7 @@
             document.getElementById('error-log').classList.remove('hidden');
             document.getElementById('error-text').innerText = msg;
             document.getElementById('status-msg').innerText = "ACCESS DENIED";
-            document.getElementById('status-msg').classList.replace('text-orange-500', 'text-rose-500');
+            document.getElementById('status-msg').classList.replace('text-emerald-400', 'text-rose-500');
         }
     </script>
 </body>
