@@ -3,94 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | Admin Command HQ</title>
+    <title>InfraDepot HQ | Super Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; }
-        #admin-map { height: 450px; width: 100%; border-radius: 1.5rem; z-index: 1; }
-        .tab-btn { padding: 0.75rem 1.5rem; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 0.75rem; transition: all 0.2s; }
-        .tab-active { background: #f97316; color: white; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .tab-btn { padding: 0.75rem 1.25rem; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 0.75rem; transition: 0.3s; }
+        .tab-active { background: #f97316; color: white; box-shadow: 0 0 20px rgba(249, 115, 22, 0.2); }
         .tab-inactive { color: #64748b; }
-        .pending-row { border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .pending-row:hover { background: rgba(249, 115, 22, 0.05); }
+        .tab-inactive:hover { background: rgba(255,255,255,0.03); color: white; }
+        #map { height: 500px; width: 100%; border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05); }
+        input, select { background: #0f172a !important; border: 1px solid #1e293b !important; color: white !important; }
+        .status-pill { padding: 2px 8px; border-radius: 99px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-10">
 
-    <header class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+    <header class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center mb-10 gap-6">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-2xl shadow-lg shadow-orange-500/20">I</div>
+            <div class="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-2xl">I</div>
             <div>
-                <h1 class="text-2xl font-black tracking-tighter uppercase italic">Infra<span class="text-orange-500">Depot</span> HQ</h1>
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Master Recon Intelligence • Udaipur</p>
+                <h1 class="text-2xl font-black tracking-tighter italic">Infra<span class="text-orange-500">Depot</span> Admin</h1>
+                <p id="admin-status" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Authenticating...</p>
             </div>
         </div>
-        
-        <div class="flex bg-slate-900 p-1.5 rounded-xl border border-white/5">
-            <button onclick="switchTab('map')" id="btn-map" class="tab-btn tab-active">Map Intel</button>
+
+        <nav class="flex bg-slate-900 p-1.5 rounded-2xl border border-white/5 shadow-2xl overflow-x-auto max-w-full">
+            <button onclick="switchTab('map')" id="btn-map" class="tab-btn tab-active">Intel Map</button>
             <button onclick="switchTab('recon')" id="btn-recon" class="tab-btn tab-inactive">Reconciliation</button>
-            <button onclick="switchTab('fleet')" id="btn-fleet" class="tab-btn tab-inactive">Fleet Stats</button>
-        </div>
+            <button onclick="switchTab('users')" id="btn-users" class="tab-btn tab-inactive">User MGMT</button>
+            <button onclick="logout()" class="tab-btn text-rose-500">Sign Out</button>
+        </nav>
     </header>
 
     <main class="max-w-7xl mx-auto">
         
-        <div id="tab-map" class="space-y-6">
+        <div id="tab-map" class="space-y-6 animate-in fade-in duration-500">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="glass-card p-6 text-center">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Total Shops</p>
-                    <h3 id="stat-total" class="text-3xl font-black text-white">0</h3>
-                </div>
-                <div class="glass-card p-6 text-center border-emerald-500/20">
-                    <p class="text-[10px] font-bold text-emerald-500 uppercase mb-1">Verified</p>
-                    <h3 id="stat-verified" class="text-3xl font-black text-emerald-400">0</h3>
-                </div>
-                <div class="glass-card p-6 text-center border-orange-500/20">
-                    <p class="text-[10px] font-bold text-orange-500 uppercase mb-1">Pending</p>
-                    <h3 id="stat-pending" class="text-3xl font-black text-orange-500">0</h3>
-                </div>
-                <div class="glass-card p-6 text-center">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Active Staff</p>
-                    <h3 id="stat-staff" class="text-3xl font-black text-white">0</h3>
-                </div>
+                <div class="glass p-6 rounded-[1.5rem]"><p class="text-[9px] font-bold text-slate-500 uppercase mb-1">Live Mapings</p><h3 id="stat-total" class="text-3xl font-black">0</h3></div>
+                <div class="glass p-6 rounded-[1.5rem]"><p class="text-[9px] font-bold text-orange-500 uppercase mb-1">Awaiting Recon</p><h3 id="stat-pending" class="text-3xl font-black text-orange-500">0</h3></div>
+                <div class="glass p-6 rounded-[1.5rem] border-emerald-500/20"><p class="text-[9px] font-bold text-emerald-500 uppercase mb-1">Verified Assets</p><h3 id="stat-verified" class="text-3xl font-black text-emerald-400">0</h3></div>
+                <div class="glass p-6 rounded-[1.5rem]"><p class="text-[9px] font-bold text-blue-500 uppercase mb-1">Total Users</p><h3 id="stat-users" class="text-3xl font-black">0</h3></div>
             </div>
-            <div id="admin-map" class="shadow-2xl border border-white/5"></div>
+            <div id="map" class="shadow-2xl"></div>
         </div>
 
-        <div id="tab-recon" class="hidden glass-card overflow-hidden">
-            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
-                <h2 class="font-black uppercase text-sm tracking-widest">Pending Approvals</h2>
-                <span class="text-[10px] bg-orange-500 text-white px-3 py-1 rounded-full font-bold">Action Required</span>
+        <div id="tab-recon" class="hidden glass rounded-[2rem] overflow-hidden">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <h2 class="text-xs font-black uppercase tracking-widest italic">Field Data Reconciliation Desk</h2>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-900 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-900/50 text-[10px] font-bold uppercase text-slate-500 tracking-widest">
                         <tr>
-                            <th class="p-4">ID</th>
-                            <th class="p-4">Firm Name</th>
-                            <th class="p-4">Materials</th>
-                            <th class="p-4">Location</th>
-                            <th class="p-4">Actions</th>
+                            <th class="p-5">Shop ID</th>
+                            <th class="p-5">Firm Name</th>
+                            <th class="p-5">Fleet Data</th>
+                            <th class="p-5">Staff</th>
+                            <th class="p-5 text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="recon-table-body">
+                    <tbody id="recon-tbody">
                         </tbody>
                 </table>
             </div>
         </div>
 
-        <div id="tab-fleet" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="glass-card p-8">
-                <h4 class="text-orange-500 font-black uppercase text-xs tracking-widest mb-6">Logistics Breakdown</h4>
-                <div id="fleet-chart" class="space-y-4">
+        <div id="tab-users" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="glass p-8 rounded-[2rem] h-fit">
+                <h3 class="text-xs font-black uppercase text-orange-500 tracking-widest mb-6 italic">Authorize New User</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Full Name</label>
+                        <input type="text" id="user-name" placeholder="Agent Name" class="w-full p-4 rounded-xl outline-none mt-1">
                     </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Google Email</label>
+                        <input type="email" id="user-email" placeholder="example@gmail.com" class="w-full p-4 rounded-xl outline-none mt-1">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Role Assignment</label>
+                        <select id="user-role" class="w-full p-4 rounded-xl outline-none mt-1 appearance-none">
+                            <option value="field_staff">Field Staff (Capture Only)</option>
+                            <option value="admin">Admin (Management View)</option>
+                            <option value="super_admin">Super Admin (Full Access)</option>
+                        </select>
+                    </div>
+                    <button onclick="addUser()" class="w-full bg-orange-500 text-slate-950 font-black py-4 rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 active:scale-95 transition-all">Grant Authorization</button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 glass rounded-[2rem] overflow-hidden">
+                <div class="p-6 border-b border-white/5"><h2 class="text-xs font-black uppercase tracking-widest">Master User Directory</h2></div>
+                <table class="w-full text-left text-[11px]">
+                    <thead class="bg-slate-900/50 text-slate-500 font-bold uppercase tracking-widest">
+                        <tr><th class="p-5">Member</th><th class="p-5">Role</th><th class="p-5">Status</th><th class="p-5">Actions</th></tr>
+                    </thead>
+                    <tbody id="user-tbody"></tbody>
+                </table>
             </div>
         </div>
-
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -106,19 +121,18 @@
             messagingSenderId: "733942710671",
             appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        let map;
-        let markers = [];
+        let map, markers = [];
 
-        // AUTH GUARD
+        // SECURITY GUARD: Vijay's UID ONLY
         auth.onAuthStateChanged(user => {
             if (!user || user.uid !== "T9LAq9SbOWPp7Db9UvaYkW3OfKw1") {
-                window.location.href = 'index.html';
+                window.location.href = "index.html";
             } else {
+                document.getElementById('admin-status').innerText = "Super Admin Access Granted";
                 initAdmin();
             }
         });
@@ -126,69 +140,95 @@
         function initAdmin() {
             initMap();
             loadStats();
-            loadPendingSurveys();
+            loadFieldData();
+            loadUsers();
         }
 
         function initMap() {
-            map = L.map('admin-map').setView([24.5854, 73.7125], 13);
+            map = L.map('map').setView([24.5854, 73.7125], 13);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
         }
 
-        async function loadStats() {
-            const snap = await db.collection("field_data").get();
-            document.getElementById('stat-total').innerText = snap.size;
-            
-            const pending = snap.docs.filter(d => d.data().status === "pending").length;
-            const verified = snap.size - pending;
-            
-            document.getElementById('stat-pending').innerText = pending;
-            document.getElementById('stat-verified').innerText = verified;
+        function loadStats() {
+            db.collection("field_data").onSnapshot(snap => {
+                document.getElementById('stat-total').innerText = snap.size;
+                document.getElementById('stat-pending').innerText = snap.docs.filter(d => d.data().status === 'pending').length;
+                document.getElementById('stat-verified').innerText = snap.docs.filter(d => d.data().status === 'verified').length;
+            });
+            db.collection("users").onSnapshot(snap => document.getElementById('stat-users').innerText = snap.size);
         }
 
-        function loadPendingSurveys() {
-            db.collection("field_data").where("status", "==", "pending")
-              .onSnapshot(snap => {
-                const tbody = document.getElementById('recon-table-body');
+        function loadFieldData() {
+            db.collection("field_data").orderBy("timestamp", "desc").onSnapshot(snap => {
+                const tbody = document.getElementById('recon-tbody');
                 tbody.innerHTML = "";
-                
                 snap.forEach(doc => {
-                    const data = doc.data();
+                    const d = doc.data();
                     const row = `
-                        <tr class="pending-row">
-                            <td class="p-4 text-xs font-mono text-orange-400">${data.trackingId || 'N/A'}</td>
-                            <td class="p-4 font-bold">${data.firmName}</td>
-                            <td class="p-4"><span class="tag bg-white/5 p-1 rounded text-[10px]">${data.materials.length} Items</span></td>
-                            <td class="p-4 text-[10px] text-slate-500">${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}</td>
-                            <td class="p-4 flex gap-2">
-                                <button onclick="reconcile('${doc.id}', 'verified')" class="bg-emerald-500 text-slate-950 font-black px-3 py-1 rounded text-[10px] uppercase">Verify</button>
-                                <button onclick="reconcile('${doc.id}', 'rejected')" class="bg-rose-500 text-white font-black px-3 py-1 rounded text-[10px] uppercase">Reject</button>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                            <td class="p-5 font-mono text-orange-400 text-xs">${d.trackingId || 'N/A'}</td>
+                            <td class="p-5 font-bold">${d.firmName}</td>
+                            <td class="p-5"><span class="bg-slate-800 p-1 px-2 rounded text-[10px] text-slate-300">Tractor: ${d.fleet?.tractor || 0}</span></td>
+                            <td class="p-5 text-slate-400 text-[10px] uppercase">${d.userId?.substr(0,8) || 'Unknown'}</td>
+                            <td class="p-5 text-center">
+                                ${d.status === 'pending' ? 
+                                `<button onclick="verify('${doc.id}', 'verified')" class="bg-emerald-500/20 text-emerald-400 font-bold px-4 py-1.5 rounded-lg text-[10px] uppercase tracking-tighter">Verify</button>` : 
+                                `<span class="status-pill bg-emerald-500/10 text-emerald-400">Verified Assets</span>`}
                             </td>
                         </tr>
                     `;
                     tbody.innerHTML += row;
-                    addMarker(data);
+                    dropMarker(d);
                 });
-              });
+            });
         }
 
-        async function reconcile(id, newStatus) {
-            if(!confirm(`Confirm ${newStatus} for this entry?`)) return;
-            await db.collection("field_data").doc(id).update({ status: newStatus });
-            alert("Entry " + newStatus.toUpperCase());
-            loadStats();
+        function loadUsers() {
+            db.collection("users").onSnapshot(snap => {
+                const tbody = document.getElementById('user-tbody');
+                tbody.innerHTML = "";
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    tbody.innerHTML += `
+                        <tr class="border-b border-white/5">
+                            <td class="p-5">
+                                <div class="font-bold text-white text-xs">${u.name}</div>
+                                <div class="text-[9px] text-slate-500">${u.email}</div>
+                            </td>
+                            <td class="p-5"><span class="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded text-[9px] font-bold uppercase">${u.role}</span></td>
+                            <td class="p-5"><span class="text-emerald-400 text-[9px] font-bold uppercase italic">Active</span></td>
+                            <td class="p-5"><button onclick="deleteUser('${doc.id}')" class="text-rose-500 hover:text-white transition-colors">❌</button></td>
+                        </tr>
+                    `;
+                });
+            });
         }
 
-        function addMarker(data) {
-            const color = data.status === "pending" ? "#f97316" : "#10b981";
-            L.circleMarker([data.latitude, data.longitude], {
-                color: color,
-                radius: 8,
-                fillOpacity: 0.8
-            }).addTo(map).bindPopup(`<b>${data.firmName}</b><br>Status: ${data.status}`);
+        async function addUser() {
+            const name = document.getElementById('user-name').value;
+            const email = document.getElementById('user-email').value;
+            const role = document.getElementById('user-role').value;
+            if(!name || !email) return alert("Please fill user data");
+            await db.collection("users").add({ name, email, role, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            alert("User Access Created!");
+            document.getElementById('user-name').value = "";
+            document.getElementById('user-email').value = "";
+        }
+
+        async function verify(id, status) {
+            await db.collection("field_data").doc(id).update({ status: status });
+            alert("Asset Verified to Master Map!");
+        }
+
+        function dropMarker(d) {
+            const color = d.status === 'pending' ? '#f97316' : '#10b981';
+            const lat = d.latitude || 24.58;
+            const lng = d.longitude || 73.71;
+            L.circleMarker([lat, lng], { radius: 7, color: color, fillOpacity: 0.9, weight: 2 }).addTo(map).bindPopup(d.firmName);
         }
 
         window.switchTab = (tab) => {
-            ['map', 'recon', 'fleet'].forEach(t => {
+            ['map', 'recon', 'users'].forEach(t => {
                 document.getElementById('tab-' + t).classList.add('hidden');
                 document.getElementById('btn-' + t).className = 'tab-btn tab-inactive';
             });
@@ -196,6 +236,8 @@
             document.getElementById('btn-' + tab).className = 'tab-btn tab-active';
             if(tab === 'map') setTimeout(() => map.invalidateSize(), 200);
         };
+
+        window.logout = () => auth.signOut().then(() => window.location.href = "index.html");
     </script>
 </body>
 </html>
