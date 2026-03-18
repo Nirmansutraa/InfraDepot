@@ -1,27 +1,41 @@
 /**
- * INFRA DEPOT - MASTER FIREBASE CONNECTION
- *
+ * NIRMANSUTRA | FIREBASE MASTER CONFIGURATION
+ * Project: Infradepo
  */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// ✅ YOUR LIVE API DATA
 const firebaseConfig = {
   apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
-  authDomain: "infradepo.firebaseapp.com", // Updated to infradepo
-  projectId: "infradepo",                   // Updated to infradepo
+  authDomain: "infradepo.firebaseapp.com",
+  projectId: "infradepo",
   storageBucket: "infradepo.firebasestorage.app",
   messagingSenderId: "733942710671",
-  appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa",
-  measurementId: "G-FT60ZNKS6P"
+  appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// EXPORT these so Admin and Capture pages can "talk" to the cloud
+// Exporting Engines
 export const db = getFirestore(app);
-export const auth = getAuth(app);
 export const storage = getStorage(app);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
 
-console.log("CORE SYSTEM: Connected to 'infradepo' Intelligence Cloud.");
+// Exporting Methods
+export { 
+    collection, 
+    addDoc, 
+    serverTimestamp,
+    ref, 
+    uploadString, 
+    getDownloadURL, 
+    signInWithPopup, 
+    signOut, 
+    onAuthStateChanged 
+};
