@@ -3,78 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | Commander HQ</title>
+    <title>InfraDepot | Admin Command HQ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>#map { height: 500px; width: 100%; z-index: 1; border-radius: 2rem; }</style>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); border-radius: 1.5rem; }
+        #admin-map { height: 450px; width: 100%; border-radius: 1.5rem; z-index: 1; }
+        .tab-btn { padding: 0.75rem 1.5rem; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 0.75rem; transition: all 0.2s; }
+        .tab-active { background: #f97316; color: white; }
+        .tab-inactive { color: #64748b; }
+        .pending-row { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .pending-row:hover { background: rgba(249, 115, 22, 0.05); }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 flex min-h-screen font-sans">
+<body class="p-4 md:p-8">
 
-    <aside class="w-72 bg-slate-900 border-r border-slate-800 flex flex-col p-8 sticky top-0 h-screen">
-        <div class="mb-12">
-            <h1 class="text-2xl font-black text-emerald-400 tracking-tighter italic">INFRADEPOT</h1>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-1">Udaipur Control</p>
+    <header class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center font-black text-slate-950 text-2xl shadow-lg shadow-orange-500/20">I</div>
+            <div>
+                <h1 class="text-2xl font-black tracking-tighter uppercase italic">Infra<span class="text-orange-500">Depot</span> HQ</h1>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Master Recon Intelligence • Udaipur</p>
+            </div>
         </div>
         
-        <nav class="space-y-3 flex-1">
-            <button onclick="showTab('map-tab')" class="tab-btn w-full text-left p-4 rounded-2xl bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20 transition-all">📍 Intel Map</button>
-            <button onclick="showTab('staff-tab')" class="tab-btn w-full text-left p-4 rounded-2xl hover:bg-slate-800 text-slate-400 font-bold transition-all">👥 Access Control</button>
-            <button onclick="showTab('brands-tab')" class="tab-btn w-full text-left p-4 rounded-2xl hover:bg-slate-800 text-slate-400 font-bold transition-all">🏗️ Brand Registry</button>
-        </nav>
-
-        <div class="pt-6 border-t border-slate-800">
-            <div id="user-display" class="text-[10px] font-black text-emerald-500 uppercase">Verifying...</div>
-            <button onclick="logout()" class="text-[10px] text-rose-500 font-bold uppercase mt-2 hover:underline">Logout</button>
+        <div class="flex bg-slate-900 p-1.5 rounded-xl border border-white/5">
+            <button onclick="switchTab('map')" id="btn-map" class="tab-btn tab-active">Map Intel</button>
+            <button onclick="switchTab('recon')" id="btn-recon" class="tab-btn tab-inactive">Reconciliation</button>
+            <button onclick="switchTab('fleet')" id="btn-fleet" class="tab-btn tab-inactive">Fleet Stats</button>
         </div>
-    </aside>
+    </header>
 
-    <main class="flex-1 p-10 overflow-y-auto">
+    <main class="max-w-7xl mx-auto">
         
-        <section id="map-tab" class="tab-content space-y-6">
-            <header class="flex justify-between items-end mb-4">
-                <h2 class="text-4xl font-black tracking-tighter">Market Intelligence</h2>
-                <div class="text-right">
-                    <span id="ping-count" class="text-3xl font-black text-white">0</span>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase">Shops Mapped</p>
+        <div id="tab-map" class="space-y-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-card p-6 text-center">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Total Shops</p>
+                    <h3 id="stat-total" class="text-3xl font-black text-white">0</h3>
                 </div>
-            </header>
-            <div class="bg-slate-900 rounded-[3rem] p-4 border border-slate-800 shadow-2xl"><div id="map"></div></div>
-        </section>
-
-        <section id="staff-tab" class="tab-content hidden space-y-8">
-            <header><h2 class="text-4xl font-black tracking-tighter">Access Control (RBAC)</h2></header>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 shadow-xl">
-                    <h3 class="font-bold mb-6 text-emerald-400 uppercase text-xs tracking-widest">Authorize Personnel</h3>
-                    <input id="new-uid" type="text" placeholder="Paste User UID" class="w-full bg-black border border-slate-800 p-4 rounded-2xl mb-4 text-white focus:ring-1 focus:ring-emerald-500 outline-none">
-                    <select id="new-role" class="w-full bg-black border border-slate-800 p-4 rounded-2xl mb-6 text-white">
-                        <option value="field_staff">Field Staff (Capture Only)</option>
-                        <option value="admin_staff">Admin Staff (View Only)</option>
-                        <option value="admin">Super Admin (Full Control)</option>
-                    </select>
-                    <button onclick="saveAccess()" class="w-full bg-emerald-500 text-slate-950 font-black p-4 rounded-2xl hover:bg-emerald-400 transition-all">GRANT ACCESS</button>
+                <div class="glass-card p-6 text-center border-emerald-500/20">
+                    <p class="text-[10px] font-bold text-emerald-500 uppercase mb-1">Verified</p>
+                    <h3 id="stat-verified" class="text-3xl font-black text-emerald-400">0</h3>
                 </div>
-                <div class="bg-slate-900 p-8 rounded-[2.5rem] border border-slate-800 shadow-xl h-[450px] flex flex-col">
-                    <h3 class="font-bold mb-6 text-slate-500 uppercase text-xs tracking-widest">Active Registry</h3>
-                    <div id="registry-list" class="space-y-3 overflow-y-auto pr-2 custom-scrollbar"></div>
+                <div class="glass-card p-6 text-center border-orange-500/20">
+                    <p class="text-[10px] font-bold text-orange-500 uppercase mb-1">Pending</p>
+                    <h3 id="stat-pending" class="text-3xl font-black text-orange-500">0</h3>
+                </div>
+                <div class="glass-card p-6 text-center">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Active Staff</p>
+                    <h3 id="stat-staff" class="text-3xl font-black text-white">0</h3>
                 </div>
             </div>
-        </section>
+            <div id="admin-map" class="shadow-2xl border border-white/5"></div>
+        </div>
 
-        <section id="brands-tab" class="tab-content hidden">
-            <h2 class="text-4xl font-black tracking-tighter mb-8">Brand Registry</h2>
-            <div class="bg-slate-900 p-8 rounded-[3rem] border border-slate-800">Coming Soon: Central Brand Management</div>
-        </section>
+        <div id="tab-recon" class="hidden glass-card overflow-hidden">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+                <h2 class="font-black uppercase text-sm tracking-widest">Pending Approvals</h2>
+                <span class="text-[10px] bg-orange-500 text-white px-3 py-1 rounded-full font-bold">Action Required</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-900 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        <tr>
+                            <th class="p-4">ID</th>
+                            <th class="p-4">Firm Name</th>
+                            <th class="p-4">Materials</th>
+                            <th class="p-4">Location</th>
+                            <th class="p-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recon-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-fleet" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card p-8">
+                <h4 class="text-orange-500 font-black uppercase text-xs tracking-widest mb-6">Logistics Breakdown</h4>
+                <div id="fleet-chart" class="space-y-4">
+                    </div>
+            </div>
+        </div>
 
     </main>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
             authDomain: "infradepo.firebaseapp.com",
@@ -84,74 +107,95 @@
             appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
 
-        // UI Helpers
-        window.showTab = (id) => {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-        };
+        let map;
+        let markers = [];
 
-        window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
-
-        // Map Initialization
-        const map = L.map('map').setView([24.5854, 73.7125], 13);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('user-display').innerText = "SUPER ADMIN ACTIVE";
-                syncRegistry();
-                syncMap();
+        // AUTH GUARD
+        auth.onAuthStateChanged(user => {
+            if (!user || user.uid !== "T9LAq9SbOWPp7Db9UvaYkW3OfKw1") {
+                window.location.href = 'index.html';
             } else {
-                window.location.href = "index.html";
+                initAdmin();
             }
         });
 
-        // 🟢 SYNC RBAC REGISTRY
-        function syncRegistry() {
-            onSnapshot(collection(db, "users"), (snap) => {
-                const list = document.getElementById('registry-list');
-                list.innerHTML = '';
-                snap.forEach(uDoc => {
-                    const u = uDoc.data();
-                    list.innerHTML += `
-                        <div class="bg-black p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
-                            <div>
-                                <div class="text-[10px] font-black text-emerald-500 uppercase">${u.role}</div>
-                                <div class="text-xs font-bold text-slate-300">${uDoc.id.substring(0,12)}...</div>
-                            </div>
-                            <button onclick="revoke('${uDoc.id}')" class="text-rose-500 text-[10px] font-bold hover:underline">REVOKE</button>
-                        </div>`;
-                });
-            });
+        function initAdmin() {
+            initMap();
+            loadStats();
+            loadPendingSurveys();
         }
 
-        window.saveAccess = async () => {
-            const uid = document.getElementById('new-uid').value;
-            const role = document.getElementById('new-role').value;
-            if(!uid) return alert("Paste a valid UID");
-            await setDoc(doc(db, "users", uid), { role: role });
-            document.getElementById('new-uid').value = '';
-            alert("Access Granted!");
-        };
-
-        window.revoke = async (uid) => {
-            if(confirm("Permanently revoke access?")) await deleteDoc(doc(db, "users", uid));
-        };
-
-        // 🔵 SYNC MAP DATA
-        function syncMap() {
-            onSnapshot(collection(db, "surveys"), (snap) => {
-                document.getElementById('ping-count').innerText = snap.size;
-                snap.forEach(sDoc => {
-                    const s = sDoc.data();
-                    L.marker([s.location.lat, s.location.lng]).addTo(map).bindPopup(`<b>${s.firmName}</b>`);
-                });
-            });
+        function initMap() {
+            map = L.map('admin-map').setView([24.5854, 73.7125], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
         }
+
+        async function loadStats() {
+            const snap = await db.collection("field_data").get();
+            document.getElementById('stat-total').innerText = snap.size;
+            
+            const pending = snap.docs.filter(d => d.data().status === "pending").length;
+            const verified = snap.size - pending;
+            
+            document.getElementById('stat-pending').innerText = pending;
+            document.getElementById('stat-verified').innerText = verified;
+        }
+
+        function loadPendingSurveys() {
+            db.collection("field_data").where("status", "==", "pending")
+              .onSnapshot(snap => {
+                const tbody = document.getElementById('recon-table-body');
+                tbody.innerHTML = "";
+                
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const row = `
+                        <tr class="pending-row">
+                            <td class="p-4 text-xs font-mono text-orange-400">${data.trackingId || 'N/A'}</td>
+                            <td class="p-4 font-bold">${data.firmName}</td>
+                            <td class="p-4"><span class="tag bg-white/5 p-1 rounded text-[10px]">${data.materials.length} Items</span></td>
+                            <td class="p-4 text-[10px] text-slate-500">${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}</td>
+                            <td class="p-4 flex gap-2">
+                                <button onclick="reconcile('${doc.id}', 'verified')" class="bg-emerald-500 text-slate-950 font-black px-3 py-1 rounded text-[10px] uppercase">Verify</button>
+                                <button onclick="reconcile('${doc.id}', 'rejected')" class="bg-rose-500 text-white font-black px-3 py-1 rounded text-[10px] uppercase">Reject</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                    addMarker(data);
+                });
+              });
+        }
+
+        async function reconcile(id, newStatus) {
+            if(!confirm(`Confirm ${newStatus} for this entry?`)) return;
+            await db.collection("field_data").doc(id).update({ status: newStatus });
+            alert("Entry " + newStatus.toUpperCase());
+            loadStats();
+        }
+
+        function addMarker(data) {
+            const color = data.status === "pending" ? "#f97316" : "#10b981";
+            L.circleMarker([data.latitude, data.longitude], {
+                color: color,
+                radius: 8,
+                fillOpacity: 0.8
+            }).addTo(map).bindPopup(`<b>${data.firmName}</b><br>Status: ${data.status}`);
+        }
+
+        window.switchTab = (tab) => {
+            ['map', 'recon', 'fleet'].forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hidden');
+                document.getElementById('btn-' + t).className = 'tab-btn tab-inactive';
+            });
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            document.getElementById('btn-' + tab).className = 'tab-btn tab-active';
+            if(tab === 'map') setTimeout(() => map.invalidateSize(), 200);
+        };
     </script>
 </body>
 </html>
