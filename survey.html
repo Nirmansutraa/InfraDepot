@@ -3,10 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>InfraDepot Survey</title>
 
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body { font-family: Arial; background:#f4f6f9; margin:0; }
+.container { padding:10px; }
+.card { background:#fff; padding:12px; margin-bottom:12px; border-radius:10px; }
+.section-title { font-size:12px; color:#888; margin-bottom:8px; }
+input { width:100%; padding:10px; margin:5px 0; border-radius:8px; border:1px solid #ccc; }
+.row { display:flex; gap:8px; }
+.map { height:150px; border-radius:8px; margin-bottom:10px; }
+.btn { padding:12px; border:none; border-radius:8px; width:100%; margin-top:5px; }
+.btn-dark { background:#0f1b2d; color:white; }
+.btn-green { background:#2ecc71; color:white; }
+.counter { display:flex; justify-content:space-between; margin-bottom:8px; }
+.counter button { width:30px; height:30px; }
+.hidden { display:none; }
+.photo-preview img { width:70px; margin:5px; border-radius:6px; }
+</style>
 
 </head>
 
@@ -14,7 +32,13 @@
 
 <div class="container">
 
-<!-- CONTACT -->
+<!-- ================= TRACKING ================= -->
+<div class="card">
+<div class="section-title">TRACKING ID</div>
+<div id="trackingIdBox" style="background:#0f1b2d;color:#00ffcc;padding:12px;border-radius:8px;text-align:center;">Generating...</div>
+</div>
+
+<!-- ================= CONTACT ================= -->
 <div class="card">
 <div class="section-title">ENTITY & CONTACT</div>
 
@@ -36,9 +60,9 @@
 
 </div>
 
-<!-- GPS -->
+<!-- ================= GPS ================= -->
 <div class="card">
-<div class="section-title">GPS</div>
+<div class="section-title">GPS & LOCATION</div>
 
 <div id="map" class="map"></div>
 
@@ -47,28 +71,28 @@
 
 </div>
 
-<!-- PHOTO -->
+<!-- ================= PHOTO ================= -->
 <div class="card">
-<div class="section-title">Business Photos</div>
+<div class="section-title">Business Photos (Max 10)</div>
 
 <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)">
-<div id="photos"></div>
+<div id="photos" class="photo-preview"></div>
 
 </div>
 
-<!-- MATERIAL -->
+<!-- ================= MATERIAL ================= -->
 <div class="card">
 <div class="section-title">Materials Intelligence</div>
 <div id="materialsContainer"></div>
 </div>
 
-<!-- FLEET -->
+<!-- ================= FLEET ================= -->
 <div class="card">
 <div class="section-title">Fleet</div>
 <div id="fleetContainer"></div>
 </div>
 
-<!-- ACTION -->
+<!-- ================= ACTION ================= -->
 <div class="card">
 <button class="btn" onclick="saveLocal()">SAVE LOCAL</button>
 <button class="btn btn-green" onclick="syncCloud()">SYNC CLOUD</button>
@@ -78,9 +102,14 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<script src="data/materials.js"></script>
-<script src="js/materials-engine.js"></script>
-<script src="js/core-engine.js"></script>
+<!-- MODULE SYSTEM -->
+<script type="module">
+import "./js/firebase-config.js";
+import "./data/materials.js";
+import "./js/pricing-engine.js";
+import "./js/materials-engine.js";
+import "./js/core-engine.js";
+</script>
 
 </body>
 </html>
