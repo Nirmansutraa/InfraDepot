@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nirmansutra HQ | Command Center</title>
+    <title>Nirmansutra HQ | Secure Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -14,9 +14,16 @@
         #map { height: 100%; width: 100%; border-radius: 20px; z-index: 1; }
         .hidden { display: none !important; }
         .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
+        /* 🛡️ SECURITY SHIELD */
+        #rbac-shield { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
+
+    <div id="rbac-shield">
+        <div class="w-12 h-12 border-4 border-gray-200 border-t-[#FF5A00] rounded-full animate-spin mb-4"></div>
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">Validating Admin Clearances...</p>
+    </div>
 
     <aside class="w-64 bg-[#0B1B33] text-slate-400 flex flex-col shadow-2xl z-50">
         <div class="p-8 flex items-center gap-3">
@@ -26,70 +33,44 @@
 
         <nav class="flex-1 px-4 space-y-2">
             <div onclick="switchTab('map-view')" class="sidebar-item active p-4 rounded-lg flex items-center gap-3">
-                <span class="text-lg">📍</span> <span class="text-xs font-bold uppercase tracking-widest">Live Map</span>
-            </div>
-            <div onclick="switchTab('material-view')" class="sidebar-item p-4 rounded-lg flex items-center gap-3">
-                <span class="text-lg">🏗️</span> <span class="text-xs font-bold uppercase tracking-widest">Materials</span>
+                <span>📍</span> <span class="text-[10px] font-bold uppercase tracking-widest">Live Intelligence</span>
             </div>
             <div onclick="switchTab('user-view')" class="sidebar-item p-4 rounded-lg flex items-center gap-3">
-                <span class="text-lg">👥</span> <span class="text-xs font-bold uppercase tracking-widest">User Roles</span>
+                <span>👥</span> <span class="text-[10px] font-bold uppercase tracking-widest">Staff & Roles</span>
             </div>
-            <div onclick="switchTab('data-view')" class="sidebar-item p-4 rounded-lg flex items-center gap-3">
-                <span class="text-lg">📊</span> <span class="text-xs font-bold uppercase tracking-widest">Field Data</span>
+            <div onclick="switchTab('material-view')" class="sidebar-item p-4 rounded-lg flex items-center gap-3">
+                <span>🏗️</span> <span class="text-[10px] font-bold uppercase tracking-widest">Global Brands</span>
             </div>
         </nav>
 
         <div class="p-6 border-t border-slate-800">
-            <button onclick="logout()" class="w-full py-3 rounded-lg border border-slate-700 text-[10px] font-bold uppercase hover:bg-red-500 hover:text-white transition-all">Sign Out</button>
+            <button onclick="logout()" class="w-full py-3 rounded-lg border border-slate-700 text-[9px] font-bold uppercase hover:bg-red-500 hover:text-white transition-all tracking-widest">Terminal Exit</button>
         </div>
     </aside>
 
     <main class="flex-1 flex flex-col overflow-hidden">
-        
         <header class="h-20 bg-white border-b px-8 flex justify-between items-center">
-            <h2 id="tab-title" class="text-xl font-900 text-slate-800 uppercase italic">Intelligence Map</h2>
+            <h2 id="tab-title" class="text-lg font-900 text-slate-800 uppercase italic tracking-tight">Intelligence Map</h2>
             <div class="flex items-center gap-4">
                 <div class="text-right">
-                    <p id="admin-name" class="text-xs font-black text-slate-900 leading-none">Vijay Sharma</p>
-                    <p class="text-[9px] font-bold text-orange-500 uppercase tracking-widest">Super Admin</p>
+                    <p id="admin-email-display" class="text-[11px] font-black text-slate-900 leading-none">---</p>
+                    <p class="text-[9px] font-bold text-orange-500 uppercase tracking-widest">Root Access</p>
                 </div>
-                <div class="w-10 h-10 bg-slate-100 rounded-full border-2 border-orange-500"></div>
             </div>
         </header>
 
         <section class="flex-1 p-8 overflow-y-auto">
             
             <div id="map-view" class="h-full">
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <div class="glass-card p-6 rounded-2xl border-t-4 border-orange-500">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Total Suppliers</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Suppliers Mapped</p>
                         <h3 id="stat-suppliers" class="text-3xl font-black text-slate-800">0</h3>
                     </div>
-                    <div class="glass-card p-6 rounded-2xl border-t-4 border-emerald-500">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Active Staff</p>
-                        <h3 id="stat-staff" class="text-3xl font-black text-slate-800">0</h3>
-                    </div>
                 </div>
-                <div class="glass-card h-3/4 rounded-3xl overflow-hidden relative">
+                <div class="glass-card h-[500px] rounded-3xl overflow-hidden relative">
                     <div id="map"></div>
                 </div>
-            </div>
-
-            <div id="material-view" class="hidden space-y-6">
-                <div class="glass-card p-8 rounded-3xl">
-                    <h3 class="text-lg font-bold mb-4">Add New Brand to Registry</h3>
-                    <div class="flex gap-4">
-                        <input id="new-brand-name" type="text" placeholder="Brand Name (e.g. ACC)" class="flex-1 p-4 bg-slate-50 border rounded-xl outline-none">
-                        <select id="new-brand-cat" class="p-4 bg-slate-50 border rounded-xl outline-none">
-                            <option>Cement</option>
-                            <option>Steel</option>
-                            <option>Sand</option>
-                        </select>
-                        <button onclick="addNewBrand()" class="bg-[#FF5A00] text-white px-8 rounded-xl font-bold">Add Brand</button>
-                    </div>
-                </div>
-                <div id="brand-list" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    </div>
             </div>
 
             <div id="user-view" class="hidden">
@@ -97,14 +78,28 @@
                     <table class="w-full text-left">
                         <thead class="bg-slate-50 border-b">
                             <tr>
-                                <th class="p-6 text-[10px] font-bold uppercase text-slate-400">User Email</th>
+                                <th class="p-6 text-[10px] font-bold uppercase text-slate-400">Collaborator</th>
                                 <th class="p-6 text-[10px] font-bold uppercase text-slate-400">Current Role</th>
-                                <th class="p-6 text-[10px] font-bold uppercase text-slate-400">Actions</th>
+                                <th class="p-6 text-[10px] font-bold uppercase text-slate-400">Control</th>
                             </tr>
                         </thead>
                         <tbody id="user-table-body">
                             </tbody>
                     </table>
+                </div>
+            </div>
+
+            <div id="material-view" class="hidden">
+                <div class="glass-card p-8 rounded-3xl mb-6">
+                    <h3 class="text-sm font-black uppercase mb-4 text-slate-500">Add Brand to Global List</h3>
+                    <div class="flex gap-4">
+                        <input id="brand-name" type="text" placeholder="Brand Name" class="flex-1 p-4 bg-slate-50 border rounded-xl outline-none text-sm">
+                        <select id="brand-cat" class="p-4 bg-slate-50 border rounded-xl outline-none text-sm">
+                            <option>Cement</option>
+                            <option>Steel</option>
+                        </select>
+                        <button onclick="addBrand()" class="bg-[#FF5A00] text-white px-8 rounded-xl font-bold text-xs uppercase">Push to Field</button>
+                    </div>
                 </div>
             </div>
 
@@ -129,7 +124,32 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // 🧠 TAB SWITCHER
+        // 🛡️ STRICT RBAC GATE
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = "index.html";
+            } else {
+                const doc = await db.collection("users").doc(user.uid).get();
+                if (doc.exists && (doc.data().role === 'admin' || doc.data().role === 'super_admin')) {
+                    // Access Granted
+                    document.getElementById('rbac-shield').style.display = 'none';
+                    document.getElementById('admin-email-display').innerText = user.email;
+                    initHQ();
+                } else {
+                    // Unauthorized - Kick out
+                    alert("Unauthorized Access Attempt. Session Terminated.");
+                    auth.signOut().then(() => window.location.href = "index.html");
+                }
+            }
+        });
+
+        function initHQ() {
+            initMap();
+            loadLiveStats();
+            loadUserTable();
+        }
+
+        // TAB LOGIC
         function switchTab(tabId) {
             document.querySelectorAll('main section > div').forEach(div => div.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
@@ -138,43 +158,50 @@
             document.getElementById('tab-title').innerText = event.currentTarget.innerText;
         }
 
-        // 📍 MAP INITIALIZATION
-        let map = L.map('map').setView([24.5854, 73.7125], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-        // 📡 LIVE DATA LISTENERS
-        db.collection("field_data").onSnapshot(snap => {
-            document.getElementById('stat-suppliers').innerText = snap.size;
-            snap.forEach(doc => {
-                const d = doc.data();
-                if(d.latitude) L.marker([d.latitude, d.longitude]).addTo(map).bindPopup(`<b>${d.firmName}</b>`);
-            });
-        });
-
-        db.collection("users").onSnapshot(snap => {
-            document.getElementById('stat-staff').innerText = snap.size;
-            const table = document.getElementById('user-table-body');
-            table.innerHTML = "";
-            snap.forEach(doc => {
-                const u = doc.data();
-                table.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-6 font-bold text-slate-700">${u.email}</td>
-                        <td class="p-6"><span class="bg-slate-100 px-3 py-1 rounded-full text-[10px] font-bold uppercase">${u.role}</span></td>
-                        <td class="p-6">
-                            <button onclick="updateRole('${doc.id}', 'admin')" class="text-orange-500 text-[10px] font-bold uppercase mr-4">Make Admin</button>
-                            <button onclick="updateRole('${doc.id}', 'field_staff')" class="text-slate-400 text-[10px] font-bold uppercase">Make Staff</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        });
-
-        function updateRole(uid, role) {
-            db.collection("users").doc(uid).update({ role: role });
+        // MAP LOGIC
+        let map;
+        function initMap() {
+            map = L.map('map').setView([24.5854, 73.7125], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         }
 
-        function logout() { auth.signOut().then(() => window.location.href="index.html"); }
+        // DATA SYNC
+        function loadLiveStats() {
+            db.collection("field_data").onSnapshot(snap => {
+                document.getElementById('stat-suppliers').innerText = snap.size;
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(d.latitude) L.marker([d.latitude, d.longitude]).addTo(map).bindPopup(`<b>${d.firmName}</b>`);
+                });
+            });
+        }
+
+        function loadUserTable() {
+            db.collection("users").onSnapshot(snap => {
+                const table = document.getElementById('user-table-body');
+                table.innerHTML = "";
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    table.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-6 font-bold text-slate-700 text-sm">${u.email}</td>
+                            <td class="p-6"><span class="bg-slate-100 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest">${u.role}</span></td>
+                            <td class="p-6">
+                                <button onclick="setRole('${doc.id}', 'admin')" class="text-orange-600 text-[9px] font-bold uppercase mr-4">Grant Admin</button>
+                                <button onclick="setRole('${doc.id}', 'field_staff')" class="text-slate-400 text-[9px] font-bold uppercase">Set Staff</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        async function setRole(id, role) {
+            await db.collection("users").doc(id).update({ role: role });
+            alert("Role updated for security sync.");
+        }
+
+        function logout() { auth.signOut().then(() => window.location.href = "index.html"); }
     </script>
 </body>
 </html>
