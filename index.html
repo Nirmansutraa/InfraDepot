@@ -11,7 +11,7 @@
         .infra { color: #94a3b8; } .depot { color: #f97316; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .hero-gradient { background: radial-gradient(circle at top right, rgba(249, 115, 22, 0.08), transparent); }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="text-slate-300 antialiased selection:bg-orange-500/30 hero-gradient min-h-screen">
@@ -41,16 +41,10 @@
                     Building <br>Intelligence <br><span class="infra">Infra</span><span class="depot">Segment.</span>
                 </h1>
                 <p class="text-lg text-slate-400 max-w-md leading-relaxed mx-auto lg:mx-0">
-                    Nirmansutra is the unified digital backbone for modern infrastructure development, connecting field data with market action.
+                    Nirmansutra is the unified digital backbone for modern infrastructure development.
                 </p>
                 <div class="flex justify-center lg:justify-start gap-4">
-                    <a href="#ecosystem" class="bg-slate-800 text-white px-8 py-4 rounded-2xl font-bold text-sm hover:bg-slate-700 transition-all">Explore Brands</a>
-                </div>
-            </div>
-            <div class="relative hidden lg:block">
-                <div class="absolute inset-0 bg-orange-500/10 blur-[120px]"></div>
-                <div class="glass p-1 rounded-[3rem] overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1000" class="rounded-[2.8rem] opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0 duration-700">
+                    <button onclick="openAuth()" class="bg-slate-800 text-white px-8 py-4 rounded-2xl font-bold text-sm hover:bg-slate-700 transition-all">Access Dashboard</button>
                 </div>
             </div>
         </div>
@@ -62,7 +56,6 @@
             <p id="auth-msg" class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mb-12">Authorized Access Only</p>
             
             <button id="google-login" class="w-full bg-white text-slate-950 font-black p-5 rounded-2xl flex items-center justify-center gap-4 hover:bg-orange-500 transition-all text-xs uppercase tracking-widest shadow-xl">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-6 h-6">
                 PROCEED WITH GOOGLE
             </button>
             <button onclick="closeAuth()" class="mt-8 text-[10px] text-slate-600 font-black uppercase tracking-widest hover:text-rose-500 transition-colors">Abort Connection</button>
@@ -70,11 +63,10 @@
 
         <div id="setup-gate" class="max-w-md w-full glass p-10 md:p-14 rounded-[4rem] text-center hidden border-emerald-500/20">
             <h3 class="text-2xl font-black text-emerald-400 mb-2 tracking-tighter uppercase italic">Identity Setup</h3>
-            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-10">First Login: Activate your Field ID</p>
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-10 text-center">First Login: Activate your Field ID</p>
             <div class="space-y-4">
-                <input type="tel" id="setup-whatsapp" placeholder="WhatsApp Number" class="w-full p-4 rounded-xl bg-slate-900 border border-white/10 outline-none text-sm text-white focus:border-orange-500">
-                <input type="text" id="setup-uid-display" class="w-full p-4 rounded-xl bg-slate-800 border border-white/5 text-[9px] font-mono text-slate-500" readonly>
-                <button onclick="finalizeProfile()" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-xl text-xs uppercase tracking-widest active:scale-95 transition-all">Verify & Activate</button>
+                <input type="tel" id="setup-whatsapp" placeholder="WhatsApp Number" class="w-full p-4 rounded-xl bg-slate-900 border border-white/10 outline-none text-sm text-white">
+                <button onclick="finalizeProfile()" class="w-full bg-emerald-500 text-slate-950 font-black py-4 rounded-xl text-xs uppercase tracking-widest">Verify & Activate</button>
             </div>
         </div>
     </div>
@@ -104,81 +96,58 @@
             auth.signInWithPopup(provider);
         };
 
-        // --- MASTER AUTH LOGIC ---
         auth.onAuthStateChanged(async (user) => {
             const authMsg = document.getElementById('auth-msg');
             const loginCard = document.getElementById('login-card');
             
             if (user) {
-                openAuth(); // Show the modal if they are logged in but processing
+                openAuth();
                 authMsg.innerText = "Verifying Identity...";
-                authMsg.classList.remove('text-slate-500');
-                authMsg.classList.add('text-orange-500');
+                authMsg.classList.replace('text-slate-500', 'text-orange-500');
 
                 try {
-                    // Try 1: Find by UID (Trimmed)
-                    const cleanUID = user.uid.trim();
-                    const userRef = db.collection("users").doc(cleanUID);
+                    // Force the database to refresh the check
+                    const userRef = db.collection("users").doc(user.uid.trim());
                     const doc = await userRef.get();
 
-                    let userData;
-                    let targetDocId = cleanUID;
-
                     if (doc.exists) {
-                        userData = doc.data();
-                    } else {
-                        // Try 2: Backup - Search by Email
-                        const emailQuery = await db.collection("users").where("email", "==", user.email).get();
-                        if (!emailQuery.empty) {
-                            userData = emailQuery.docs[0].data();
-                            targetDocId = emailQuery.docs[0].id;
-                        }
-                    }
-
-                    if (userData) {
-                        // GATE: FORCE PROFILE SETUP
+                        const userData = doc.data();
                         if (userData.mustCompleteProfile === true) {
                             loginCard.classList.add('hidden');
                             document.getElementById('setup-gate').classList.remove('hidden');
-                            document.getElementById('setup-uid-display').value = "ID: " + cleanUID;
-                            window.currentDocId = targetDocId;
                         } else {
-                            // REDIRECT BY ROLE
-                            const role = userData.role;
-                            if (role === 'super_admin' || role === 'admin') {
-                                window.location.href = "admin.html";
-                            } else {
-                                window.location.href = "capture.html";
-                            }
+                            window.location.href = (userData.role === 'super_admin' || userData.role === 'admin') ? "admin.html" : "capture.html";
                         }
                     } else {
-                        // NOT IN DATABASE
-                        authMsg.innerText = "ACCESS DENIED: CONTACT VIJAY";
-                        authMsg.classList.replace('text-orange-500', 'text-rose-500');
-                        setTimeout(() => auth.signOut(), 4000);
+                        // Fallback check by email
+                        const q = await db.collection("users").where("email", "==", user.email).get();
+                        if (!q.empty) {
+                            const d = q.docs[0].data();
+                            window.location.href = (d.role === 'super_admin') ? "admin.html" : "capture.html";
+                        } else {
+                            authMsg.innerText = "ACCESS DENIED: " + user.email;
+                            authMsg.classList.replace('text-orange-500', 'text-rose-500');
+                            setTimeout(() => auth.signOut(), 3000);
+                        }
                     }
-
                 } catch (error) {
-                    console.error("Auth Loop Error:", error);
-                    authMsg.innerText = "DB Connection Error. Refreshing...";
+                    console.error("DB Error:", error);
+                    authMsg.innerText = "DB CONNECTION ERROR. REFRESHING...";
+                    // Auto-retry once after 2 seconds
+                    setTimeout(() => location.reload(), 2000);
                 }
             }
         });
 
         async function finalizeProfile() {
             const wa = document.getElementById('setup-whatsapp').value;
-            if(!wa || wa.length < 10) return alert("Valid WhatsApp number required.");
-
-            try {
-                await db.collection("users").doc(window.currentDocId).update({
-                    whatsapp: wa,
-                    uid: auth.currentUser.uid,
-                    mustCompleteProfile: false,
-                    activatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert("Identity Verified. Entering Terminal.");
-                location.reload();
-            } catch (e) { alert("Activation Error: " + e.message); }
+            if(!wa || wa.length < 10) return alert("Valid WhatsApp required.");
+            await db.collection("users").doc(auth.currentUser.uid).update({
+                whatsapp: wa,
+                mustCompleteProfile: false,
+                activatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            location.reload();
         }
     </script>
 </body>
