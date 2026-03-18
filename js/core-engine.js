@@ -1,50 +1,48 @@
-// ================= DATA =================
-function getData(){
 
-return {
-  owner: ownerName.value,
-  phone: ownerPhone.value,
-  whatsapp: ownerWhatsapp.value,
-  manager: managerName.value,
-  gps: coordinates.value,
-  address: address.value,
-  materials: selectedMaterials,
-  timestamp: new Date().toISOString()
-};
+// ================= IMPORTS =================
+import { db, storage, collection, addDoc, ref, uploadString, getDownloadURL } from "./firebase-config.js";
 
+// ================= GLOBAL STATE =================
+let photos = [];
+let trackingId = "";
+
+// ================= INIT =================
+window.addEventListener("DOMContentLoaded", () => {
+
+  // Generate Tracking ID
+  trackingId = "ID-" + Date.now();
+  document.getElementById("trackingIdBox").innerText = trackingId;
+
+  // WhatsApp Auto Sync
+  ["owner","manager"].forEach(type=>{
+    document.getElementById(type+"Phone").addEventListener("input",()=>{
+      let wp=document.getElementById(type+"Whatsapp");
+      if(!wp.dataset.modified){
+        wp.value=document.getElementById(type+"Phone").value;
+      }
+    });
+
+    document.getElementById(type+"Whatsapp").addEventListener("input",function(){
+      this.dataset.modified=true;
+    });
+  });
+
+  initMap();
+  initFleet();
+
+});
+
+// ================= MAP =================
+let map, marker;
+
+function initMap(){
+  map = L.map('map').setView([24.5854,73.7125],13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 }
 
-// ================= INDEXED DB =================
-let db;
-let req = indexedDB.open("InfraDepotDB",1);
+window.captureGPS = async function(){
 
-req.onupgradeneeded = e=>{
-  db = e.target.result;
-  db.createObjectStore("survey",{keyPath:"id",autoIncrement:true});
-};
+  navigator.geolocation.getCurrentPosition(async pos=>{
 
-req.onsuccess = e=>{ db=e.target.result };
-
-// SAVE LOCAL
-function saveLocal(){
-
-let tx = db.transaction("survey","readwrite");
-let store = tx.objectStore("survey");
-
-store.add(getData());
-
-alert("Saved Offline Successfully");
-
-}
-
-// ================= CLOUD =================
-function syncCloud(){
-
-let data = getData();
-
-console.log("Uploading:",data);
-
-// Firebase hook
-alert("Next step: connect Firebase");
-
-}
+    let lat = pos
