@@ -1,6 +1,9 @@
 const container = document.getElementById("materialsContainer");
 
+let selectedMaterials = {};
+
 Object.keys(MATERIALS).forEach(mat => {
+
   const div = document.createElement("div");
   div.className = "material";
 
@@ -15,27 +18,50 @@ Object.keys(MATERIALS).forEach(mat => {
 });
 
 function toggleMaterial(mat){
+
   const el = document.getElementById(mat);
 
   if(el.classList.contains("hidden")){
+
     el.classList.remove("hidden");
 
-    let varieties = MATERIALS[mat].varieties;
-    let brands = MATERIALS[mat].brands;
+    const varieties = MATERIALS[mat].varieties;
 
-    el.innerHTML = `
-      <div class="sub-section">
-        <b>Varieties</b>
-        ${varieties.map(v=>`<div><input type="checkbox"> ${v}</div>`).join("")}
-      </div>
+    el.innerHTML = varieties.map((v,i)=>`
+      <div class="variety-card">
+        <label>
+          <input type="checkbox" onchange="selectVariety('${mat}',${i})">
+          ${v.name}
+        </label>
 
-      <div class="sub-section">
-        <b>Brands</b>
-        ${brands.map(b=>`<div><input type="checkbox"> ${b}</div>`).join("")}
+        <div class="price">
+          ${formatPrice(v.price,v.unit)}
+          (Avg: ₹${calculateAvgPrice(v.price)})
+        </div>
+
+        <div class="meta">
+          Availability: ${v.availability} |
+          Supplier: ${v.supplier.join(",")}
+        </div>
       </div>
-    `;
+    `).join("");
 
   } else {
     el.classList.add("hidden");
+    delete selectedMaterials[mat];
   }
+}
+
+function selectVariety(mat,index){
+
+  const v = MATERIALS[mat].varieties[index];
+
+  if(!selectedMaterials[mat]) selectedMaterials[mat]=[];
+
+  selectedMaterials[mat].push({
+    name:v.name,
+    price:v.price,
+    unit:v.unit,
+    supplier:v.supplier
+  });
 }
