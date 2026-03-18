@@ -3,75 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InfraDepot | Advanced Field Survey</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <title>Field Terminal | Survey</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <style>
-        body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; }
-        .container { padding:10px; max-width: 600px; margin: auto; }
-        .card { background:#fff; padding:15px; margin-bottom:12px; border-radius:12px; border: 1px solid #eee; }
-        .section-title { font-size:11px; font-weight: bold; color:#FF5A00; margin-bottom:8px; text-transform: uppercase; letter-spacing: 1px; }
-        input, select { width:100%; padding:10px; margin:5px 0; border-radius:8px; border:1px solid #ccc; font-size:14px; outline: none; }
+        body { font-family: sans-serif; background:#f4f6f9; }
+        .card { background:#fff; padding:20px; margin-bottom:15px; border-radius:15px; border: 1px solid #eee; }
+        .section-label { font-size:10px; font-weight: 800; color:#FF5A00; margin-bottom:10px; text-transform: uppercase; letter-spacing: 1px; }
+        input, select, textarea { width:100%; padding:12px; margin:6px 0; border-radius:10px; border:1px solid #ddd; outline:none; }
         input:focus { border-color: #FF5A00; }
-        .row { display:flex; gap:8px; }
-        .map { height:150px; border-radius:10px; margin-bottom:10px; border: 1px solid #ddd; }
-        .btn { padding:12px; border:none; border-radius:8px; width:100%; margin-top:5px; font-weight: bold; cursor: pointer; }
-        .btn-dark { background:#0f1b2d; color:white; }
-        .btn-orange { background:#FF5A00; color:white; }
-        .material-box { background:#0f1b2d; color:white; padding:12px; margin-bottom:6px; border-radius:10px; }
-        .counter { display:flex; justify-content:space-between; align-items: center; padding: 5px 0; }
-        .counter button { width:32px; height:32px; border-radius: 5px; background: #eee; font-weight: bold; }
-        .hidden { display:none; }
-        .photo-preview img { width:75px; height: 75px; object-fit: cover; margin:5px; border-radius:8px; border: 2px solid #FF5A00; }
-        #loading-overlay { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .map-box { height:150px; border-radius:12px; margin-bottom:10px; border: 1px solid #ddd; }
+        .btn-orange { background:#FF5A00; color:white; width:100%; padding:15px; border-radius:12px; font-weight:bold; text-transform: uppercase; }
+        #auth-guard { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
-<body>
+<body class="pb-10 px-4 pt-4">
 
-    <div id="loading-overlay">
-        <div class="w-10 h-10 border-4 border-gray-200 border-t-[#FF5A00] rounded-full animate-spin mb-4"></div>
-        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Securing Connection...</p>
+    <div id="auth-guard">
+        <div class="w-10 h-10 border-4 border-gray-100 border-t-[#FF5A00] rounded-full animate-spin"></div>
     </div>
 
-    <div class="container">
+    <div class="max-w-md mx-auto">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="font-black italic text-slate-800 tracking-tighter uppercase">Nirmansutra <span class="text-[#FF5A00]">Field</span></h1>
+            <button onclick="logout()" class="text-[10px] font-bold text-red-500 border border-red-100 px-3 py-1 rounded">Logout</button>
+        </header>
+
         <div class="card">
-            <div class="section-title">Supplier Contact</div>
-            <input id="firmName" placeholder="Firm Name (Required)">
-            <input id="ownerName" placeholder="Owner Name">
-            <div class="row">
-                <input id="ownerPhone" placeholder="Phone" oninput="syncWhatsApp('owner')">
-                <input id="ownerWhatsapp" placeholder="WhatsApp">
+            <div class="section-label">1. Contact Registry</div>
+            <input id="firm" placeholder="Firm / Shop Name (Required)">
+            <input id="owner" placeholder="Owner Name">
+            <div class="flex gap-2">
+                <input id="phone" placeholder="Phone" oninput="document.getElementById('wa').value=this.value">
+                <input id="wa" placeholder="WhatsApp">
             </div>
-            <input id="address" placeholder="Main Office Address">
+            <textarea id="address" placeholder="Detected Address" rows="2"></textarea>
         </div>
 
         <div class="card">
-            <div class="section-title">Geotagging</div>
-            <div id="map" class="map"></div>
-            <button class="btn btn-dark" onclick="captureGPS()">📍 CAPTURE GPS</button>
-            <input id="coordinates" readonly placeholder="Lat, Lng" class="bg-gray-50 mt-2 italic text-gray-400">
+            <div class="section-label">2. Geotagging</div>
+            <div id="map" class="map-box"></div>
+            <button onclick="getGPS()" class="w-full bg-slate-800 text-white text-[10px] py-3 rounded-lg font-bold uppercase mb-2">📍 Refresh Location</button>
+            <input id="coords" readonly placeholder="GPS Coordinates" class="bg-gray-50 text-gray-400 text-xs">
         </div>
 
         <div class="card">
-            <div class="section-title">Business Photos (Max 10)</div>
-            <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)" class="text-xs">
-            <div id="photos" class="photo-preview flex flex-wrap mt-2"></div>
+            <div class="section-label">3. Material Focus</div>
+            <select id="material">
+                <option>Cement</option>
+                <option>TMT Steel</option>
+                <option>River Sand</option>
+                <option>Aggregates</option>
+                <option>Bricks</option>
+            </select>
         </div>
 
-        <div class="card">
-            <div class="section-title">Materials Handled</div>
-            <div id="materialsContainer"></div>
-        </div>
-
-        <div class="card">
-            <div class="section-title">Transport Fleet</div>
-            <div id="fleetContainer"></div>
-        </div>
-
-        <div class="card">
-            <button class="btn bg-gray-500 text-white" onclick="saveLocal()">💾 SAVE OFFLINE</button>
-            <button id="sync-btn" class="btn btn-orange shadow-lg" onclick="syncCloud()">🚀 SYNC TO CLOUD</button>
-        </div>
+        <button id="sync-btn" onclick="submit()" class="btn-orange shadow-lg shadow-orange-500/20 active:scale-95 transition-all">🚀 Submit to HQ</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -80,7 +67,6 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
             authDomain: "infradepo.firebaseapp.com",
@@ -90,184 +76,51 @@
             appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
         };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        // RBAC Check
         auth.onAuthStateChanged(user => {
-            if(!user) window.location.href = "index.html";
-            else document.getElementById('loading-overlay').style.display = 'none';
+            if(!user) window.location.href="index.html";
+            else { document.getElementById('auth-guard').style.display = 'none'; getGPS(); }
         });
 
-        // MAP
         let map = L.map('map').setView([24.5854, 73.7125], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        let marker;
+        let marker, userLat, userLng;
 
-        function captureGPS() {
+        function getGPS() {
             navigator.geolocation.getCurrentPosition(async pos => {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
-                document.getElementById("coordinates").value = lat + "," + lng;
-                if (marker) map.removeLayer(marker);
-                marker = L.marker([lat, lng]).addTo(map);
-                map.setView([lat, lng], 16);
-
-                try {
-                    let res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-                    let data = await res.json();
-                    document.getElementById("address").value = data.display_name;
-                } catch(e) {}
+                userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+                document.getElementById('coords').value = userLat + ", " + userLng;
+                if(marker) map.removeLayer(marker);
+                marker = L.marker([userLat, userLng]).addTo(map);
+                map.setView([userLat, userLng], 16);
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`);
+                const data = await res.json();
+                document.getElementById('address').value = data.display_name;
             });
         }
 
-        // PHOTO
-        let photos = [];
-        function handlePhoto(e) {
-            if (photos.length >= 10) return alert("Max 10 photos");
-            let file = e.target.files[0];
-            if(!file) return;
-
-            compressImage(file).then(blob => {
-                let reader = new FileReader();
-                reader.onload = function() {
-                    photos.push({
-                        data: reader.result,
-                        time: new Date().toISOString()
-                    });
-                    renderPhotos();
-                };
-                reader.readAsDataURL(blob);
-            });
-        }
-
-        function renderPhotos() {
-            const div = document.getElementById("photos");
-            div.innerHTML = "";
-            photos.forEach(p => {
-                const img = document.createElement("img");
-                img.src = p.data;
-                div.appendChild(img);
-            });
-        }
-
-        function compressImage(file) {
-            return new Promise(resolve => {
-                const img = new Image();
-                img.src = URL.createObjectURL(file);
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-                    const scale = Math.min(1, 800 / img.width);
-                    canvas.width = img.width * scale;
-                    canvas.height = img.height * scale;
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    canvas.toBlob(blob => resolve(blob), "image/jpeg", 0.7);
-                };
-            });
-        }
-
-        // MATERIALS
-        const materialsData = {
-            "Sand": ["River Sand", "M-Sand", "Plaster Sand"],
-            "Aggregates": ["10mm", "20mm", "40mm"],
-            "Masonry": ["Granite", "Limestone", "Sandstone"],
-            "Steel": ["Fe500", "Fe550"],
-            "Cement": ["OPC", "PPC"]
-        };
-
-        const mContainer = document.getElementById('materialsContainer');
-        Object.keys(materialsData).forEach(mat => {
-            const div = document.createElement('div');
-            div.className = "material-box";
-            div.innerHTML = `
-                <label class="flex gap-2 items-center text-sm font-bold"><input type="checkbox" class="data-mat-parent" value="${mat}" onchange="toggleMaterial('${mat}')"> ${mat}</label>
-                <div id="sub_${mat}" class="hidden pl-6 mt-2 space-y-1">
-                    ${materialsData[mat].map(v => `<label class="block text-xs"><input type="checkbox" class="data-mat-child" data-parent="${mat}" value="${v}"> ${v}</label>`).join('')}
-                </div>`;
-            mContainer.appendChild(div);
-        });
-
-        function toggleMaterial(mat) {
-            document.getElementById(`sub_${mat}`).classList.toggle('hidden');
-        }
-
-        // FLEET
-        const fleetList = ["Tractor", "Mini Truck", "Truck", "Dumper", "Trailer"];
-        const fContainer = document.getElementById('fleetContainer');
-        fleetList.forEach(f => {
-            const id = f.replace(" ", "");
-            fContainer.innerHTML += `
-                <div class="counter text-sm font-bold text-gray-700 border-b pb-2 mb-2">${f}
-                    <div>
-                        <button onclick="update('${id}', -1)">-</button>
-                        <span id="${id}" class="mx-4 data-fleet" data-name="${f}">0</span>
-                        <button onclick="update('${id}', 1)">+</button>
-                    </div>
-                </div>`;
-        });
-
-        function update(id, val) {
-            let el = document.getElementById(id);
-            let v = parseInt(el.innerText) + val;
-            if (v >= 0) el.innerText = v;
-        }
-
-        function syncWhatsApp(type) {
-            const phone = document.getElementById(type + "Phone").value;
-            const wa = document.getElementById(type + "Whatsapp");
-            if(!wa.dataset.modified) wa.value = phone;
-        }
-
-        // CLOUD SYNC
-        async function syncCloud() {
-            const firm = document.getElementById("firmName").value;
-            if(!firm) return alert("Firm Name is required.");
-
+        async function submit() {
+            const firm = document.getElementById('firm').value;
+            if(!firm) return alert("Firm Name Required");
             const btn = document.getElementById('sync-btn');
-            btn.innerText = "⌛ SYNCING...";
-            btn.disabled = true;
-
-            const data = {
-                firmName: firm,
-                ownerName: document.getElementById("ownerName").value,
-                ownerPhone: document.getElementById("ownerPhone").value,
-                ownerWhatsapp: document.getElementById("ownerWhatsapp").value,
-                address: document.getElementById("address").value,
-                gps: document.getElementById("coordinates").value,
-                photos: photos,
-                materials: Array.from(document.querySelectorAll('.data-mat-child:checked')).map(el => el.value),
-                fleet: Array.from(document.querySelectorAll('.data-fleet')).reduce((acc, el) => {
-                    acc[el.dataset.name] = parseInt(el.innerText);
-                    return acc;
-                }, {}),
-                status: "pending",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                capturedBy: auth.currentUser.email
-            };
+            btn.innerText = "⌛ SYNCING..."; btn.disabled = true;
 
             try {
-                await db.collection("field_data").add(data);
-                alert("✅ Sync Successful!");
-                location.reload();
-            } catch(e) {
-                alert("❌ Sync Error: " + e.message);
-                btn.innerText = "🚀 SYNC TO CLOUD";
-                btn.disabled = false;
-            }
+                await db.collection("field_data").add({
+                    firmName: firm, ownerName: document.getElementById('owner').value,
+                    phone: document.getElementById('phone').value,
+                    material: document.getElementById('material').value,
+                    latitude: userLat, longitude: userLng,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    capturedBy: auth.currentUser.email
+                });
+                alert("✅ Synced Successfully!"); location.reload();
+            } catch(e) { alert("Error: " + e.message); btn.innerText = "🚀 Submit to HQ"; btn.disabled = false; }
         }
 
-        // OFFLINE STORAGE (INDEXED DB)
-        let idb;
-        const req = indexedDB.open("InfraDepotDB", 1);
-        req.onupgradeneeded = e => { e.target.result.createObjectStore("survey", { keyPath: "id", autoIncrement: true }); };
-        req.onsuccess = e => { idb = e.target.result; };
-
-        function saveLocal() {
-            const tx = idb.transaction("survey", "readwrite");
-            tx.objectStore("survey").add({ firm: document.getElementById("firmName").value, time: new Date() });
-            alert("💾 Saved Offline to Device Memory.");
-        }
+        function logout() { auth.signOut().then(() => window.location.href="index.html"); }
     </script>
 </body>
 </html>
