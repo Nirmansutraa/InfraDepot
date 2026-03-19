@@ -1,220 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nirmansutra | Field Terminal</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background:#f2f4f7; margin:0; }
+        .header { background:#fff; padding:12px; display:flex; justify-content:space-between; border-bottom:1px solid #ddd; font-size:12px; font-weight: bold; }
+        .container { padding:10px; max-width: 600px; margin: auto; }
+        .card { background:#fff; padding:15px; margin-bottom:12px; border-radius:12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .title { font-size:11px; color:#ff7a00; font-weight:900; margin-bottom:10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        label { font-size:10px; color:#94a3b8; font-weight: 800; text-transform: uppercase; }
+        input { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #e2e8f0; font-size: 14px; outline: none; }
+        input:focus { border-color: #ff7a00; }
+        .row { display:flex; gap:8px; }
+        
+        /* 1. TRACKING ID BOX */
+        .dark-box { background:#0f1b2d; color:#10b981; text-align:center; padding:20px; border-radius:10px; font-family: monospace; font-size: 24px; font-weight: bold; }
+        
+        /* 3. MAP */
+        .map { height:160px; border-radius:10px; margin-bottom:10px; border: 1px solid #e2e8f0; }
+        
+        /* 4. MATERIALS HIERARCHY (Matches Image) */
+        .mat-row { background:#0f1b2d; color:white; padding:15px; border-radius:8px; margin-bottom:8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold; }
+        .variety-box { background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #ff7a00; display: none; }
+        .brand-box { background: #ffffff; padding: 8px; border-radius: 6px; margin-top: 5px; margin-left: 15px; border: 1px dashed #cbd5e1; display: none; }
 
-<title>InfraDepot Survey</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-<style>
-body { font-family: Arial; background:#f2f4f7; margin:0; }
-
-.header {
-  background:#fff;
-  padding:12px;
-  display:flex;
-  justify-content:space-between;
-  border-bottom:1px solid #ddd;
-  font-size:14px;
-}
-
-.container { padding:10px; }
-
-.card {
-  background:#fff;
-  padding:12px;
-  margin-bottom:12px;
-  border-radius:10px;
-}
-
-.title {
-  font-size:12px;
-  color:#ff7a00;
-  font-weight:bold;
-  margin-bottom:8px;
-}
-
-label {
-  font-size:11px;
-  color:#777;
-}
-
-input {
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
-.row {
-  display:flex;
-  gap:8px;
-}
-
-.dark-box {
-  background:#0f1b2d;
-  color:#00ffcc;
-  text-align:center;
-  padding:15px;
-  border-radius:8px;
-}
-
-.map {
-  height:150px;
-  border-radius:8px;
-  margin-bottom:10px;
-}
-
-.btn {
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  margin-top:6px;
-}
-
-.btn-dark { background:#0f1b2d; color:white; }
-.btn-green { background:#2ecc71; color:white; }
-
-.material {
-  display:flex;
-  justify-content:space-between;
-  background:#0f1b2d;
-  color:white;
-  padding:12px;
-  border-radius:8px;
-  margin-bottom:8px;
-}
-
-.counter-grid {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.counter {
-  background:#f4f6f9;
-  padding:10px;
-  border-radius:8px;
-}
-
-.counter-inner {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.counter button {
-  width:30px;
-  height:30px;
-  background:#0f1b2d;
-  color:white;
-  border:none;
-  border-radius:6px;
-}
-
-.footer-btns {
-  display:flex;
-  gap:10px;
-}
-</style>
-
+        /* 5. FLEET GRID (Matches Image) */
+        .counter-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+        .counter { background:#f4f6f9; padding:12px; border-radius:10px; border: 1px solid #e2e8f0; }
+        .counter-inner { display:flex; justify-content:space-between; align-items:center; }
+        .counter-label { font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; }
+        .counter button { width:28px; height:28px; background:#0f1b2d; color:white; border:none; border-radius:6px; font-weight: bold; cursor: pointer; }
+        
+        /* 6. BUTTONS */
+        .btn { width:100%; padding:14px; border:none; border-radius:10px; font-weight: bold; font-size: 12px; text-transform: uppercase; cursor: pointer; }
+        .btn-dark { background:#0f1b2d; color:white; }
+        .btn-green { background:#2ecc71; color:white; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2); }
+        .footer-btns { display:flex; gap:10px; }
+    </style>
 </head>
-
 <body>
 
 <div class="header">
-  <div>Field Staff: <b>FS3396954</b></div>
-  <div style="color:red;">LOGOUT</div>
+    <div>Field Staff: <b id="displayStaffId">FS3396954</b></div>
+    <div onclick="logout()" style="color:red; cursor:pointer;">LOGOUT</div>
 </div>
 
 <div class="container">
 
-<!-- 1 TRACKING -->
-<div class="card">
-  <div class="title">1. TRACKING ID</div>
-  <div id="trackingIdBox" class="dark-box">ID---</div>
-</div>
+    <div class="card">
+        <div class="title">1. TRACKING ID</div>
+        <div id="trackingIdBox" class="dark-box">ID---</div>
+    </div>
 
-<!-- 2 ENTITY -->
-<div class="card">
-  <div class="title">2. ENTITY & CONTACTS</div>
+    <div class="card">
+        <div class="title">2. ENTITY & CONTACTS</div>
+        <label>FIRM NAME</label>
+        <input id="firmName" placeholder="Enter Firm Name" oninput="generateTrackingId()">
+        <label>OWNER DETAILS</label>
+        <input id="ownerName" placeholder="Owner Full Name">
+        <div class="row">
+            <div class="w-1/2">
+                <label>PHONE</label>
+                <input id="ownerPhone" placeholder="Phone" oninput="syncWA('owner')">
+            </div>
+            <div class="w-1/2">
+                <label>WHATSAPP</label>
+                <input id="ownerWhatsapp" placeholder="WhatsApp">
+            </div>
+        </div>
+        <label>MANAGER CONTACT</label>
+        <input id="managerName" placeholder="Manager Name">
+        <div class="row">
+            <div class="w-1/2">
+                <label>PHONE</label>
+                <input id="managerPhone" placeholder="Phone" oninput="syncWA('manager')">
+            </div>
+            <div class="w-1/2">
+                <label>WHATSAPP</label>
+                <input id="managerWhatsapp" placeholder="WhatsApp">
+            </div>
+        </div>
+        <label>BUSINESS ADDRESS</label>
+        <input id="address" placeholder="Waiting for GPS...">
+    </div>
 
-  <label>FIRM NAME</label>
-  <input id="firmName" placeholder="Enter Firm Name">
+    <div class="card">
+        <div class="title">3. GPS & VERIFICATION</div>
+        <div id="map" class="map"></div>
+        <button class="btn btn-dark" onclick="captureGPS()">📍 CAPTURE GPS & ADDRESS</button>
+        <input id="coordinates" placeholder="Coordinates" readonly class="bg-gray-50 italic text-gray-400">
+        <label>VERIFICATION PHOTOS</label>
+        <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+        <div id="photoPreview" class="flex flex-wrap gap-2 mt-2"></div>
+    </div>
 
-  <label>OWNER DETAILS</label>
-  <input id="ownerName" placeholder="Owner Full Name">
+    <div class="card">
+        <div class="title">4. MATERIALS INTELLIGENCE</div>
+        <div id="materialsContainer"></div>
+    </div>
 
-  <div class="row">
-    <input id="ownerPhone" placeholder="Phone">
-    <input id="ownerWhatsapp" placeholder="WhatsApp">
-  </div>
+    <div class="card">
+        <div class="title">5. TRANSPORTATION FLEET</div>
+        <div id="fleetContainer" class="counter-grid"></div>
+    </div>
 
-  <label>MANAGER CONTACT</label>
-  <input id="managerName" placeholder="Manager Name">
-
-  <div class="row">
-    <input id="managerPhone" placeholder="Phone">
-    <input id="managerWhatsapp" placeholder="WhatsApp">
-  </div>
-
-  <label>BUSINESS ADDRESS</label>
-  <input id="address" placeholder="Waiting for GPS...">
-</div>
-
-<!-- 3 GPS -->
-<div class="card">
-  <div class="title">3. GPS & VERIFICATION</div>
-
-  <div id="map" class="map"></div>
-
-  <button class="btn btn-dark" onclick="captureGPS()">📍 CAPTURE GPS & ADDRESS</button>
-
-  <input id="coordinates" placeholder="Coordinates">
-
-  <label>VERIFICATION PHOTOS</label>
-  <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)">
-  <div id="photos"></div>
-</div>
-
-<!-- 4 MATERIAL -->
-<div class="card">
-  <div class="title">4. MATERIALS INTELLIGENCE</div>
-
-  <div id="materialsContainer"></div>
-</div>
-
-<!-- 5 FLEET -->
-<div class="card">
-  <div class="title">5. TRANSPORTATION FLEET</div>
-
-  <div id="fleetContainer" class="counter-grid"></div>
-</div>
-
-<!-- 6 ACTION -->
-<div class="card">
-  <div class="title">6. DATA ACTIONS</div>
-
-  <div class="footer-btns">
-    <button class="btn">💾 SAVE LOCAL</button>
-    <button class="btn btn-green">📤 SUBMIT SYNC</button>
-  </div>
-</div>
+    <div class="card">
+        <div class="title">6. DATA ACTIONS</div>
+        <div class="footer-btns">
+            <button class="btn bg-slate-400 text-white" onclick="saveLocal()">💾 SAVE LOCAL</button>
+            <button class="btn btn-green" onclick="syncCloud()">🚀 SUBMIT SYNC</button>
+        </div>
+    </div>
 
 </div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // --- 1. DATA STRUCTURES ---
+    const hierarchy = {
+        "Sand": { varieties: ["River Sand", "M-Sand", "Plaster Sand"], brands: ["A-Grade", "Local", "Premium"] },
+        "Stone": { varieties: ["Grit 10mm", "Grit 20mm", "Stone Dust"], brands: ["Crusher Unit 1", "Local Supply"] },
+        "Cement": { varieties: ["OPC 43", "OPC 53", "PPC"], brands: ["ACC", "UltraTech", "JK Lakshmi", "Ambuja"] },
+        "Steel": { varieties: ["TMT Fe500", "TMT Fe550D"], brands: ["Tata Tiscon", "JSW Neo", "Kamdhenu"] }
+    };
+    const fleetTypes = ["Tractor", "Mini Truck", "Truck", "Mini Dumper", "Dumper", "Trailer"];
+
+    // --- 2. HIERARCHY & FLEET GENERATORS ---
+    function initUI() {
+        const mCont = document.getElementById('materialsContainer');
+        Object.keys(hierarchy).forEach(mat => {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <div class="mat-row" onclick="toggleDiv('var_${mat}')">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" class="data-mat" value="${mat}" onclick="event.stopPropagation()">
+                        <span>${mat}</span>
+                    </div>
+                    <span>▼</span>
+                </div>
+                <div id="var_${mat}" class="variety-box">
+                    ${hierarchy[mat].varieties.map(v => `
+                        <div class="mb-2">
+                            <label class="block text-slate-700 font-bold mb-1" onclick="toggleDiv('brand_${v.replace(/\s/g,'')}')">
+                                <input type="checkbox" class="data-var" value="${v}"> ${v} ▾
+                            </label>
+                            <div id="brand_${v.replace(/\s/g,'')}" class="brand-box">
+                                ${hierarchy[mat].brands.map(b => `
+                                    <label class="block text-[10px] my-1"><input type="checkbox" class="data-brand" data-parent="${v}" value="${b}"> ${b}</label>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
+            mCont.appendChild(div);
+        });
+
+        const fCont = document.getElementById('fleetContainer');
+        fleetTypes.forEach(f => {
+            fCont.innerHTML += `
+                <div class="counter">
+                    <div class="counter-label mb-2">${f}</div>
+                    <div class="counter-inner">
+                        <button onclick="step('${f}', -1)">-</button>
+                        <b id="count_${f}" class="fleet-val" data-name="${f}">0</b>
+                        <button onclick="step('${f}', 1)">+</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    // --- 3. LOGIC ENGINES ---
+    let map = L.map('map').setView([24.5854, 73.7125], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    let marker;
+
+    function captureGPS() {
+        navigator.geolocation.getCurrentPosition(async pos => {
+            const lat = pos.coords.latitude; const lng = pos.coords.longitude;
+            document.getElementById('coordinates').value = lat + ", " + lng;
+            if(marker) map.removeLayer(marker);
+            marker = L.marker([lat, lng]).addTo(map);
+            map.setView([lat, lng], 16);
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                const data = await res.json();
+                document.getElementById('address').value = data.display_name;
+            } catch(e) { console.log("Geocode Service Busy"); }
+        });
+    }
+
+    function generateTrackingId() {
+        const firm = document.getElementById('firmName').value;
+        const box = document.getElementById('trackingIdBox');
+        if(!firm) { box.innerText = "ID---"; return; }
+        if(box.innerText === "ID---") box.innerText = "ID-" + Math.floor(100000 + Math.random() * 900000);
+    }
+
+    function syncWA(type) {
+        document.getElementById(type + 'Whatsapp').value = document.getElementById(type + 'Phone').value;
+    }
+
+    function toggleDiv(id) {
+        const el = document.getElementById(id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function step(id, v) {
+        const el = document.getElementById('count_' + id);
+        let c = parseInt(el.innerText) + v;
+        if(c >= 0) el.innerText = c;
+    }
+
+    let photoStore = [];
+    function handlePhoto(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            photoStore.push(event.target.result);
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.style.width = "60px"; img.style.borderRadius = "5px";
+            document.getElementById('photoPreview').appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // --- 4. INTEGRATION HOOKS ---
+    function saveLocal() {
+        alert("Saved to Offline Storage (IndexedDB)");
+        // Logic will be handled by your imported core-engine.js
+    }
+
+    function syncCloud() {
+        alert("Initiating Cloud Sync to Firebase...");
+        // Logic will be handled by your imported core-engine.js
+    }
+
+    function logout() {
+        window.location.href = "index.html";
+    }
+
+    window.onload = initUI;
+</script>
 
 <script type="module">
-import "./js/firebase-config.js";
-import "./data/materials.js";
-import "./js/pricing-engine.js";
-import "./js/materials-engine.js";
-import "./js/core-engine.js";
+    import "./js/firebase-config.js";
+    import "./js/core-engine.js";
 </script>
 
 </body>
