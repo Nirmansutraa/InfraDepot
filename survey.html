@@ -84,6 +84,7 @@ body { background:#f2f4f7; font-family: Arial; }
 }
 .btn-dark { background:#0f1b2d; color:white; }
 .btn-green { background:#2ecc71; color:white; }
+.btn-slate { background:#475569; color:white; }
 
 /* INPUT STYLING FOR ENTITY SECTION */
 #supplierType, #firmName, #ownerName, #ownerPhone, #ownerWhatsapp {
@@ -174,7 +175,7 @@ body { background:#f2f4f7; font-family: Arial; }
 <div class="counter-inner">
 <button onclick="step('Truck',-1)">-</button>
 <span class="fleet-val" data-name="Truck">0</span>
-<button onclick="sumbitValue('Truck',1); step('Truck',1)">+</button>
+<button onclick="step('Truck',1)">+</button>
 </div>
 </div>
 
@@ -208,8 +209,9 @@ body { background:#f2f4f7; font-family: Arial; }
 </div>
 </div>
 
-<div class="card">
-<button id="syncBtn" class="btn btn-green" onclick="syncCloud()">🚀 SUBMIT SYNC</button>
+<div class="card flex gap-2">
+<button class="btn btn-slate text-xs" onclick="saveLocally()">💾 SAVE LOCALLY</button>
+<button id="syncBtn" class="btn btn-green text-xs" onclick="syncCloud()">🚀 SYNC TO CLOUD</button>
 </div>
 
 </div>
@@ -293,6 +295,13 @@ initMaterialsUI();
 import "./js/firebase-config.js";
 import "./js/core-engine.js";
 </script>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 
 </body>
 </html>
