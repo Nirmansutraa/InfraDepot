@@ -1,298 +1,162 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Field Terminal</title>
+import { db, collection, addDoc, getDocs, serverTimestamp } from "./firebase-config.js";
+import { generateSmartID } from "./id-generator.js";
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://cdn.tailwindcss.com"></script>
+// ================= 1. CONFIG & LOCAL STORAGE =================
+let IMGBB_KEY = localStorage.getItem("nirmansutra_imgbb_key");
 
-<style>
-body { background:#f2f4f7; font-family: Arial; }
-
-.card {
-    background:white;
-    padding:14px;
-    border-radius:12px;
-    margin-bottom:12px;
-    box-shadow:0 1px 3px rgba(0,0,0,0.1);
+if (!IMGBB_KEY) {
+    const userKey = prompt("⚠️ FIRST TIME SETUP: Enter your ImgBB API Key.");
+    if (userKey) {
+        localStorage.setItem("nirmansutra_imgbb_key", userKey);
+        IMGBB_KEY = userKey;
+    }
 }
 
-.title {
-    font-size:11px;
-    color:#ff7a00;
-    font-weight:bold;
-    margin-bottom:8px;
-}
+let photos = []; 
+let map, marker;
 
-.dark-box {
-    background:#0f1b2d;
-    color:#10b981;
-    text-align:center;
-    padding:18px;
-    border-radius:10px;
-    font-size:20px;
-    font-weight:bold;
-    font-family: monospace;
-}
+// ================= 2. SMART ID ENGINE =================
+window.refreshTrackingID = async function() {
+    try {
+        const snapshot = await getDocs(collection(db, "field_data"));
+        const count = snapshot.size;
+        const type = document.getElementById("supplierType")?.value || "Retailer";
+        const selected = Array.from(document.querySelectorAll('.data-brand:checked')).map(el => ({
+            brand: el.value, 
+            variety: el.dataset.parent
+        }));
 
-.map { height:180px; border-radius:10px; }
-
-.material-btn {
-    background:#0f1b2d;
-    color:white;
-    padding:12px;
-    border-radius:8px;
-    margin-bottom:6px;
-    cursor:pointer;
-}
-
-.variety-box { display:none; padding-left:10px; }
-.brand-box { display:none; padding-left:15px; }
-
-/* FLEET */
-.counter-grid {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-}
-.counter {
-    background:#f4f6f9;
-    padding:10px;
-    border-radius:10px;
-}
-.counter-inner {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-.counter button {
-    background:#0f1b2d;
-    color:white;
-    width:28px;
-    height:28px;
-    border-radius:6px;
-}
-
-/* BUTTON */
-.btn {
-    width:100%;
-    padding:14px;
-    border-radius:10px;
-    font-weight:bold;
-}
-.btn-dark { background:#0f1b2d; color:white; }
-.btn-green { background:#2ecc71; color:white; }
-
-/* INPUT STYLING FOR ENTITY SECTION */
-#supplierType, #firmName, #ownerName, #ownerPhone, #ownerWhatsapp {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    outline: none;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="container p-2 max-w-md mx-auto">
-
-<div class="card">
-<div class="title">1. TRACKING ID</div>
-<div id="trackingIdBox" class="dark-box">ID---</div>
-</div>
-
-<div class="card">
-<div class="title">2. ENTITY & CONTACTS</div>
-
-<label class="text-[10px] font-bold text-slate-400 uppercase">Supplier Classification</label>
-<select id="supplierType" onchange="if(window.refreshTrackingID) window.refreshTrackingID()">
-    <option value="Retailer">Retailer (R)</option>
-    <option value="Wholesaler">Wholesaler (W)</option>
-</select>
-
-<input id="firmName" placeholder="Firm Name">
-<input id="ownerName" placeholder="Owner Name">
-
-<div class="flex gap-2">
-<input id="ownerPhone" placeholder="Phone">
-<input id="ownerWhatsapp" placeholder="WhatsApp">
-</div>
-</div>
-
-<div class="card">
-<div class="title">3. GPS & VERIFICATION</div>
-<div id="map" class="map"></div>
-
-<button class="btn btn-dark mt-2" onclick="captureGPS()">📍 CAPTURE GPS</button>
-
-<input id="coordinates" readonly placeholder="Coordinates">
-<textarea id="address" placeholder="Address"></textarea>
-
-<label class="text-xs">Verification Photos</label>
-<input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)">
-<div id="photoPreview" class="flex gap-2 flex-wrap mt-2"></div>
-</div>
-
-<div class="card">
-<div class="title">4. MATERIALS INTELLIGENCE</div>
-
-<div id="materialsContainer"></div>
-
-</div>
-
-<div class="card">
-<div class="title">5. TRANSPORTATION FLEET</div>
-
-<div class="counter-grid">
-
-<div class="counter">
-<div>Tractor</div>
-<div class="counter-inner">
-<button onclick="step('Tractor',-1)">-</button>
-<span class="fleet-val" data-name="Tractor">0</span>
-<button onclick="step('Tractor',1)">+</button>
-</div>
-</div>
-
-<div class="counter">
-<div>Mini Truck</div>
-<div class="counter-inner">
-<button onclick="step('Mini Truck',-1)">-</button>
-<span class="fleet-val" data-name="Mini Truck">0</span>
-<button onclick="step('Mini Truck',1)">+</button>
-</div>
-</div>
-
-<div class="counter">
-<div>Truck</div>
-<div class="counter-inner">
-<button onclick="step('Truck',-1)">-</button>
-<span class="fleet-val" data-name="Truck">0</span>
-<button onclick="sumbitValue('Truck',1); step('Truck',1)">+</button>
-</div>
-</div>
-
-<div class="counter">
-<div>Mini Dumper</div>
-<div class="counter-inner">
-<button onclick="step('Mini Dumper',-1)">-</button>
-<span class="fleet-val" data-name="Mini Dumper">0</span>
-<button onclick="step('Mini Dumper',1)">+</button>
-</div>
-</div>
-
-<div class="counter">
-<div>Dumper</div>
-<div class="counter-inner">
-<button onclick="step('Dumper',-1)">-</button>
-<span class="fleet-val" data-name="Dumper">0</span>
-<button onclick="step('Dumper',1)">+</button>
-</div>
-</div>
-
-<div class="counter">
-<div>Trailer</div>
-<div class="counter-inner">
-<button onclick="step('Trailer',-1)">-</button>
-<span class="fleet-val" data-name="Trailer">0</span>
-<button onclick="step('Trailer',1)">+</button>
-</div>
-</div>
-
-</div>
-</div>
-
-<div class="card">
-<button id="syncBtn" class="btn btn-green" onclick="syncCloud()">🚀 SUBMIT SYNC</button>
-</div>
-
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script>
-// MATERIAL DATA
-const materialsData = {
-"Cement": {varieties:["OPC 43","OPC 53","PPC"],brands:["ACC","UltraTech","Ambuja"]},
-"TMT Steel": {varieties:["Fe500","Fe550D"],brands:["Tata","JSW"]},
-"Sand": {varieties:["River","M-Sand"],brands:["Local","Premium"]},
-"Aggregates": {varieties:["10mm","20mm"],brands:["Crusher"]},
-"Masonry Stones": {varieties:["Granite"],brands:["Local"]},
-"Bricks": {varieties:["Red","Fly Ash"],brands:["Local"]}
+        const newID = generateSmartID(type, selected, count);
+        document.getElementById("trackingIdBox").innerText = newID;
+        return newID;
+    } catch (e) {
+        console.error("ID Generation Error:", e);
+        return "RJ-UDR-ERR-000";
+    }
 };
 
-// BUILD UI
-function initMaterialsUI(){
-const c=document.getElementById("materialsContainer");
+// ================= 3. SAVE DATA LOCALLY =================
+window.saveLocally = function() {
+    const firm = document.getElementById("firmName").value;
+    if (!firm) return alert("❌ Please enter Firm Name before saving locally.");
 
-Object.keys(materialsData).forEach(mat=>{
-const safe=mat.replace(/\s/g,'');
+    const surveyData = {
+        firmName: firm,
+        ownerName: document.getElementById("ownerName").value,
+        ownerPhone: document.getElementById("ownerPhone").value,
+        ownerWhatsapp: document.getElementById("ownerWhatsapp").value,
+        coordinates: document.getElementById("coordinates").value,
+        address: document.getElementById("address").value,
+        fleet: Array.from(document.querySelectorAll('.fleet-val')).map(el => ({ name: el.dataset.name, val: el.innerText })),
+        // Note: Photos are stored in the global 'photos' variable (Base64)
+    };
 
-const div=document.createElement("div");
+    localStorage.setItem("pending_survey", JSON.stringify(surveyData));
+    alert("💾 Data Saved Locally! You can now Sync to Cloud.");
+};
 
-div.innerHTML=`
-<div class="material-btn" onclick="toggleDiv('var_${safe}')">${mat}</div>
-
-<div id="var_${safe}" class="variety-box">
-${materialsData[mat].varieties.map(v=>{
-const vID=v.replace(/\s/g,'');
-
-return `
-<div>
-<label onclick="toggleDiv('brand_${vID}')">
-<input type="checkbox" class="data-var" data-mat="${mat}" value="${v}">
-${v}
-</label>
-
-<div id="brand_${vID}" class="brand-box">
-${materialsData[mat].brands.map(b=>`
-<label>
-<input type="checkbox" class="data-brand" 
-       onclick="if(window.refreshTrackingID) window.refreshTrackingID()" 
-       data-mat="${mat}" data-parent="${v}" value="${b}">
-${b}
-</label><br>
-`).join("")}
-</div>
-</div>
-`;
-}).join("")}
-</div>
-`;
-
-c.appendChild(div);
+// ================= 4. MAP, GPS & PHOTOS =================
+window.addEventListener("DOMContentLoaded", () => {
+    window.refreshTrackingID();
+    initMap();
 });
+
+function initMap() {
+    map = L.map('map').setView([24.5854, 73.7125], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 }
 
-// TOGGLE
-function toggleDiv(id){
-const el=document.getElementById(id);
-if(el) el.style.display=el.style.display==="block"?"none":"block";
-}
+window.captureGPS = async function() {
+    navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude; const lng = pos.coords.longitude;
+        document.getElementById("coordinates").value = lat + "," + lng;
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([lat, lng]).addTo(map);
+        map.setView([lat, lng], 16);
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+        const data = await res.json();
+        document.getElementById("address").value = data.display_name;
+    });
+};
 
-// FLEET
-function step(name,val){
-const el=document.querySelector(`.fleet-val[data-name="${name}"]`);
-let v=parseInt(el.innerText)+val;
-if(v>=0) el.innerText=v;
-}
+window.handlePhoto = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        photos.push(event.target.result.split(',')[1]); 
+        const img = document.createElement('img');
+        img.src = event.target.result;
+        img.className = "w-16 h-16 rounded object-cover border-2 border-orange-500";
+        document.getElementById('photoPreview').appendChild(img);
+    };
+    reader.readAsDataURL(file);
+};
 
-// INIT
-window.addEventListener("DOMContentLoaded",()=>{
-initMaterialsUI();
-});
-</script>
+// ================= 5. CLOUD SYNC & AUTO-CLEAR =================
+window.syncCloud = async function() {
+    const btn = document.getElementById("syncBtn");
+    const firm = document.getElementById("firmName").value;
+    
+    if (!firm) return alert("❌ Firm Name Required!");
+    if (photos.length === 0) return alert("❌ At least one photo is required!");
 
-<script type="module">
-import "./js/firebase-config.js";
-import "./js/core-engine.js";
-</script>
+    btn.innerText = "⌛ SYNCING..."; btn.disabled = true;
 
-</body>
-</html>
+    try {
+        const finalID = await window.refreshTrackingID();
+
+        // 1. Upload Photos
+        let photoUrls = [];
+        for (let base64Image of photos) {
+            let formData = new FormData();
+            formData.append("image", base64Image);
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+                method: "POST",
+                body: formData
+            });
+            const result = await res.json();
+            if (result.success) photoUrls.push(result.data.url);
+        }
+
+        // 2. Gather Data
+        const materials = Array.from(document.querySelectorAll('.data-brand:checked')).map(el => ({
+            brand: el.value, variety: el.dataset.parent
+        }));
+        
+        const fleet = {};
+        document.querySelectorAll('.fleet-val').forEach(el => fleet[el.dataset.name] = el.innerText);
+
+        // 3. Save to Firestore
+        await addDoc(collection(db, "field_data"), {
+            trackingId: finalID,
+            supplierType: document.getElementById("supplierType").value,
+            firmName: firm,
+            owner: {
+                name: document.getElementById("ownerName").value,
+                phone: document.getElementById("ownerPhone").value,
+                whatsapp: document.getElementById("ownerWhatsapp").value
+            },
+            location: {
+                coords: document.getElementById("coordinates").value,
+                address: document.getElementById("address").value
+            },
+            materials,
+            fleet,
+            photos: photoUrls,
+            timestamp: serverTimestamp()
+        });
+
+        // ✅ SUCCESS ACTIONS
+        alert("🚀 CLOUD SYNC SUCCESSFUL!\nTracking ID: " + finalID + "\nForm cleared for next entry.");
+        
+        // Clear Local Storage and Refresh Page to reset form
+        localStorage.removeItem("pending_survey");
+        location.reload(); 
+
+    } catch (e) {
+        console.error("Sync Error:", e);
+        alert("❌ Sync Failed! Data is still saved locally. Check internet.");
+        btn.innerText = "🚀 SYNC TO CLOUD"; btn.disabled = false;
+    }
+};
