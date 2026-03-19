@@ -34,6 +34,7 @@ body { background:#f2f4f7; font-family: Arial; }
     border-radius:10px;
     font-size:20px;
     font-weight:bold;
+    font-family: monospace;
 }
 
 .map { height:180px; border-radius:10px; }
@@ -84,6 +85,16 @@ body { background:#f2f4f7; font-family: Arial; }
 .btn-dark { background:#0f1b2d; color:white; }
 .btn-green { background:#2ecc71; color:white; }
 
+/* INPUT STYLING FOR ENTITY SECTION */
+#supplierType, #firmName, #ownerName, #ownerPhone, #ownerWhatsapp {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    outline: none;
+}
+
 </style>
 </head>
 
@@ -91,15 +102,20 @@ body { background:#f2f4f7; font-family: Arial; }
 
 <div class="container p-2 max-w-md mx-auto">
 
-<!-- TRACKING -->
 <div class="card">
 <div class="title">1. TRACKING ID</div>
 <div id="trackingIdBox" class="dark-box">ID---</div>
 </div>
 
-<!-- ENTITY -->
 <div class="card">
 <div class="title">2. ENTITY & CONTACTS</div>
+
+<label class="text-[10px] font-bold text-slate-400 uppercase">Supplier Classification</label>
+<select id="supplierType" onchange="if(window.refreshTrackingID) window.refreshTrackingID()">
+    <option value="Retailer">Retailer (R)</option>
+    <option value="Wholesaler">Wholesaler (W)</option>
+</select>
+
 <input id="firmName" placeholder="Firm Name">
 <input id="ownerName" placeholder="Owner Name">
 
@@ -109,7 +125,6 @@ body { background:#f2f4f7; font-family: Arial; }
 </div>
 </div>
 
-<!-- GPS -->
 <div class="card">
 <div class="title">3. GPS & VERIFICATION</div>
 <div id="map" class="map"></div>
@@ -124,7 +139,6 @@ body { background:#f2f4f7; font-family: Arial; }
 <div id="photoPreview" class="flex gap-2 flex-wrap mt-2"></div>
 </div>
 
-<!-- MATERIALS -->
 <div class="card">
 <div class="title">4. MATERIALS INTELLIGENCE</div>
 
@@ -132,7 +146,6 @@ body { background:#f2f4f7; font-family: Arial; }
 
 </div>
 
-<!-- FLEET -->
 <div class="card">
 <div class="title">5. TRANSPORTATION FLEET</div>
 
@@ -161,7 +174,7 @@ body { background:#f2f4f7; font-family: Arial; }
 <div class="counter-inner">
 <button onclick="step('Truck',-1)">-</button>
 <span class="fleet-val" data-name="Truck">0</span>
-<button onclick="step('Truck',1)">+</button>
+<button onclick="sumbitValue('Truck',1); step('Truck',1)">+</button>
 </div>
 </div>
 
@@ -195,7 +208,6 @@ body { background:#f2f4f7; font-family: Arial; }
 </div>
 </div>
 
-<!-- ACTION -->
 <div class="card">
 <button id="syncBtn" class="btn btn-green" onclick="syncCloud()">🚀 SUBMIT SYNC</button>
 </div>
@@ -241,7 +253,9 @@ ${v}
 <div id="brand_${vID}" class="brand-box">
 ${materialsData[mat].brands.map(b=>`
 <label>
-<input type="checkbox" class="data-brand" data-mat="${mat}" data-parent="${v}" value="${b}">
+<input type="checkbox" class="data-brand" 
+       onclick="if(window.refreshTrackingID) window.refreshTrackingID()" 
+       data-mat="${mat}" data-parent="${v}" value="${b}">
 ${b}
 </label><br>
 `).join("")}
@@ -259,7 +273,7 @@ c.appendChild(div);
 // TOGGLE
 function toggleDiv(id){
 const el=document.getElementById(id);
-el.style.display=el.style.display==="block"?"none":"block";
+if(el) el.style.display=el.style.display==="block"?"none":"block";
 }
 
 // FLEET
