@@ -1,150 +1,298 @@
-import { db, collection, addDoc, getDocs, serverTimestamp } from "./firebase-config.js";
-import { generateSmartID } from "./id-generator.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Terminal</title>
 
-// ================= 1. SECURITY VAULT =================
-let IMGBB_KEY = localStorage.getItem("nirmansutra_imgbb_key");
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.tailwindcss.com"></script>
 
-if (!IMGBB_KEY) {
-    const userKey = prompt("⚠️ FIRST TIME SETUP: Enter your ImgBB API Key to enable photos.");
-    if (userKey) {
-        localStorage.setItem("nirmansutra_imgbb_key", userKey);
-        IMGBB_KEY = userKey;
-    }
+<style>
+body { background:#f2f4f7; font-family: Arial; }
+
+.card {
+    background:white;
+    padding:14px;
+    border-radius:12px;
+    margin-bottom:12px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.1);
 }
 
-// ================= 2. STATE & TRACKING ID =================
-let photos = []; 
-let map, marker;
+.title {
+    font-size:11px;
+    color:#ff7a00;
+    font-weight:bold;
+    margin-bottom:8px;
+}
 
-// Function to calculate and update the ID on the screen
-window.refreshTrackingID = async function() {
-    try {
-        // Fetch current count from Firebase
-        const snapshot = await getDocs(collection(db, "field_data"));
-        const count = snapshot.size;
+.dark-box {
+    background:#0f1b2d;
+    color:#10b981;
+    text-align:center;
+    padding:18px;
+    border-radius:10px;
+    font-size:20px;
+    font-weight:bold;
+    font-family: monospace;
+}
 
-        // Get current form values
-        const supplierType = document.getElementById("supplierType")?.value || "Retailer";
-        const selectedMaterials = Array.from(document.querySelectorAll('.data-brand:checked')).map(el => ({
-            brand: el.value, 
-            variety: el.dataset.parent
-        }));
+.map { height:180px; border-radius:10px; }
 
-        // Use the exclusive logic file
-        const newID = generateSmartID(supplierType, selectedMaterials, count);
-        
-        document.getElementById("trackingIdBox").innerText = newID;
-        return newID;
-    } catch (e) {
-        console.error("ID Refresh Failed:", e);
-        return "ID-ERROR";
-    }
+.material-btn {
+    background:#0f1b2d;
+    color:white;
+    padding:12px;
+    border-radius:8px;
+    margin-bottom:6px;
+    cursor:pointer;
+}
+
+.variety-box { display:none; padding-left:10px; }
+.brand-box { display:none; padding-left:15px; }
+
+/* FLEET */
+.counter-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+.counter {
+    background:#f4f6f9;
+    padding:10px;
+    border-radius:10px;
+}
+.counter-inner {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.counter button {
+    background:#0f1b2d;
+    color:white;
+    width:28px;
+    height:28px;
+    border-radius:6px;
+}
+
+/* BUTTON */
+.btn {
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    font-weight:bold;
+}
+.btn-dark { background:#0f1b2d; color:white; }
+.btn-green { background:#2ecc71; color:white; }
+
+/* INPUT STYLING FOR ENTITY SECTION */
+#supplierType, #firmName, #ownerName, #ownerPhone, #ownerWhatsapp {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    outline: none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container p-2 max-w-md mx-auto">
+
+<div class="card">
+<div class="title">1. TRACKING ID</div>
+<div id="trackingIdBox" class="dark-box">ID---</div>
+</div>
+
+<div class="card">
+<div class="title">2. ENTITY & CONTACTS</div>
+
+<label class="text-[10px] font-bold text-slate-400 uppercase">Supplier Classification</label>
+<select id="supplierType" onchange="if(window.refreshTrackingID) window.refreshTrackingID()">
+    <option value="Retailer">Retailer (R)</option>
+    <option value="Wholesaler">Wholesaler (W)</option>
+</select>
+
+<input id="firmName" placeholder="Firm Name">
+<input id="ownerName" placeholder="Owner Name">
+
+<div class="flex gap-2">
+<input id="ownerPhone" placeholder="Phone">
+<input id="ownerWhatsapp" placeholder="WhatsApp">
+</div>
+</div>
+
+<div class="card">
+<div class="title">3. GPS & VERIFICATION</div>
+<div id="map" class="map"></div>
+
+<button class="btn btn-dark mt-2" onclick="captureGPS()">📍 CAPTURE GPS</button>
+
+<input id="coordinates" readonly placeholder="Coordinates">
+<textarea id="address" placeholder="Address"></textarea>
+
+<label class="text-xs">Verification Photos</label>
+<input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+<div id="photoPreview" class="flex gap-2 flex-wrap mt-2"></div>
+</div>
+
+<div class="card">
+<div class="title">4. MATERIALS INTELLIGENCE</div>
+
+<div id="materialsContainer"></div>
+
+</div>
+
+<div class="card">
+<div class="title">5. TRANSPORTATION FLEET</div>
+
+<div class="counter-grid">
+
+<div class="counter">
+<div>Tractor</div>
+<div class="counter-inner">
+<button onclick="step('Tractor',-1)">-</button>
+<span class="fleet-val" data-name="Tractor">0</span>
+<button onclick="step('Tractor',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Mini Truck</div>
+<div class="counter-inner">
+<button onclick="step('Mini Truck',-1)">-</button>
+<span class="fleet-val" data-name="Mini Truck">0</span>
+<button onclick="step('Mini Truck',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Truck</div>
+<div class="counter-inner">
+<button onclick="step('Truck',-1)">-</button>
+<span class="fleet-val" data-name="Truck">0</span>
+<button onclick="sumbitValue('Truck',1); step('Truck',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Mini Dumper</div>
+<div class="counter-inner">
+<button onclick="step('Mini Dumper',-1)">-</button>
+<span class="fleet-val" data-name="Mini Dumper">0</span>
+<button onclick="step('Mini Dumper',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Dumper</div>
+<div class="counter-inner">
+<button onclick="step('Dumper',-1)">-</button>
+<span class="fleet-val" data-name="Dumper">0</span>
+<button onclick="step('Dumper',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Trailer</div>
+<div class="counter-inner">
+<button onclick="step('Trailer',-1)">-</button>
+<span class="fleet-val" data-name="Trailer">0</span>
+<button onclick="step('Trailer',1)">+</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="card">
+<button id="syncBtn" class="btn btn-green" onclick="syncCloud()">🚀 SUBMIT SYNC</button>
+</div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// MATERIAL DATA
+const materialsData = {
+"Cement": {varieties:["OPC 43","OPC 53","PPC"],brands:["ACC","UltraTech","Ambuja"]},
+"TMT Steel": {varieties:["Fe500","Fe550D"],brands:["Tata","JSW"]},
+"Sand": {varieties:["River","M-Sand"],brands:["Local","Premium"]},
+"Aggregates": {varieties:["10mm","20mm"],brands:["Crusher"]},
+"Masonry Stones": {varieties:["Granite"],brands:["Local"]},
+"Bricks": {varieties:["Red","Fly Ash"],brands:["Local"]}
 };
 
-// ================= 3. INIT & MAP =================
-window.addEventListener("DOMContentLoaded", () => {
-    window.refreshTrackingID(); // Generate initial ID
-    initMap();
+// BUILD UI
+function initMaterialsUI(){
+const c=document.getElementById("materialsContainer");
 
-    // Listen for changes in Type or Materials to update ID live
-    document.addEventListener("change", (e) => {
-        if (e.target.id === "supplierType" || e.target.classList.contains('data-brand')) {
-            window.refreshTrackingID();
-        }
-    });
+Object.keys(materialsData).forEach(mat=>{
+const safe=mat.replace(/\s/g,'');
+
+const div=document.createElement("div");
+
+div.innerHTML=`
+<div class="material-btn" onclick="toggleDiv('var_${safe}')">${mat}</div>
+
+<div id="var_${safe}" class="variety-box">
+${materialsData[mat].varieties.map(v=>{
+const vID=v.replace(/\s/g,'');
+
+return `
+<div>
+<label onclick="toggleDiv('brand_${vID}')">
+<input type="checkbox" class="data-var" data-mat="${mat}" value="${v}">
+${v}
+</label>
+
+<div id="brand_${vID}" class="brand-box">
+${materialsData[mat].brands.map(b=>`
+<label>
+<input type="checkbox" class="data-brand" 
+       onclick="if(window.refreshTrackingID) window.refreshTrackingID()" 
+       data-mat="${mat}" data-parent="${v}" value="${b}">
+${b}
+</label><br>
+`).join("")}
+</div>
+</div>
+`;
+}).join("")}
+</div>
+`;
+
+c.appendChild(div);
 });
-
-function initMap() {
-    map = L.map('map').setView([24.5854, 73.7125], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 }
 
-window.captureGPS = async function() {
-    navigator.geolocation.getCurrentPosition(async pos => {
-        const lat = pos.coords.latitude; const lng = pos.coords.longitude;
-        document.getElementById("coordinates").value = lat + "," + lng;
-        if (marker) map.removeLayer(marker);
-        marker = L.marker([lat, lng]).addTo(map);
-        map.setView([lat, lng], 16);
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-        const data = await res.json();
-        document.getElementById("address").value = data.display_name;
-    });
-};
+// TOGGLE
+function toggleDiv(id){
+const el=document.getElementById(id);
+if(el) el.style.display=el.style.display==="block"?"none":"block";
+}
 
-// ================= 4. PHOTO HANDLING =================
-window.handlePhoto = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        photos.push(event.target.result.split(',')[1]); 
-        const img = document.createElement('img');
-        img.src = event.target.result;
-        img.className = "w-16 h-16 rounded object-cover border-2 border-orange-500";
-        document.getElementById('photoPreview').appendChild(img);
-    };
-    reader.readAsDataURL(file);
-};
+// FLEET
+function step(name,val){
+const el=document.querySelector(`.fleet-val[data-name="${name}"]`);
+let v=parseInt(el.innerText)+val;
+if(v>=0) el.innerText=v;
+}
 
-// ================= 5. THE CLEAN SYNC =================
-window.syncCloud = async function() {
-    const btn = document.getElementById("syncBtn");
-    const firm = document.getElementById("firmName").value;
-    
-    if (!firm) return alert("Firm Name Required!");
-    if (!IMGBB_KEY) return alert("API Key Missing. Refresh page.");
+// INIT
+window.addEventListener("DOMContentLoaded",()=>{
+initMaterialsUI();
+});
+</script>
 
-    btn.innerText = "⌛ UPLOADING..."; btn.disabled = true;
+<script type="module">
+import "./js/firebase-config.js";
+import "./js/core-engine.js";
+</script>
 
-    try {
-        // STEP A: Final ID Refresh to ensure serial is correct
-        const finalID = await window.refreshTrackingID();
-
-        // STEP B: Upload to ImgBB
-        let photoUrls = [];
-        for (let base64Image of photos) {
-            let formData = new FormData();
-            formData.append("image", base64Image);
-            
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
-                method: "POST",
-                body: formData
-            });
-            const result = await res.json();
-            if (result.success) photoUrls.push(result.data.url);
-        }
-
-        // STEP C: Scrape Form Data
-        const materials = Array.from(document.querySelectorAll('.data-brand:checked')).map(el => ({
-            brand: el.value, variety: el.dataset.parent
-        }));
-        
-        const fleet = {};
-        document.querySelectorAll('.fleet-val').forEach(el => fleet[el.dataset.name] = el.innerText);
-
-        // STEP D: Save to Firestore
-        await addDoc(collection(db, "field_data"), {
-            trackingId: finalID,
-            firmName: firm,
-            supplierType: document.getElementById("supplierType")?.value || "Retailer",
-            owner: document.getElementById("ownerName").value,
-            phone: document.getElementById("ownerPhone").value,
-            address: document.getElementById("address").value,
-            gps: document.getElementById("coordinates").value,
-            materials,
-            fleet,
-            photos: photoUrls,
-            timestamp: serverTimestamp()
-        });
-
-        alert("🚀 SUCCESS: Survey Synced with ID: " + finalID);
-        location.reload();
-
-    } catch (e) {
-        console.error("Sync Error:", e);
-        alert("❌ Sync Failed. Check console.");
-        btn.innerText = "🚀 SUBMIT SYNC"; btn.disabled = false;
-    }
-};
+</body>
+</html>
