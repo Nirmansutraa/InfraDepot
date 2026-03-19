@@ -3,270 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nirmansutra | Field Terminal v2.0</title>
+    <title>Nirmansutra | Field Terminal v2.1</title>
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: Arial, sans-serif; background:#f2f4f7; margin:0; }
-        .header { background:#fff; padding:12px; display:flex; justify-content:space-between; border-bottom:1px solid #ddd; font-size:12px; font-weight: bold; }
-        .container { padding:10px; max-width: 600px; margin: auto; }
-        .card { background:#fff; padding:15px; margin-bottom:12px; border-radius:12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .title { font-size:11px; color:#ff7a00; font-weight:900; margin-bottom:10px; text-transform: uppercase; letter-spacing: 0.5px; }
-        label { font-size:10px; color:#94a3b8; font-weight: 800; text-transform: uppercase; }
-        input, textarea { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #e2e8f0; font-size: 14px; outline: none; }
-        input:focus, textarea:focus { border-color: #ff7a00; }
-        .row { display:flex; gap:8px; }
-        
-        /* 1. TRACKING ID BOX */
-        .dark-box { background:#0f1b2d; color:#10b981; text-align:center; padding:20px; border-radius:10px; font-family: monospace; font-size: 24px; font-weight: bold; }
-        
-        /* 3. MAP */
-        .map { height:180px; border-radius:10px; margin-bottom:10px; border: 1px solid #e2e8f0; }
-        
-        /* 4. MATERIALS HIERARCHY */
-        .mat-row { background:#0f1b2d; color:white; padding:15px; border-radius:8px; margin-bottom:8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold; }
-        .variety-box { background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #ff7a00; display: none; }
-        .brand-box { background: #ffffff; padding: 8px; border-radius: 6px; margin-top: 5px; margin-left: 15px; border: 1px dashed #cbd5e1; display: none; }
 
-        /* 5. FLEET GRID */
-        .counter-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-        .counter { background:#f4f6f9; padding:12px; border-radius:10px; border: 1px solid #e2e8f0; }
-        .counter-inner { display:flex; justify-content:space-between; align-items:center; }
-        .counter-label { font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; }
-        .counter button { width:28px; height:28px; background:#0f1b2d; color:white; border:none; border-radius:6px; font-weight: bold; cursor: pointer; }
-        
-        /* 6. BUTTONS */
-        .btn { width:100%; padding:14px; border:none; border-radius:10px; font-weight: bold; font-size: 12px; text-transform: uppercase; cursor: pointer; }
-        .btn-dark { background:#0f1b2d; color:white; }
-        .btn-green { background:#2ecc71; color:white; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.2); }
-        .footer-btns { display:flex; gap:10px; }
+    <style>
+        body { font-family: Arial; background:#f2f4f7; }
+        .card { background:#fff; padding:15px; margin:10px; border-radius:12px; }
+        .title { font-size:11px; color:#ff7a00; font-weight:bold; margin-bottom:8px; }
+        .map { height:180px; border-radius:10px; }
+
+        .mat-row { background:#0f1b2d; color:#fff; padding:12px; border-radius:8px; cursor:pointer; margin-bottom:6px; }
+        .variety-box { display:none; padding-left:10px; }
+        .brand-box { display:none; padding-left:20px; }
+
+        .counter-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .counter { background:#f4f6f9; padding:10px; border-radius:10px; }
+        .counter-inner { display:flex; justify-content:space-between; }
+
+        img { border-radius:6px; }
     </style>
 </head>
+
 <body>
 
-<div class="header">
-    <div>Field Staff: <b id="displayStaffId">FS3396954</b></div>
-    <div onclick="logout()" style="color:red; cursor:pointer;">LOGOUT</div>
+<div class="card">
+    <div class="title">TRACKING ID</div>
+    <div id="trackingIdBox">ID---</div>
 </div>
 
-<div class="container">
+<div class="card">
+    <div class="title">ENTITY</div>
+    <input id="firmName" placeholder="Firm Name">
+    <input id="ownerName" placeholder="Owner Name">
+    <input id="ownerPhone" placeholder="Phone">
+    <input id="ownerWhatsapp" placeholder="WhatsApp">
+</div>
 
-    <div class="card">
-        <div class="title">1. TRACKING ID</div>
-        <div id="trackingIdBox" class="dark-box">ID---</div>
-    </div>
+<div class="card">
+    <div class="title">GPS</div>
+    <div id="map" class="map"></div>
+    <button onclick="captureGPS()">📍 Capture GPS</button>
+    <input id="coordinates" readonly>
+    <textarea id="address"></textarea>
 
-    <div class="card">
-        <div class="title">2. ENTITY & CONTACTS</div>
-        <label>FIRM NAME</label>
-        <input id="firmName" placeholder="Enter Firm Name" oninput="generateTrackingId()">
-        <label>OWNER DETAILS</label>
-        <input id="ownerName" placeholder="Owner Full Name">
-        <div class="row">
-            <div class="w-1/2">
-                <label>PHONE</label>
-                <input id="ownerPhone" placeholder="Phone" oninput="syncWA('owner')">
-            </div>
-            <div class="w-1/2">
-                <label>WHATSAPP</label>
-                <input id="ownerWhatsapp" placeholder="WhatsApp">
-            </div>
-        </div>
-        <label>BUSINESS ADDRESS</label>
-        <textarea id="address" placeholder="Waiting for GPS..." rows="3"></textarea>
-    </div>
+    <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+    <div id="photoPreview" class="flex gap-2 flex-wrap"></div>
+</div>
 
-    <div class="card">
-        <div class="title">3. GPS & VERIFICATION</div>
-        <div id="map" class="map"></div>
-        <button class="btn btn-dark" onclick="captureGPS()">📍 CAPTURE GPS & ADDRESS</button>
-        <input id="coordinates" placeholder="Coordinates" readonly class="bg-gray-50 italic text-gray-400">
-        <label>VERIFICATION PHOTOS</label>
-        <input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)">
-        <div id="photoPreview" class="flex flex-wrap gap-2 mt-2"></div>
-    </div>
+<div class="card">
+    <div class="title">MATERIALS INTELLIGENCE</div>
+    <div id="materialsContainer"></div>
+</div>
 
-    <div class="card">
-        <div class="title">4. MATERIALS INTELLIGENCE</div>
-        <div id="materialsContainer"></div>
-    </div>
+<div class="card">
+    <div class="title">TRANSPORTATION FLEET</div>
+    <div id="fleetContainer" class="counter-grid"></div>
+</div>
 
-    <div class="card">
-        <div class="title">5. TRANSPORTATION FLEET</div>
-        <div id="fleetContainer" class="counter-grid"></div>
-    </div>
-
-    <div class="card">
-        <div class="title">6. DATA ACTIONS</div>
-        <div class="footer-btns">
-            <button class="btn bg-slate-400 text-white" onclick="saveLocal()">💾 SAVE LOCAL</button>
-            <button id="syncBtn" class="btn btn-green" onclick="syncCloud()">🚀 SUBMIT SYNC</button>
-        </div>
-    </div>
-
+<div class="card">
+    <button id="syncBtn" onclick="syncCloud()">🚀 SUBMIT</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    // --- 1. DATA: TOP 10 INDIAN BRANDS HIERARCHY ---
-    const hierarchy = {
-        "Cement": { 
-            varieties: ["OPC 43/53", "PPC", "White Cement"], 
-            brands: ["ACC", "UltraTech", "Ambuja", "JK Lakshmi", "Shree Cement", "Dalmia", "Ramco", "Birla White", "Wonder", "Binani"] 
-        },
-        "Steel (TMT)": { 
-            varieties: ["Fe500", "Fe550D", "Fe600"], 
-            brands: ["Tata Tiscon", "JSW Neo", "Jindal Panther", "Kamdhenu", "Sail", "Vizag Steel", "Rathi", "Shyam Steel", "Electrosteel", "Amba"] 
-        },
-        "Sand": { varieties: ["River Sand", "M-Sand", "Plaster Sand"], brands: ["Local Supply", "Standard", "Premium Wash"] },
-        "Stone": { varieties: ["20mm Grit", "40mm Grit", "Stone Dust"], brands: ["Crusher Unit-1", "Local Quarry"] }
-    };
-    const fleetTypes = ["Tractor", "Mini Truck", "Truck", "Mini Dumper", "Dumper", "Trailer"];
+let map, marker;
+let photos = [];
 
-    // --- 2. MAP ENGINE (ANTI-CRASH) ---
-    let map, marker;
-    function initMap() {
-        if (map) return; 
-        map = L.map('map').setView([24.5854, 73.7125], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+// ================= MAP =================
+function initMap(){
+    map = L.map('map').setView([24.58,73.71],13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+}
+
+// ================= GPS =================
+function captureGPS(){
+    navigator.geolocation.getCurrentPosition(async pos=>{
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        document.getElementById("coordinates").value = lat + "," + lng;
+
+        if(marker) map.removeLayer(marker);
+        marker = L.marker([lat,lng]).addTo(map);
+
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        const data = await res.json();
+
+        document.getElementById("address").value = data.display_name;
+    });
+}
+
+// ================= MATERIALS =================
+const hierarchy = {
+    "Cement": {
+        varieties:["OPC 43","OPC 53","PPC"],
+        brands:["ACC","UltraTech","Ambuja","Shree","Dalmia","JK","Ramco","Wonder","Binani","Birla"]
+    },
+    "TMT Steel": {
+        varieties:["Fe500","Fe550D","Fe600"],
+        brands:["Tata","JSW","Jindal","Kamdhenu","SAIL","Vizag","Rathi","Shyam","Electrosteel","Amba"]
+    },
+    "Sand": {
+        varieties:["River","M-Sand","Plaster"],
+        brands:["Local","Premium"]
+    },
+    "Aggregates": {
+        varieties:["10mm","20mm","40mm"],
+        brands:["Crusher A","Crusher B"]
+    },
+    "Masonry Stones": {
+        varieties:["Granite","Basalt"],
+        brands:["Local Quarry"]
+    },
+    "Bricks": {
+        varieties:["Red","Fly Ash"],
+        brands:["Local","Premium"]
     }
+};
 
-    async function captureGPS() {
-        navigator.geolocation.getCurrentPosition(async pos => {
-            const lat = pos.coords.latitude; const lng = pos.coords.longitude;
-            document.getElementById('coordinates').value = lat + ", " + lng;
-            if(marker) map.removeLayer(marker);
-            marker = L.marker([lat, lng]).addTo(map);
-            map.setView([lat, lng], 16);
-            
-            // 🔥 REVERSE GEOCODE FIX: AUTO-POPULATES ADDRESS
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                const data = await res.json();
-                document.getElementById('address').value = data.display_name;
-            } catch(e) { document.getElementById('address').value = "GPS Fixed: " + lat + "," + lng; }
-        });
-    }
+function initMaterials(){
+    const cont = document.getElementById("materialsContainer");
 
-    // --- 3. UI GENERATORS ---
-    function initUI() {
-        const mCont = document.getElementById('materialsContainer');
-        Object.keys(hierarchy).forEach(mat => {
-            const safeID = mat.replace(/\s/g,'');
-            const div = document.createElement('div');
-            div.innerHTML = `
-                <div class="mat-row" onclick="toggleDiv('var_${safeID}')">
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" class="data-mat" value="${mat}" onclick="event.stopPropagation()">
-                        <span>${mat}</span>
+    Object.keys(hierarchy).forEach(mat=>{
+        const safe = mat.replace(/\s/g,'');
+
+        const div = document.createElement("div");
+
+        div.innerHTML = `
+            <div class="mat-row" onclick="toggleDiv('var_${safe}')">${mat}</div>
+            <div id="var_${safe}" class="variety-box">
+                ${hierarchy[mat].varieties.map(v=>{
+                    const vID = v.replace(/\s/g,'');
+                    return `
+                    <div>
+                        <label onclick="toggleDiv('brand_${vID}')">
+                            <input type="checkbox" class="data-var" data-mat="${mat}" value="${v}">
+                            ${v}
+                        </label>
+                        <div id="brand_${vID}" class="brand-box">
+                            ${hierarchy[mat].brands.map(b=>`
+                                <label>
+                                    <input type="checkbox" class="data-brand" data-parent="${v}" data-mat="${mat}" value="${b}">
+                                    ${b}
+                                </label><br>
+                            `).join("")}
+                        </div>
                     </div>
-                    <span>▼</span>
+                    `;
+                }).join("")}
+            </div>
+        `;
+
+        cont.appendChild(div);
+    });
+}
+
+// ================= FLEET =================
+const fleetTypes = ["Tractor","Mini Truck","Truck","Dumper","Trailer"];
+
+function initFleet(){
+    const cont = document.getElementById("fleetContainer");
+
+    fleetTypes.forEach(f=>{
+        cont.innerHTML += `
+            <div class="counter">
+                <div>${f}</div>
+                <div class="counter-inner">
+                    <button onclick="step('${f}',-1)">-</button>
+                    <span id="count_${f}" class="fleet-val" data-name="${f}">0</span>
+                    <button onclick="step('${f}',1)">+</button>
                 </div>
-                <div id="var_${safeID}" class="variety-box">
-                    ${hierarchy[mat].varieties.map(v => {
-                        const vID = v.replace(/\s|\//g,'');
-                        return `
-                        <div class="mb-2">
-                            <label class="block text-slate-700 font-bold mb-1" onclick="toggleDiv('br_${vID}')">
-                                <input type="checkbox" class="data-var" value="${v}"> ${v} ▾
-                            </label>
-                            <div id="br_${vID}" class="brand-box">
-                                ${hierarchy[mat].brands.map(b => `
-                                    <label class="block text-[10px] my-1"><input type="checkbox" class="data-brand" data-parent="${v}" value="${b}"> ${b}</label>
-                                `).join('')}
-                            </div>
-                        </div>`;
-                    }).join('')}
-                </div>`;
-            mCont.appendChild(div);
-        });
+            </div>
+        `;
+    });
+}
 
-        const fCont = document.getElementById('fleetContainer');
-        fleetTypes.forEach(f => {
-            fCont.innerHTML += `
-                <div class="counter">
-                    <div class="counter-label mb-2">${f}</div>
-                    <div class="counter-inner">
-                        <button onclick="step('${f}', -1)">-</button>
-                        <b id="count_${f}" class="fleet-val" data-name="${f}">0</b>
-                        <button onclick="step('${f}', 1)">+</button>
-                    </div>
-                </div>`;
-        });
-    }
+function step(id,v){
+    const el = document.getElementById("count_"+id);
+    let val = parseInt(el.innerText) + v;
+    if(val >= 0) el.innerText = val;
+}
 
-    // --- 4. LOGIC HELPERS ---
-    function generateTrackingId() {
-        const firm = document.getElementById('firmName').value;
-        const box = document.getElementById('trackingIdBox');
-        if(!firm) { box.innerText = "ID---"; return; }
-        if(box.innerText === "ID---") box.innerText = "ID-" + Math.floor(100000 + Math.random() * 900000);
-    }
+// ================= PHOTO =================
+function handlePhoto(e){
+    if(photos.length >= 10) return alert("Max 10 photos");
 
-    function syncWA(type) {
-        document.getElementById(type + 'Whatsapp').value = document.getElementById(type + 'Phone').value;
-    }
+    const file = e.target.files[0];
+    const reader = new FileReader();
 
-    function toggleDiv(id) {
-        const el = document.getElementById(id);
-        if (el) el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-    }
+    reader.onload = ev=>{
+        const img = new Image();
+        img.src = ev.target.result;
 
-    function step(id, v) {
-        const el = document.getElementById('count_' + id);
-        let c = parseInt(el.innerText) + v;
-        if(c >= 0) el.innerText = c;
-    }
+        img.onload = ()=>{
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
 
-    let photoStore = [];
-    function handlePhoto(e) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            photoStore.push(event.target.result);
-            const img = document.createElement('img');
-            img.src = event.target.result;
-            img.className = "w-16 h-16 rounded object-cover border border-orange-400";
-            document.getElementById('photoPreview').appendChild(img);
+            const scale = 0.6;
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+
+            ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+            // Stamp
+            ctx.fillStyle = "red";
+            ctx.font = "16px Arial";
+            ctx.fillText(new Date().toLocaleString(),10,canvas.height-20);
+            ctx.fillText(document.getElementById("coordinates").value,10,canvas.height-5);
+
+            const base64 = canvas.toDataURL("image/jpeg",0.7);
+
+            photos.push(base64);
+
+            const im = document.createElement("img");
+            im.src = base64;
+            im.width = 60;
+            im.onclick = ()=>window.open(base64);
+
+            document.getElementById("photoPreview").appendChild(im);
         };
-        reader.readAsDataURL(file);
-    }
-
-    // --- 5. SYNC CALL ---
-    function syncCloud() {
-        const btn = document.getElementById('syncBtn');
-        btn.innerText = "⌛ SYNCING..."; btn.disabled = true;
-        
-        // This data will be collected and sent by your imported core-engine.js
-        console.log("Sync initiated. Photos: ", photoStore.length);
-        
-        // Safety timeout to reset button if engine fails
-        setTimeout(() => {
-            if (btn.disabled) {
-                btn.innerText = "🚀 SUBMIT SYNC";
-                btn.disabled = false;
-            }
-        }, 5000);
-    }
-
-    function saveLocal() {
-        alert("Saved to Offline Storage (Local DB)");
-    }
-
-    function logout() {
-        window.location.href = "index.html";
-    }
-
-    window.onload = () => {
-        initMap();
-        initUI();
     };
+
+    reader.readAsDataURL(file);
+}
+
+// ================= HELPERS =================
+function toggleDiv(id){
+    const el = document.getElementById(id);
+    el.style.display = (el.style.display === "block") ? "none" : "block";
+}
+
+// ================= INIT =================
+window.onload = ()=>{
+    initMap();
+    initMaterials();
+    initFleet();
+};
 </script>
 
 <script type="module">
-    import "./js/firebase-config.js";
-    import "./js/core-engine.js";
+import "./js/firebase-config.js";
+import "./js/core-engine.js";
 </script>
 
 </body>
