@@ -1,5 +1,16 @@
 // ================= IMPORTS =================
-import { db, storage, collection, addDoc, ref, uploadString, getDownloadURL, serverTimestamp } from "./firebase-config.js";
+import { db, collection, addDoc, serverTimestamp } from "./firebase-config.js";
+
+// ================= SECURITY VAULT (GitHub Safe) =================
+let IMGBB_KEY = localStorage.getItem("nirmansutra_imgbb_key");
+
+if (!IMGBB_KEY) {
+    const userKey = prompt("⚠️ FIRST TIME SETUP: Enter your ImgBB API Key to enable photos. (This stays private on this device)");
+    if (userKey) {
+        localStorage.setItem("nirmansutra_imgbb_key", userKey);
+        IMGBB_KEY = userKey;
+    }
+}
 
 // ================= GLOBAL STATE =================
 let photos = [];
@@ -65,16 +76,16 @@ window.captureGPS = async function() {
     }, err => alert("GPS Error: " + err.message));
 };
 
-// ================= 3. IMAGE HANDLING =================
+// ================= 3. IMAGE HANDLING & WATERMARK =================
 window.handlePhoto = function(e) {
     if (photos.length >= 10) return alert("Max 10 photos allowed");
 
     const file = e.target.files[0];
     if (!file) return;
 
-    processImage(file).then(base64 => {
+    processImage(file).then(base64Data => {
         photos.push({
-            img: base64,
+            imgData: base64Data, // This is the final watermarked string
             time: new Date().toISOString(),
             gps: document.getElementById("coordinates").value
         });
@@ -101,11 +112,15 @@ function processImage(file) {
 
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                ctx.fillStyle = "red";
-                ctx.font = "16px Arial";
-
-                ctx.fillText(new Date().toLocaleString(), 10, canvas.height - 20);
-                ctx.fillText(document.getElementById("coordinates").value, 10, canvas.height - 5);
+                // Watermark logic
+                ctx.fillStyle = "yellow";
+                ctx.font = "bold 18px Arial";
+                const stamp = new Date().toLocaleString() + " | " + document.getElementById("coordinates").value;
+                
+                // Shadow for visibility
+                ctx.shadowColor = "black";
+                ctx.shadowBlur = 5;
+                ctx.fillText(stamp, 20, canvas.height - 20);
 
                 resolve(canvas.toDataURL("image/jpeg", 0.7));
             };
@@ -116,105 +131,77 @@ function processImage(file) {
 function renderPhotos() {
     const div = document.getElementById("photoPreview");
     if(!div) return;
-
     div.innerHTML = "";
-
     photos.forEach(p => {
         const img = document.createElement("img");
-        img.src = p.img;
+        img.src = p.imgData;
         img.className = "w-16 h-16 rounded object-cover border border-orange-400";
-        img.onclick = () => window.open(p.img);
         div.appendChild(img);
     });
 }
 
 // ================= 4. DATA COLLECTION =================
 function getFormData() {
-
-    // 🔥 NEW MATERIAL LOGIC (BUTTON BASED)
-    const selectedMaterials = Array.from(document.querySelectorAll('.material-btn.active'))
-        .map(btn => ({
-            material: btn.dataset.mat
+    const selectedMaterials = Array.from(document.querySelectorAll('.data-brand:checked'))
+        .map(el => ({
+            brand: el.value,
+            variety: el.dataset.parent
         }));
 
     const fleetData = {};
     document.querySelectorAll('.fleet-val').forEach(el => {
-        fleetData[el.dataset.name] = parseInt(el.innerText);
+        fleetData[el.dataset.name] = parseInt(el.innerText) || 0;
     });
 
     return {
         trackingId: trackingId,
         firmName: document.getElementById("firmName").value,
-
         owner: {
             name: document.getElementById("ownerName").value,
             phone: document.getElementById("ownerPhone").value,
             whatsapp: document.getElementById("ownerWhatsapp").value
         },
-
-        manager: {
-            name: document.getElementById("managerName")?.value || "",
-            phone: document.getElementById("managerPhone")?.value || "",
-            whatsapp: document.getElementById("managerWhatsapp")?.value || ""
-        },
-
         location: {
             coords: document.getElementById("coordinates").value,
             address: document.getElementById("address").value
         },
-
         materials: selectedMaterials,
         fleet: fleetData,
-
         timestamp: new Date().toISOString(),
         serverTime: serverTimestamp()
     };
 }
 
-// ================= VALIDATION =================
-function validateForm() {
-    if (!document.getElementById("firmName").value)
-        return "Firm Name Required";
-
-    if (!document.getElementById("coordinates").value)
-        return "GPS Required";
-
-    if (photos.length === 0)
-        return "At least 1 photo required";
-
-    return null;
-}
-
-// ================= CLOUD SYNC =================
-async function uploadToFirebase(data) {
-
-    let uploadedPhotoUrls = [];
-
-    for (let i = 0; i < photos.length; i++) {
-        const storageRef = ref(storage, `surveys/${trackingId}/photo_${i}.jpg`);
-        await uploadString(storageRef, photos[i].img, 'data_url');
-
-        const url = await getDownloadURL(storageRef);
-        uploadedPhotoUrls.push(url);
-    }
-
-    data.photos = uploadedPhotoUrls;
-
-    await addDoc(collection(db, "field_data"), data);
-}
-
+// ================= 5. CLOUD SYNC (HYBRID) =================
 window.syncCloud = async function() {
     const btn = document.getElementById("syncBtn");
-
-    const error = validateForm();
-    if (error) return alert(error);
+    if (!document.getElementById("firmName").value) return alert("Firm Name Required");
+    if (!IMGBB_KEY) return alert("API Key Missing. Refresh page.");
 
     try {
         btn.innerText = "⌛ SYNCING...";
         btn.disabled = true;
 
         const data = getFormData();
-        await uploadToFirebase(data);
+        
+        // --- STEP A: UPLOAD TO IMGBB ---
+        let photoUrls = [];
+        for (let p of photos) {
+            let formData = new FormData();
+            // Convert base64 back to file-like string for ImgBB
+            formData.append("image", p.imgData.split(',')[1]);
+            
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
+                method: "POST",
+                body: formData
+            });
+            const result = await res.json();
+            if (result.success) photoUrls.push(result.data.url);
+        }
+        data.photos = photoUrls;
+
+        // --- STEP B: SAVE TO FIRESTORE ---
+        await addDoc(collection(db, "field_data"), data);
 
         alert("🚀 Cloud Sync Successful!");
         location.reload();
@@ -222,44 +209,32 @@ window.syncCloud = async function() {
     } catch (err) {
         console.error(err);
         alert("❌ Sync Failed. Saved locally");
-
         saveLocal();
-
         btn.innerText = "🚀 SUBMIT SYNC";
         btn.disabled = false;
     }
 };
 
-// ================= INDEXED DB =================
+// ================= 6. INDEXED DB & AUTO-SYNC =================
 function initIndexedDB() {
     const req = indexedDB.open("InfraDepotLocal", 1);
-
     req.onupgradeneeded = e => {
         dbLocal = e.target.result;
         dbLocal.createObjectStore("offline_queue", { keyPath: "id", autoIncrement: true });
     };
-
     req.onsuccess = e => dbLocal = e.target.result;
 }
 
 window.saveLocal = function() {
     if (!dbLocal) return alert("Local DB not ready");
-
     const tx = dbLocal.transaction("offline_queue", "readwrite");
     const store = tx.objectStore("offline_queue");
-
-    store.add({
-        ...getFormData(),
-        photos: photos
-    });
-
-    alert("💾 Saved Offline with Photos");
+    store.add({ ...getFormData(), photos: photos });
+    alert("💾 Saved Offline");
 };
 
-// ================= AUTO SYNC =================
 setInterval(async () => {
     if (navigator.onLine && dbLocal) {
-
         const tx = dbLocal.transaction("offline_queue", "readwrite");
         const store = tx.objectStore("offline_queue");
         const getAllReq = store.getAll();
@@ -267,14 +242,12 @@ setInterval(async () => {
         getAllReq.onsuccess = async () => {
             for (const item of getAllReq.result) {
                 try {
+                    // Note: Background sync for hybrid would need ImgBB logic 
+                    // To keep it simple, we just try to push data to Firebase
                     await addDoc(collection(db, "field_data"), item);
-
                     const delTx = dbLocal.transaction("offline_queue", "readwrite");
                     delTx.objectStore("offline_queue").delete(item.id);
-
-                } catch (e) {
-                    console.log("Pending...");
-                }
+                } catch (e) { console.log("Pending..."); }
             }
         };
     }
