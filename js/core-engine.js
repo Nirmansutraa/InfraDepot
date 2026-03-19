@@ -101,15 +101,11 @@ function processImage(file) {
 
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                // 🔥 STAMP (GPS + TIME)
                 ctx.fillStyle = "red";
                 ctx.font = "16px Arial";
 
-                const stamp1 = new Date().toLocaleString();
-                const stamp2 = document.getElementById("coordinates").value;
-
-                ctx.fillText(stamp1, 10, canvas.height - 25);
-                ctx.fillText(stamp2, 10, canvas.height - 5);
+                ctx.fillText(new Date().toLocaleString(), 10, canvas.height - 20);
+                ctx.fillText(document.getElementById("coordinates").value, 10, canvas.height - 5);
 
                 resolve(canvas.toDataURL("image/jpeg", 0.7));
             };
@@ -127,10 +123,7 @@ function renderPhotos() {
         const img = document.createElement("img");
         img.src = p.img;
         img.className = "w-16 h-16 rounded object-cover border border-orange-400";
-
-        // Click preview (NEW)
         img.onclick = () => window.open(p.img);
-
         div.appendChild(img);
     });
 }
@@ -138,12 +131,11 @@ function renderPhotos() {
 // ================= 4. DATA COLLECTION =================
 function getFormData() {
 
-    // ✅ MATERIAL FIX (SAFE EXTRACTION)
-    const selectedMaterials = Array.from(document.querySelectorAll('.data-brand:checked')).map(el => ({
-        category: el.dataset.mat || "unknown",
-        variety: el.dataset.parent,
-        brand: el.value
-    }));
+    // 🔥 NEW MATERIAL LOGIC (BUTTON BASED)
+    const selectedMaterials = Array.from(document.querySelectorAll('.material-btn.active'))
+        .map(btn => ({
+            material: btn.dataset.mat
+        }));
 
     const fleetData = {};
     document.querySelectorAll('.fleet-val').forEach(el => {
@@ -179,7 +171,7 @@ function getFormData() {
     };
 }
 
-// ================= VALIDATION (NEW) =================
+// ================= VALIDATION =================
 function validateForm() {
     if (!document.getElementById("firmName").value)
         return "Firm Name Required";
@@ -193,7 +185,7 @@ function validateForm() {
     return null;
 }
 
-// ================= 5. CLOUD SYNC =================
+// ================= CLOUD SYNC =================
 async function uploadToFirebase(data) {
 
     let uploadedPhotoUrls = [];
@@ -238,7 +230,7 @@ window.syncCloud = async function() {
     }
 };
 
-// ================= 6. INDEXED DB =================
+// ================= INDEXED DB =================
 function initIndexedDB() {
     const req = indexedDB.open("InfraDepotLocal", 1);
 
@@ -256,7 +248,6 @@ window.saveLocal = function() {
     const tx = dbLocal.transaction("offline_queue", "readwrite");
     const store = tx.objectStore("offline_queue");
 
-    // ✅ SAVE WITH PHOTOS (FIXED)
     store.add({
         ...getFormData(),
         photos: photos
@@ -265,7 +256,7 @@ window.saveLocal = function() {
     alert("💾 Saved Offline with Photos");
 };
 
-// ================= 7. AUTO SYNC =================
+// ================= AUTO SYNC =================
 setInterval(async () => {
     if (navigator.onLine && dbLocal) {
 
@@ -280,8 +271,6 @@ setInterval(async () => {
 
                     const delTx = dbLocal.transaction("offline_queue", "readwrite");
                     delTx.objectStore("offline_queue").delete(item.id);
-
-                    console.log("Auto sync success");
 
                 } catch (e) {
                     console.log("Pending...");
