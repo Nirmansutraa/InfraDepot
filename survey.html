@@ -38,21 +38,17 @@ body { background:#f2f4f7; font-family: Arial; }
 
 .map { height:180px; border-radius:10px; }
 
-/* MATERIAL BUTTONS */
 .material-btn {
     background:#0f1b2d;
     color:white;
     padding:12px;
     border-radius:8px;
     margin-bottom:6px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
     cursor:pointer;
 }
-.material-btn.active {
-    background:#ff7a00;
-}
+
+.variety-box { display:none; padding-left:10px; }
+.brand-box { display:none; padding-left:15px; }
 
 /* FLEET */
 .counter-grid {
@@ -132,16 +128,8 @@ body { background:#f2f4f7; font-family: Arial; }
 <div class="card">
 <div class="title">4. MATERIALS INTELLIGENCE</div>
 
-<div id="materialsContainer">
+<div id="materialsContainer"></div>
 
-<div class="material-btn" data-mat="Sand">Sand</div>
-<div class="material-btn" data-mat="Aggregates">Aggregates</div>
-<div class="material-btn" data-mat="Masonry Stones">Masonry Stones</div>
-<div class="material-btn" data-mat="TMT Steel">TMT Steel</div>
-<div class="material-btn" data-mat="Cement">Cement</div>
-<div class="material-btn" data-mat="Bricks">Bricks</div>
-
-</div>
 </div>
 
 <!-- FLEET -->
@@ -214,23 +202,77 @@ body { background:#f2f4f7; font-family: Arial; }
 
 </div>
 
-<!-- SCRIPTS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-// MATERIAL BUTTON TOGGLE
-document.querySelectorAll('.material-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-        btn.classList.toggle('active');
-    });
-});
+// MATERIAL DATA
+const materialsData = {
+"Cement": {varieties:["OPC 43","OPC 53","PPC"],brands:["ACC","UltraTech","Ambuja"]},
+"TMT Steel": {varieties:["Fe500","Fe550D"],brands:["Tata","JSW"]},
+"Sand": {varieties:["River","M-Sand"],brands:["Local","Premium"]},
+"Aggregates": {varieties:["10mm","20mm"],brands:["Crusher"]},
+"Masonry Stones": {varieties:["Granite"],brands:["Local"]},
+"Bricks": {varieties:["Red","Fly Ash"],brands:["Local"]}
+};
 
-// FLEET STEP
-function step(name,val){
-    const el=document.querySelector(`.fleet-val[data-name="${name}"]`);
-    let v=parseInt(el.innerText)+val;
-    if(v>=0) el.innerText=v;
+// BUILD UI
+function initMaterialsUI(){
+const c=document.getElementById("materialsContainer");
+
+Object.keys(materialsData).forEach(mat=>{
+const safe=mat.replace(/\s/g,'');
+
+const div=document.createElement("div");
+
+div.innerHTML=`
+<div class="material-btn" onclick="toggleDiv('var_${safe}')">${mat}</div>
+
+<div id="var_${safe}" class="variety-box">
+${materialsData[mat].varieties.map(v=>{
+const vID=v.replace(/\s/g,'');
+
+return `
+<div>
+<label onclick="toggleDiv('brand_${vID}')">
+<input type="checkbox" class="data-var" data-mat="${mat}" value="${v}">
+${v}
+</label>
+
+<div id="brand_${vID}" class="brand-box">
+${materialsData[mat].brands.map(b=>`
+<label>
+<input type="checkbox" class="data-brand" data-mat="${mat}" data-parent="${v}" value="${b}">
+${b}
+</label><br>
+`).join("")}
+</div>
+</div>
+`;
+}).join("")}
+</div>
+`;
+
+c.appendChild(div);
+});
 }
+
+// TOGGLE
+function toggleDiv(id){
+const el=document.getElementById(id);
+el.style.display=el.style.display==="block"?"none":"block";
+}
+
+// FLEET
+function step(name,val){
+const el=document.querySelector(`.fleet-val[data-name="${name}"]`);
+let v=parseInt(el.innerText)+val;
+if(v>=0) el.innerText=v;
+}
+
+// INIT
+window.addEventListener("DOMContentLoaded",()=>{
+initMaterialsUI();
+});
 </script>
 
 <script type="module">
