@@ -1,12 +1,30 @@
 /**
  * NIRMANSUTRA | FIREBASE MASTER CONFIGURATION
  * Project: Infradepo
+ * Fixed: Added getDocs for Smart ID Generation
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { 
+    getFirestore, 
+    collection, 
+    addDoc, 
+    getDocs, 
+    serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+    getStorage, 
+    ref, 
+    uploadString, 
+    getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { 
+    getAuth, 
+    GoogleAuthProvider, 
+    signInWithPopup, 
+    signOut, 
+    onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // ✅ YOUR LIVE API DATA
 const firebaseConfig = {
@@ -31,6 +49,7 @@ export const googleProvider = new GoogleAuthProvider();
 export { 
     collection, 
     addDoc, 
+    getDocs, // <--- Added this to fix the console error
     serverTimestamp,
     ref, 
     uploadString, 
