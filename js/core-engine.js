@@ -9,16 +9,14 @@ let dbLocal;
 
 // ================= 1. INITIALIZATION =================
 window.addEventListener("DOMContentLoaded", () => {
-    // Generate Tracking ID
     trackingId = "ID-" + Date.now();
     const idBox = document.getElementById("trackingIdBox");
     if(idBox) idBox.innerText = trackingId;
 
-    // WhatsApp Auto Sync Logic
     ["owner", "manager"].forEach(type => {
         const phoneInput = document.getElementById(type + "Phone");
         const waInput = document.getElementById(type + "Whatsapp");
-        
+
         if(phoneInput && waInput) {
             phoneInput.addEventListener("input", () => {
                 if (!waInput.dataset.modified) {
@@ -35,15 +33,13 @@ window.addEventListener("DOMContentLoaded", () => {
     initIndexedDB();
 });
 
-// ================= 2. MAP ENGINE (SAFE) =================
+// ================= 2. MAP =================
 function initMap() {
     const mapContainer = document.getElementById('map');
-    if (!mapContainer || map) return; // Prevent double initialization
+    if (!mapContainer || map) return;
 
     map = L.map('map').setView([24.5854, 73.7125], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 }
 
 window.captureGPS = async function() {
@@ -59,26 +55,24 @@ window.captureGPS = async function() {
         marker = L.marker([lat, lng]).addTo(map);
         map.setView([lat, lng], 16);
 
-        // Reverse Geocode (Address Fetch)
         try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
             const data = await res.json();
-            const addrInput = document.getElementById("address");
-            if(addrInput) addrInput.value = data.display_name || "Address found";
+            document.getElementById("address").value = data.display_name || "Address found";
         } catch (err) {
             console.error("Address fetch failed", err);
         }
     }, err => alert("GPS Error: " + err.message));
 };
 
-// ================= 3. IMAGE COMPRESSION & HANDLING =================
+// ================= 3. IMAGE HANDLING =================
 window.handlePhoto = function(e) {
     if (photos.length >= 10) return alert("Max 10 photos allowed");
 
     const file = e.target.files[0];
     if (!file) return;
 
-    compressImage(file).then(base64 => {
+    processImage(file).then(base64 => {
         photos.push({
             img: base64,
             time: new Date().toISOString(),
@@ -88,20 +82,35 @@ window.handlePhoto = function(e) {
     });
 };
 
-function compressImage(file) {
+function processImage(file) {
     return new Promise(resolve => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
+
         reader.onload = e => {
             const img = new Image();
             img.src = e.target.result;
+
             img.onload = () => {
                 const canvas = document.createElement("canvas");
                 const ctx = canvas.getContext("2d");
-                const scale = 0.6; 
+
+                const scale = 0.6;
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
+
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                // 🔥 STAMP (GPS + TIME)
+                ctx.fillStyle = "red";
+                ctx.font = "16px Arial";
+
+                const stamp1 = new Date().toLocaleString();
+                const stamp2 = document.getElementById("coordinates").value;
+
+                ctx.fillText(stamp1, 10, canvas.height - 25);
+                ctx.fillText(stamp2, 10, canvas.height - 5);
+
                 resolve(canvas.toDataURL("image/jpeg", 0.7));
             };
         };
@@ -111,25 +120,31 @@ function compressImage(file) {
 function renderPhotos() {
     const div = document.getElementById("photoPreview");
     if(!div) return;
+
     div.innerHTML = "";
+
     photos.forEach(p => {
         const img = document.createElement("img");
         img.src = p.img;
         img.className = "w-16 h-16 rounded object-cover border border-orange-400";
+
+        // Click preview (NEW)
+        img.onclick = () => window.open(p.img);
+
         div.appendChild(img);
     });
 }
 
-// ================= 4. DATA COLLECTION (SCRAPER) =================
+// ================= 4. DATA COLLECTION =================
 function getFormData() {
-    // Scrape Materials Hierarchy
+
+    // ✅ MATERIAL FIX (SAFE EXTRACTION)
     const selectedMaterials = Array.from(document.querySelectorAll('.data-brand:checked')).map(el => ({
-        category: el.closest('.variety-box').id.replace('var_', ''),
+        category: el.dataset.mat || "unknown",
         variety: el.dataset.parent,
         brand: el.value
     }));
 
-    // Scrape Fleet Data
     const fleetData = {};
     document.querySelectorAll('.fleet-val').forEach(el => {
         fleetData[el.dataset.name] = parseInt(el.innerText);
@@ -138,46 +153,69 @@ function getFormData() {
     return {
         trackingId: trackingId,
         firmName: document.getElementById("firmName").value,
+
         owner: {
             name: document.getElementById("ownerName").value,
             phone: document.getElementById("ownerPhone").value,
             whatsapp: document.getElementById("ownerWhatsapp").value
         },
+
         manager: {
-            name: document.getElementById("managerName").value,
-            phone: document.getElementById("managerPhone").value,
-            whatsapp: document.getElementById("managerWhatsapp").value
+            name: document.getElementById("managerName")?.value || "",
+            phone: document.getElementById("managerPhone")?.value || "",
+            whatsapp: document.getElementById("managerWhatsapp")?.value || ""
         },
+
         location: {
             coords: document.getElementById("coordinates").value,
             address: document.getElementById("address").value
         },
+
         materials: selectedMaterials,
         fleet: fleetData,
+
         timestamp: new Date().toISOString(),
         serverTime: serverTimestamp()
     };
 }
 
-// ================= 5. CLOUD SYNC & OFFLINE =================
+// ================= VALIDATION (NEW) =================
+function validateForm() {
+    if (!document.getElementById("firmName").value)
+        return "Firm Name Required";
+
+    if (!document.getElementById("coordinates").value)
+        return "GPS Required";
+
+    if (photos.length === 0)
+        return "At least 1 photo required";
+
+    return null;
+}
+
+// ================= 5. CLOUD SYNC =================
 async function uploadToFirebase(data) {
-    // 1. Upload compressed photos to Storage
+
     let uploadedPhotoUrls = [];
+
     for (let i = 0; i < photos.length; i++) {
         const storageRef = ref(storage, `surveys/${trackingId}/photo_${i}.jpg`);
         await uploadString(storageRef, photos[i].img, 'data_url');
+
         const url = await getDownloadURL(storageRef);
         uploadedPhotoUrls.push(url);
     }
+
     data.photos = uploadedPhotoUrls;
 
-    // 2. Save document to Firestore
     await addDoc(collection(db, "field_data"), data);
 }
 
 window.syncCloud = async function() {
     const btn = document.getElementById("syncBtn");
-    if(!document.getElementById("firmName").value) return alert("Firm Name Required");
+
+    const error = validateForm();
+    if (error) return alert(error);
 
     try {
         btn.innerText = "⌛ SYNCING...";
@@ -188,36 +226,49 @@ window.syncCloud = async function() {
 
         alert("🚀 Cloud Sync Successful!");
         location.reload();
+
     } catch (err) {
         console.error(err);
-        alert("❌ Sync Failed. Data saved locally.");
+        alert("❌ Sync Failed. Saved locally");
+
         saveLocal();
+
         btn.innerText = "🚀 SUBMIT SYNC";
         btn.disabled = false;
     }
 };
 
-// ================= 6. INDEXED DB (LOCAL STORAGE) =================
+// ================= 6. INDEXED DB =================
 function initIndexedDB() {
     const req = indexedDB.open("InfraDepotLocal", 1);
+
     req.onupgradeneeded = e => {
         dbLocal = e.target.result;
         dbLocal.createObjectStore("offline_queue", { keyPath: "id", autoIncrement: true });
     };
+
     req.onsuccess = e => dbLocal = e.target.result;
 }
 
 window.saveLocal = function() {
     if (!dbLocal) return alert("Local DB not ready");
+
     const tx = dbLocal.transaction("offline_queue", "readwrite");
     const store = tx.objectStore("offline_queue");
-    store.add(getFormData());
-    alert("💾 Saved to Local Device Memory");
+
+    // ✅ SAVE WITH PHOTOS (FIXED)
+    store.add({
+        ...getFormData(),
+        photos: photos
+    });
+
+    alert("💾 Saved Offline with Photos");
 };
 
-// ================= 7. BACKGROUND AUTO-SYNC =================
+// ================= 7. AUTO SYNC =================
 setInterval(async () => {
     if (navigator.onLine && dbLocal) {
+
         const tx = dbLocal.transaction("offline_queue", "readwrite");
         const store = tx.objectStore("offline_queue");
         const getAllReq = store.getAll();
@@ -225,16 +276,17 @@ setInterval(async () => {
         getAllReq.onsuccess = async () => {
             for (const item of getAllReq.result) {
                 try {
-                    // Note: This background sync attempts to upload data without photos 
-                    // (since photos are large and usually sent via manual syncCloud)
                     await addDoc(collection(db, "field_data"), item);
+
                     const delTx = dbLocal.transaction("offline_queue", "readwrite");
                     delTx.objectStore("offline_queue").delete(item.id);
-                    console.log("Background sync success for ID: " + item.id);
+
+                    console.log("Auto sync success");
+
                 } catch (e) {
-                    console.log("Auto-sync pending...");
+                    console.log("Pending...");
                 }
             }
         };
     }
-}, 30000); // Check every 30 seconds
+}, 30000);
