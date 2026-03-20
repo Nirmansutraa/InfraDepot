@@ -116,7 +116,7 @@
         .input-invalid { border-color: #ef4444 !important; background-color: #fef2f2; border-width: 2px !important; }
         .validation-msg { font-size: 9px; margin-top: 2px; font-weight: 600; display: none; color: #ef4444; }
 
-        /* Feature Extensions: Brand Chips */
+        /* Brand Chips */
         .chip {
             padding: 6px 14px;
             border-radius: 20px;
@@ -133,7 +133,7 @@
             border-color: #ff7a00;
         }
 
-        /* Feature Extensions: Photo Capture */
+        /* Photo Capture */
         .photo-slot {
             position: relative;
             width: 75px;
@@ -170,6 +170,9 @@
         .btn-dark { background: #0f1b2d; color: white; }
         .btn-green { background: #10b981; color: white; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); }
         .btn-slate { background: #475569; color: white; }
+
+        /* Read Only State Styling */
+        input[readonly] { background-color: #f9fafb; color: #64748b; cursor: not-allowed; border-style: dashed; }
     </style>
 </head>
 
@@ -196,7 +199,7 @@
 
         <div class="mt-4">
             <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Owner Contact (+91 Required)</p>
-            <input id="ownerPhone" type="tel" placeholder="Phone Number (e.g. 98765 43210)" oninput="validatePhone(this)" value="+91">
+            <input id="ownerPhone" type="tel" placeholder="Phone Number" oninput="validatePhone(this)" value="+91">
             <div id="msg-ownerPhone" class="validation-msg">Invalid Indian Number</div>
             
             <div class="flex items-center gap-2 mt-2 px-1">
@@ -251,8 +254,7 @@
 
         <div class="mb-4">
             <p class="text-[9px] font-black text-slate-400 uppercase mb-2">Featured Industry Brands</p>
-            <div id="brandChipsContainer" class="flex flex-wrap gap-2">
-                </div>
+            <div id="brandChipsContainer" class="flex flex-wrap gap-2"></div>
         </div>
 
         <div id="materialsContainer"></div>
@@ -329,19 +331,12 @@
 
 <script>
     /**
-     * ROBUST INDIAN CONTEXT PHONE VALIDATION (v2.3)
+     * ROBUST INDIAN CONTEXT PHONE VALIDATION (v2.4)
      */
     function validatePhone(input) {
         let val = input.value.trim();
         const msgEl = document.getElementById(`msg-${input.id}`);
         
-        // 1. AUTO-FIX: If user types 10 digits starting with 6-9, add +91 automatically
-        if (/^[6-9]\d{9}$/.test(val)) {
-            val = "+91" + val;
-            input.value = val;
-        }
-
-        // 2. CLEANUP: Force +91 if user deleted it or typed standard start
         if (!val.startsWith('+91')) {
             if (val.startsWith('91') && val.length > 2) {
                 val = '+' + val;
@@ -353,13 +348,12 @@
         }
         
         input.value = val;
-        let digits = val.replace(/\D/g, ''); // Get only digits
+        let digits = val.replace(/\D/g, ''); 
         let mobilePart = digits.startsWith('91') ? digits.slice(2) : digits;
 
         let isValid = false;
         let reason = "Invalid Number";
 
-        // 3. INDIAN MOBILE CONTEXT CHECK (10 digits starting with 6-9)
         if (mobilePart.length === 10 && /^[6-9]/.test(mobilePart)) {
             if (/^(.)\1{9}$/.test(mobilePart)) {
                 reason = "Fake (Repeated Digits)";
@@ -372,7 +366,6 @@
             reason = mobilePart.length < 10 ? "Too Short" : "Too Long";
         }
 
-        // 4. UI FEEDBACK AND DATA ATTRIBUTE
         if (val === "+91" || val === "") {
             input.classList.remove('input-valid', 'input-invalid');
             if(msgEl) msgEl.style.display = 'none';
@@ -393,9 +386,6 @@
         }
     }
 
-    /**
-     * PRE-SUBMIT VALIDATION HOOK
-     */
     function initiateEnterpriseSync() {
         const phoneFields = ['ownerPhone', 'ownerWhatsapp', 'mgrPhone', 'mgrWhatsapp'];
         let allValid = true;
@@ -403,9 +393,8 @@
 
         phoneFields.forEach(id => {
             const el = document.getElementById(id);
-            // Skip validation if field is just the prefix or empty, except ownerPhone
             if (el && el.value !== "+91" && el.value.trim() !== "") {
-                validatePhone(el); // Force check
+                validatePhone(el);
                 if (el.dataset.valid !== "true") {
                     allValid = false;
                     if(!firstInvalid) firstInvalid = el;
@@ -414,7 +403,6 @@
             }
         });
 
-        // Basic requirement: Owner Phone is mandatory
         const ownerPhone = document.getElementById('ownerPhone');
         if (ownerPhone.value === "+91" || !ownerPhone.value.trim()) {
             allValid = false;
@@ -424,17 +412,47 @@
         }
 
         if (!allValid) {
-            alert("❌ Please fix invalid phone numbers (check red fields). Indian numbers must start with 6-9.");
+            alert("❌ Please fix invalid phone numbers. Indian numbers must start with 6-9.");
             if(firstInvalid) firstInvalid.focus();
             return;
         }
 
-        // Trigger original syncCloud from core-engine.js
         if(window.syncCloud) window.syncCloud();
     }
 
     /**
-     * CORE UI DATA & GENERATORS
+     * SYNC LOGIC (MERGED)
+     */
+    function syncPhoneToWhatsapp() {
+        const phone = document.getElementById('ownerPhone');
+        const wa = document.getElementById('ownerWhatsapp');
+        const checkbox = document.getElementById('syncWhatsapp');
+
+        if (checkbox.checked) {
+            wa.value = phone.value;
+            validatePhone(wa);
+            wa.setAttribute("readonly", true);
+        } else {
+            wa.removeAttribute("readonly");
+        }
+    }
+
+    function syncMgrToWhatsapp() {
+        const phone = document.getElementById('mgrPhone');
+        const wa = document.getElementById('mgrWhatsapp');
+        const checkbox = document.getElementById('syncMgrWhatsapp');
+
+        if (checkbox.checked) {
+            wa.value = phone.value;
+            validatePhone(wa);
+            wa.setAttribute("readonly", true);
+        } else {
+            wa.removeAttribute("readonly");
+        }
+    }
+
+    /**
+     * MATERIALS UI LOGIC
      */
     const materialsData = {
         "Cement": {varieties:["OPC 43","OPC 53","PPC"],brands:["ACC","UltraTech","Ambuja"]},
@@ -510,32 +528,35 @@
         if(v >= 0) el.innerText = v;
     }
 
-    function syncPhoneToWhatsapp() {
-        const phone = document.getElementById('ownerPhone');
-        const wa = document.getElementById('ownerWhatsapp');
-        if(document.getElementById('syncWhatsapp').checked) {
-            wa.value = phone.value;
-            validatePhone(wa);
-        }
-    }
-
-    function syncMgrToWhatsapp() {
-        const phone = document.getElementById('mgrPhone');
-        const wa = document.getElementById('mgrWhatsapp');
-        if(document.getElementById('syncMgrWhatsapp').checked) {
-            wa.value = phone.value;
-            validatePhone(wa);
-        }
-    }
-
+    /**
+     * INITIALIZATION & EVENT LISTENERS
+     */
     window.addEventListener("DOMContentLoaded", () => {
         initMaterialsUI();
         initBrandChips();
-        // Initialize all phone fields with +91
+        
+        // AUTO SYNC ON INPUT (REAL-TIME)
+        document.getElementById('ownerPhone').addEventListener('input', () => {
+            if (document.getElementById('syncWhatsapp').checked) {
+                syncPhoneToWhatsapp();
+            }
+        });
+
+        document.getElementById('mgrPhone').addEventListener('input', () => {
+            if (document.getElementById('syncMgrWhatsapp').checked) {
+                syncMgrToWhatsapp();
+            }
+        });
+
+        // Initialize phone fields
         ['ownerPhone', 'ownerWhatsapp', 'mgrPhone', 'mgrWhatsapp'].forEach(id => {
             const el = document.getElementById(id);
             if(el) validatePhone(el);
         });
+
+        // INITIAL SYNC ON LOAD
+        syncPhoneToWhatsapp();
+        syncMgrToWhatsapp();
     });
 </script>
 
