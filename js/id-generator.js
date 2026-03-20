@@ -3,7 +3,7 @@
 /**
  * Generates a Smart ID: RJ-UDR-[Type][Material]-[Serial]
  * @param {string} supplierType - "Retailer" or "Wholesaler"
- * @param {string} activeMaterial - The material name (Cement, Sand, etc.)
+ * @param {any} activeMaterial - The material name (String) or Selection Array
  * @param {number} currentCount - Current total entries from Firebase
  */
 export function generateSmartID(supplierType, activeMaterial, currentCount) {
@@ -15,14 +15,22 @@ export function generateSmartID(supplierType, activeMaterial, currentCount) {
 
     // 2. Get Material Code (The 6 Core Materials)
     let matCode = "X"; // Default for Mixed/None
-    const mat = activeMaterial.toLowerCase();
+    let matSearch = "";
 
-    if (mat.includes("cement")) matCode = "C";
-    else if (mat.includes("tmt") || mat.includes("steel")) matCode = "T";
-    else if (mat.includes("sand")) matCode = "S";
-    else if (mat.includes("aggregate")) matCode = "A";
-    else if (mat.includes("stone")) matCode = "O";
-    else if (mat.includes("brick")) matCode = "B";
+    // MERGE LOGIC: Handle both string inputs and object arrays
+    if (Array.isArray(activeMaterial) && activeMaterial.length > 0) {
+        // If it's an array, look at the brand/variety of the first item
+        matSearch = (activeMaterial[0].brand || activeMaterial[0].variety || "").toLowerCase();
+    } else if (typeof activeMaterial === 'string') {
+        matSearch = activeMaterial.toLowerCase();
+    }
+
+    if (matSearch.includes("cement")) matCode = "C";
+    else if (matSearch.includes("tmt") || matSearch.includes("steel")) matCode = "T";
+    else if (matSearch.includes("sand")) matCode = "S";
+    else if (matSearch.includes("aggregate")) matCode = "A";
+    else if (matSearch.includes("stone")) matCode = "O";
+    else if (matSearch.includes("brick")) matCode = "B";
 
     // 3. Format Serial (e.g., 001, 042)
     const serial = String(currentCount + 1).padStart(3, '0');
