@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Terminal</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+body { background:#f2f4f7; font-family: Arial; }
+
+.card {
+    background:white;
+    padding:14px;
+    border-radius:12px;
+    margin-bottom:12px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.1);
+}
+
+.title {
+    font-size:11px;
+    color:#ff7a00;
+    font-weight:bold;
+    margin-bottom:8px;
+}
+
+.dark-box {
+    background:#0f1b2d;
+    color:#10b981;
+    text-align:center;
+    padding:18px;
+    border-radius:10px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.map { height:180px; border-radius:10px; }
+
+.material-btn {
+    background:#0f1b2d;
+    color:white;
+    padding:12px;
+    border-radius:8px;
+    margin-bottom:6px;
+    cursor:pointer;
+}
+
+.variety-box { display:none; padding-left:10px; }
+.brand-box { display:none; padding-left:15px; }
+
+/* FLEET */
+.counter-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+.counter {
+    background:#f4f6f9;
+    padding:10px;
+    border-radius:10px;
+}
+.counter-inner {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.counter button {
+    background:#0f1b2d;
+    color:white;
+    width:28px;
+    height:28px;
+    border-radius:6px;
+}
+
+/* BUTTON */
+.btn {
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    font-weight:bold;
+}
+.btn-dark { background:#0f1b2d; color:white; }
+.btn-green { background:#2ecc71; color:white; }
+
+</style>
+</head>
+
+<body>
+
+<div class="container p-2 max-w-md mx-auto">
+
+<!-- TRACKING -->
+<div class="card">
+<div class="title">1. TRACKING ID</div>
+<div id="trackingIdBox" class="dark-box">ID---</div>
+</div>
+
+<!-- ENTITY -->
+<div class="card">
+<div class="title">2. ENTITY & CONTACTS</div>
+<input id="firmName" placeholder="Firm Name">
+<input id="ownerName" placeholder="Owner Name">
+
+<div class="flex gap-2">
+<input id="ownerPhone" placeholder="Phone">
+<input id="ownerWhatsapp" placeholder="WhatsApp">
+</div>
+</div>
+
+<!-- GPS -->
+<div class="card">
+<div class="title">3. GPS & VERIFICATION</div>
+<div id="map" class="map"></div>
+
+<button class="btn btn-dark mt-2" onclick="captureGPS()">📍 CAPTURE GPS</button>
+
+<input id="coordinates" readonly placeholder="Coordinates">
+<textarea id="address" placeholder="Address"></textarea>
+
+<label class="text-xs">Verification Photos</label>
+<input type="file" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+<div id="photoPreview" class="flex gap-2 flex-wrap mt-2"></div>
+</div>
+
+<!-- MATERIALS -->
+<div class="card">
+<div class="title">4. MATERIALS INTELLIGENCE</div>
+
+<div id="materialsContainer"></div>
+
+</div>
+
+<!-- FLEET -->
+<div class="card">
+<div class="title">5. TRANSPORTATION FLEET</div>
+
+<div class="counter-grid">
+
+<div class="counter">
+<div>Tractor</div>
+<div class="counter-inner">
+<button onclick="step('Tractor',-1)">-</button>
+<span class="fleet-val" data-name="Tractor">0</span>
+<button onclick="step('Tractor',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Mini Truck</div>
+<div class="counter-inner">
+<button onclick="step('Mini Truck',-1)">-</button>
+<span class="fleet-val" data-name="Mini Truck">0</span>
+<button onclick="step('Mini Truck',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Truck</div>
+<div class="counter-inner">
+<button onclick="step('Truck',-1)">-</button>
+<span class="fleet-val" data-name="Truck">0</span>
+<button onclick="step('Truck',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Mini Dumper</div>
+<div class="counter-inner">
+<button onclick="step('Mini Dumper',-1)">-</button>
+<span class="fleet-val" data-name="Mini Dumper">0</span>
+<button onclick="step('Mini Dumper',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Dumper</div>
+<div class="counter-inner">
+<button onclick="step('Dumper',-1)">-</button>
+<span class="fleet-val" data-name="Dumper">0</span>
+<button onclick="step('Dumper',1)">+</button>
+</div>
+</div>
+
+<div class="counter">
+<div>Trailer</div>
+<div class="counter-inner">
+<button onclick="step('Trailer',-1)">-</button>
+<span class="fleet-val" data-name="Trailer">0</span>
+<button onclick="step('Trailer',1)">+</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ACTION -->
+<div class="card">
+<button id="syncBtn" class="btn btn-green" onclick="syncCloud()">🚀 SUBMIT SYNC</button>
+</div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// MATERIAL DATA
+const materialsData = {
+"Cement": {varieties:["OPC 43","OPC 53","PPC"],brands:["ACC","UltraTech","Ambuja"]},
+"TMT Steel": {varieties:["Fe500","Fe550D"],brands:["Tata","JSW"]},
+"Sand": {varieties:["River","M-Sand"],brands:["Local","Premium"]},
+"Aggregates": {varieties:["10mm","20mm"],brands:["Crusher"]},
+"Masonry Stones": {varieties:["Granite"],brands:["Local"]},
+"Bricks": {varieties:["Red","Fly Ash"],brands:["Local"]}
+};
+
+// BUILD UI
+function initMaterialsUI(){
+const c=document.getElementById("materialsContainer");
+
+Object.keys(materialsData).forEach(mat=>{
+const safe=mat.replace(/\s/g,'');
+
+const div=document.createElement("div");
+
+div.innerHTML=`
+<div class="material-btn" onclick="toggleDiv('var_${safe}')">${mat}</div>
+
+<div id="var_${safe}" class="variety-box">
+${materialsData[mat].varieties.map(v=>{
+const vID=v.replace(/\s/g,'');
+
+return `
+<div>
+<label onclick="toggleDiv('brand_${vID}')">
+<input type="checkbox" class="data-var" data-mat="${mat}" value="${v}">
+${v}
+</label>
+
+<div id="brand_${vID}" class="brand-box">
+${materialsData[mat].brands.map(b=>`
+<label>
+<input type="checkbox" class="data-brand" data-mat="${mat}" data-parent="${v}" value="${b}">
+${b}
+</label><br>
+`).join("")}
+</div>
+</div>
+`;
+}).join("")}
+</div>
+`;
+
+c.appendChild(div);
+});
+}
+
+// TOGGLE
+function toggleDiv(id){
+const el=document.getElementById(id);
+el.style.display=el.style.display==="block"?"none":"block";
+}
+
+// FLEET
+function step(name,val){
+const el=document.querySelector(`.fleet-val[data-name="${name}"]`);
+let v=parseInt(el.innerText)+val;
+if(v>=0) el.innerText=v;
+}
+
+// INIT
+window.addEventListener("DOMContentLoaded",()=>{
+initMaterialsUI();
+});
+</script>
+
+<script type="module">
+import "./js/firebase-config.js";
+import "./js/core-engine.js";
+</script>
+
+</body>
+</html>
