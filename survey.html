@@ -7,172 +7,18 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/libphonenumber-js/1.10.44/libphonenumber-js.min.js"></script>
 
     <style>
-        body { 
-            background: #f2f4f7; 
-            font-family: 'Inter', Arial, sans-serif; 
-            padding-bottom: 40px;
-        }
-
-        /* Card System */
-        .card {
-            background: white;
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e5e7eb;
-        }
-
-        .title {
-            font-size: 11px;
-            color: #ff7a00;
-            font-weight: 800;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Branding Box */
-        .dark-box {
-            background: #0f1b2d;
-            color: #10b981;
-            text-align: center;
-            padding: 18px;
-            border-radius: 10px;
-            font-size: 20px;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            border: 2px solid #1e293b;
-        }
-
-        /* Map UI */
-        .map { 
-            height: 180px; 
-            border-radius: 10px; 
-            border: 1px solid #d1d5db;
-        }
-
-        /* Material Selection UI */
-        .material-btn {
-            background: #0f1b2d;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .variety-box { display: none; padding-left: 12px; border-left: 2px solid #ff7a00; margin-bottom: 10px; }
-        .brand-box { display: none; padding-left: 15px; background: #f9fafb; border-radius: 8px; padding-top: 5px; }
-
-        /* Fleet Counter UI */
-        .counter-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        .counter {
-            background: #f4f6f9;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
-        }
-        .counter-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .counter button {
-            background: #0f1b2d;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 6px;
-            font-weight: bold;
-        }
-
-        /* Form Inputs */
-        #supplierType, #firmName, #ownerName, #ownerPhone, #ownerWhatsapp, 
-        #mgrName, #mgrPhone, #mgrWhatsapp, #address {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            outline: none;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-
-        /* Validation UI States */
-        .input-valid { border-color: #10b981 !important; border-width: 2px !important; }
-        .input-invalid { border-color: #ef4444 !important; background-color: #fef2f2; border-width: 2px !important; }
-        .validation-msg { font-size: 9px; margin-top: 2px; font-weight: 600; display: none; color: #ef4444; }
-
-        /* Brand Chips */
-        .chip {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            border: 1px solid #d1d5db;
-            background: white;
-            transition: all 0.2s ease;
-        }
-        .chip.active {
-            background: #ff7a00;
-            color: white;
-            border-color: #ff7a00;
-        }
-
-        /* Photo Capture */
-        .photo-slot {
-            position: relative;
-            width: 75px;
-            height: 75px;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid #d1d5db;
-            flex-shrink: 0;
-        }
-        .del-btn {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            font-size: 10px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        /* Buttons */
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border-radius: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
+        body { background: #f2f4f7; font-family: 'Inter', Arial, sans-serif; padding-bottom: 40px; }
+        .card { background: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+        .title { font-size: 11px; color: #ff7a00; font-weight: 800; margin-bottom: 10px; text-transform: uppercase; }
+        .dark-box { background: #0f1b2d; color: #10b981; text-align: center; padding: 18px; border-radius: 10px; font-size: 20px; font-weight: bold; }
+        .map { height: 180px; border-radius: 10px; border: 1px solid #d1d5db; }
+        input, textarea, select { width: 100%; padding: 12px; margin-top: 6px; border-radius: 8px; border: 1px solid #d1d5db; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; font-weight: bold; }
         .btn-dark { background: #0f1b2d; color: white; }
-        .btn-green { background: #10b981; color: white; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); }
+        .btn-green { background: #10b981; color: white; }
         .btn-slate { background: #475569; color: white; }
-
-        /* Read Only State Styling */
-        input[readonly] { background-color: #f9fafb; color: #64748b; cursor: not-allowed; border-style: dashed; }
     </style>
 </head>
 
@@ -187,142 +33,40 @@
 
     <div class="card">
         <div class="title">2. ENTITY & CONTACTS</div>
-        
-        <label class="text-[10px] font-bold text-slate-400 uppercase">Supplier Classification</label>
+
         <select id="supplierType" onchange="if(window.refreshTrackingID) window.refreshTrackingID()">
-            <option value="Retailer">Retailer (R)</option>
-            <option value="Wholesaler">Wholesaler (W)</option>
+            <option value="Retailer">Retailer</option>
+            <option value="Wholesaler">Wholesaler</option>
         </select>
 
-        <input id="firmName" placeholder="Firm Name (e.g., Udaipur Steels)">
+        <input id="firmName" placeholder="Firm Name">
         <input id="ownerName" placeholder="Owner Name">
 
-        <div class="mt-4">
-            <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Owner Contact (+91 Required)</p>
-            <input id="ownerPhone" type="tel" placeholder="Phone Number" oninput="validatePhone(this)" value="+91">
-            <div id="msg-ownerPhone" class="validation-msg">Invalid Indian Number</div>
-            
-            <div class="flex items-center gap-2 mt-2 px-1">
-                <input type="checkbox" id="syncWhatsapp" class="w-4 h-4 accent-orange-500" onchange="syncPhoneToWhatsapp()">
-                <label for="syncWhatsapp" class="text-[10px] font-bold text-slate-500 uppercase">Same as Phone</label>
-            </div>
-            <input id="ownerWhatsapp" type="tel" placeholder="WhatsApp Number" oninput="validatePhone(this)" value="+91">
-            <div id="msg-ownerWhatsapp" class="validation-msg">Invalid Indian Number</div>
-        </div>
+        <input id="ownerPhone" type="tel" value="+91">
+        <input id="ownerWhatsapp" type="tel" value="+91">
 
-        <div class="mt-4 pt-4 border-t border-dashed border-slate-200">
-            <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Manager Intelligence</p>
-            <input id="mgrName" placeholder="Manager Name">
-            <input id="mgrPhone" type="tel" placeholder="Manager Contact" oninput="validatePhone(this)" value="+91">
-            <div id="msg-mgrPhone" class="validation-msg">Invalid Indian Number</div>
-            
-            <div class="flex items-center gap-2 mt-2 px-1">
-                <input type="checkbox" id="syncMgrWhatsapp" class="w-4 h-4 accent-orange-500" onchange="syncMgrToWhatsapp()">
-                <label for="syncMgrWhatsapp" class="text-[10px] font-bold text-slate-500 uppercase">Same as Contact</label>
-            </div>
-            <input id="mgrWhatsapp" type="tel" placeholder="Manager WhatsApp" oninput="validatePhone(this)" value="+91">
-            <div id="msg-mgrWhatsapp" class="validation-msg">Invalid Indian Number</div>
-        </div>
+        <input id="mgrName" placeholder="Manager Name">
+        <input id="mgrPhone" type="tel" value="+91">
+        <input id="mgrWhatsapp" type="tel" value="+91">
     </div>
 
     <div class="card">
-        <div class="title">3. GPS & VERIFICATION</div>
+        <div class="title">3. GPS</div>
         <div id="map" class="map"></div>
-
         <button class="btn btn-dark mt-2" onclick="captureGPS()">📍 CAPTURE GPS</button>
-
-        <div class="grid grid-cols-2 gap-2 mt-2">
-            <input id="lat" readonly placeholder="Latitude" class="bg-slate-50 text-[10px] text-slate-500">
-            <input id="lng" readonly placeholder="Longitude" class="bg-slate-50 text-[10px] text-slate-500">
-        </div>
-        <input id="coordinates" readonly class="hidden">
-        <textarea id="address" placeholder="Physical Address (Autofetching on GPS)"></textarea>
-
-        <div class="mt-4">
-            <label class="text-[10px] font-bold text-slate-400 uppercase block mb-2">Site Photos (Max 10 | 512KB)</label>
-            <div class="flex items-center gap-3">
-                <button onclick="document.getElementById('cameraInput').click()" class="bg-slate-100 border-2 border-dashed border-slate-300 w-16 h-16 rounded-lg flex items-center justify-center text-slate-400 text-xl hover:bg-slate-200 transition-all">+</button>
-                <div id="photoPreview" class="flex gap-2 overflow-x-auto pb-2 flex-1"></div>
-            </div>
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handlePhoto(event)">
-            <p class="text-[9px] text-slate-400 mt-1 italic">* Photos are auto-compressed for cloud sync.</p>
-        </div>
+        <input id="lat" readonly>
+        <input id="lng" readonly>
+        <textarea id="address"></textarea>
     </div>
 
     <div class="card">
         <div class="title">4. MATERIALS INTELLIGENCE</div>
-
-        <div class="mb-4">
-            <p class="text-[9px] font-black text-slate-400 uppercase mb-2">Featured Industry Brands</p>
-            <div id="brandChipsContainer" class="flex flex-wrap gap-2"></div>
-        </div>
-
         <div id="materialsContainer"></div>
     </div>
 
-    <div class="card">
-        <div class="title">5. TRANSPORTATION FLEET</div>
-
-        <div class="counter-grid">
-            <div class="counter">
-                <div class="text-[11px] font-bold text-slate-600">Tractor</div>
-                <div class="counter-inner">
-                    <button onclick="step('Tractor',-1)">-</button>
-                    <span class="fleet-val text-sm font-black" data-name="Tractor">0</span>
-                    <button onclick="step('Tractor',1)">+</button>
-                </div>
-            </div>
-
-            <div class="counter">
-                <div class="text-[11px] font-bold text-slate-600">Mini Truck</div>
-                <div class="counter-inner">
-                    <button onclick="step('Mini Truck',-1)">-</button>
-                    <span class="fleet-val text-sm font-black" data-name="Mini Truck">0</span>
-                    <button onclick="step('Mini Truck',1)">+</button>
-                </div>
-            </div>
-
-            <div class="counter">
-                <div class="text-[11px] font-bold text-slate-600">Truck</div>
-                <div class="counter-inner">
-                    <button onclick="step('Truck',-1)">-</button>
-                    <span class="fleet-val text-sm font-black" data-name="Truck">0</span>
-                    <button onclick="step('Truck',1)">+</button>
-                </div>
-            </div>
-
-            <div class="counter">
-                <div class="text-[11px] font-bold text-slate-600">Mini Dumper</div>
-                <div class="counter-inner">
-                    <button onclick="step('Mini Dumper',-1)">-</button>
-                    <span class="fleet-val text-sm font-black" data-name="Mini Dumper">0</span>
-                    <button onclick="step('Mini Dumper',1)">+</button>
-                </div>
-            </div>
-
-            <div class="counter">
-                <div class="text-[11px] font-bold text-slate-600">Dumper</div>
-                <div class="counter-inner">
-                    <button onclick="step('Dumper',-1)">-</button>
-                    <span class="fleet-val text-sm font-black" data-name="Dumper">0</span>
-                    <button onclick="step('Dumper',1)">+</button>
-                </div>
-            </div>
-
-            <div class="counter">
-                <div class="text-[11px] font-bold text-slate-600">Trailer</div>
-                <div class="counter-inner">
-                    <button onclick="step('Trailer',-1)">-</button>
-                    <span class="fleet-val text-sm font-black" data-name="Trailer">0</span>
-                    <button onclick="step('Trailer',1)">+</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="card flex gap-2">
-        <button class="btn btn-slate text-xs flex-1" onclick="saveLocally()">💾 SAVE LOCALLY</button>
-        <button id="syncBtn" class="btn btn-green text-xs flex-[2]" onclick="initiateEnterpriseSync()">🚀 SYNC TO CLOUD</button>
+        <button class="btn btn-slate" onclick="saveLocally()">SAVE</button>
+        <button id="syncBtn" class="btn btn-green" onclick="initiateEnterpriseSync()">SYNC</button>
     </div>
 
 </div>
@@ -330,242 +74,19 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    /**
-     * ROBUST INDIAN CONTEXT PHONE VALIDATION (v2.4)
-     */
-    function validatePhone(input) {
-        let val = input.value.trim();
-        const msgEl = document.getElementById(`msg-${input.id}`);
-        
-        if (!val.startsWith('+91')) {
-            if (val.startsWith('91') && val.length > 2) {
-                val = '+' + val;
-            } else if (val.length > 0 && /^[6-9]/.test(val)) {
-                val = '+91' + val;
-            } else if (val.length === 0) {
-                val = '+91';
-            }
-        }
-        
-        input.value = val;
-        let digits = val.replace(/\D/g, ''); 
-        let mobilePart = digits.startsWith('91') ? digits.slice(2) : digits;
-
-        let isValid = false;
-        let reason = "Invalid Number";
-
-        if (mobilePart.length === 10 && /^[6-9]/.test(mobilePart)) {
-            if (/^(.)\1{9}$/.test(mobilePart)) {
-                reason = "Fake (Repeated Digits)";
-            } else if (/^0123456789|9876543210|1234567890$/.test(mobilePart)) {
-                reason = "Fake (Sequential)";
-            } else {
-                isValid = true;
-            }
-        } else {
-            reason = mobilePart.length < 10 ? "Too Short" : "Too Long";
-        }
-
-        if (val === "+91" || val === "") {
-            input.classList.remove('input-valid', 'input-invalid');
-            if(msgEl) msgEl.style.display = 'none';
-            input.dataset.valid = "false";
-        } else if (isValid) {
-            input.classList.add('input-valid');
-            input.classList.remove('input-invalid');
-            if(msgEl) msgEl.style.display = 'none';
-            input.dataset.valid = "true";
-        } else {
-            input.classList.add('input-invalid');
-            input.classList.remove('input-valid');
-            if(msgEl) {
-                msgEl.innerText = reason;
-                msgEl.style.display = 'block';
-            }
-            input.dataset.valid = "false";
-        }
-    }
-
-    function initiateEnterpriseSync() {
-        const phoneFields = ['ownerPhone', 'ownerWhatsapp', 'mgrPhone', 'mgrWhatsapp'];
-        let allValid = true;
-        let firstInvalid = null;
-
-        phoneFields.forEach(id => {
-            const el = document.getElementById(id);
-            if (el && el.value !== "+91" && el.value.trim() !== "") {
-                validatePhone(el);
-                if (el.dataset.valid !== "true") {
-                    allValid = false;
-                    if(!firstInvalid) firstInvalid = el;
-                    el.classList.add('input-invalid');
-                }
-            }
-        });
-
-        const ownerPhone = document.getElementById('ownerPhone');
-        if (ownerPhone.value === "+91" || !ownerPhone.value.trim()) {
-            allValid = false;
-            ownerPhone.classList.add('input-invalid');
-            alert("❌ Owner Phone Number is required.");
-            return;
-        }
-
-        if (!allValid) {
-            alert("❌ Please fix invalid phone numbers. Indian numbers must start with 6-9.");
-            if(firstInvalid) firstInvalid.focus();
-            return;
-        }
-
-        if(window.syncCloud) window.syncCloud();
-    }
-
-    /**
-     * SYNC LOGIC (MERGED)
-     */
-    function syncPhoneToWhatsapp() {
-        const phone = document.getElementById('ownerPhone');
-        const wa = document.getElementById('ownerWhatsapp');
-        const checkbox = document.getElementById('syncWhatsapp');
-
-        if (checkbox.checked) {
-            wa.value = phone.value;
-            validatePhone(wa);
-            wa.setAttribute("readonly", true);
-        } else {
-            wa.removeAttribute("readonly");
-        }
-    }
-
-    function syncMgrToWhatsapp() {
-        const phone = document.getElementById('mgrPhone');
-        const wa = document.getElementById('mgrWhatsapp');
-        const checkbox = document.getElementById('syncMgrWhatsapp');
-
-        if (checkbox.checked) {
-            wa.value = phone.value;
-            validatePhone(wa);
-            wa.setAttribute("readonly", true);
-        } else {
-            wa.removeAttribute("readonly");
-        }
-    }
-
-    /**
-     * MATERIALS UI LOGIC
-     */
-    const materialsData = {
-        "Cement": {varieties:["OPC 43","OPC 53","PPC"],brands:["ACC","UltraTech","Ambuja"]},
-        "TMT Steel": {varieties:["Fe500","Fe550D"],brands:["Tata","JSW"]},
-        "Sand": {varieties:["River","M-Sand"],brands:["Local","Premium"]},
-        "Aggregates": {varieties:["10mm","20mm"],brands:["Crusher"]},
-        "Masonry Stones": {varieties:["Granite"],brands:["Local"]},
-        "Bricks": {varieties:["Red","Fly Ash"],brands:["Local"]}
-    };
-
-    const topBrandsList = ["ACC", "UltraTech", "Ambuja", "Tata Tiscon", "JSW Neosteel", "JK Lakshmi", "Birla", "Wonder", "Kamdhenu", "Dalmia"];
-
-    function initMaterialsUI(){
-        const c = document.getElementById("materialsContainer");
-        Object.keys(materialsData).forEach(mat => {
-            const safe = mat.replace(/\s/g,'');
-            const div = document.createElement("div");
-            div.innerHTML = `
-                <div class="material-btn" onclick="toggleDiv('var_${safe}')">
-                    <span>${mat}</span>
-                    <span class="text-[10px]">▼</span>
-                </div>
-                <div id="var_${safe}" class="variety-box">
-                    ${materialsData[mat].varieties.map(v => {
-                        const vID = v.replace(/\s/g,'');
-                        return `
-                            <div>
-                                <label class="flex items-center gap-2 font-bold text-slate-700 py-1" onclick="toggleDiv('brand_${vID}')">
-                                    <input type="checkbox" class="data-var" data-mat="${mat}" value="${v}">
-                                    ${v}
-                                </label>
-                                <div id="brand_${vID}" class="brand-box">
-                                    ${materialsData[mat].brands.map(b => `
-                                        <label class="flex items-center gap-2 text-xs py-1 text-slate-500">
-                                            <input type="checkbox" class="data-brand" 
-                                                   onclick="if(window.refreshTrackingID) window.refreshTrackingID()" 
-                                                   data-mat="${mat}" data-parent="${v}" value="${b}">
-                                            ${b}
-                                        </label>
-                                    `).join("")}
-                                </div>
-                            </div>
-                        `;
-                    }).join("")}
-                </div>
-            `;
-            c.appendChild(div);
-        });
-    }
-
-    function initBrandChips() {
-        const container = document.getElementById('brandChipsContainer');
-        topBrandsList.forEach(brand => {
-            const chip = document.createElement('div');
-            chip.className = 'chip';
-            chip.innerText = brand;
-            chip.onclick = function() {
-                this.classList.toggle('active');
-                if(window.refreshTrackingID) window.refreshTrackingID();
-            };
-            container.appendChild(chip);
-        });
-    }
-
-    function toggleDiv(id){
-        const el = document.getElementById(id);
-        if(el) el.style.display = el.style.display === "block" ? "none" : "block";
-    }
-
-    function step(name, val){
-        const el = document.querySelector(`.fleet-val[data-name="${name}"]`);
-        let v = parseInt(el.innerText) + val;
-        if(v >= 0) el.innerText = v;
-    }
-
-    /**
-     * INITIALIZATION & EVENT LISTENERS
-     */
-    window.addEventListener("DOMContentLoaded", () => {
-        initMaterialsUI();
-        initBrandChips();
-        
-        // AUTO SYNC ON INPUT (REAL-TIME)
-        document.getElementById('ownerPhone').addEventListener('input', () => {
-            if (document.getElementById('syncWhatsapp').checked) {
-                syncPhoneToWhatsapp();
-            }
-        });
-
-        document.getElementById('mgrPhone').addEventListener('input', () => {
-            if (document.getElementById('syncMgrWhatsapp').checked) {
-                syncMgrToWhatsapp();
-            }
-        });
-
-        // Initialize phone fields
-        ['ownerPhone', 'ownerWhatsapp', 'mgrPhone', 'mgrWhatsapp'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) validatePhone(el);
-        });
-
-        // INITIAL SYNC ON LOAD
-        syncPhoneToWhatsapp();
-        syncMgrToWhatsapp();
-    });
+function initiateEnterpriseSync(){
+    if(window.syncCloud) window.syncCloud();
+}
 </script>
 
+<!-- 🔥 MATERIAL ENGINE CONNECTED -->
+<script src="./js/materials-engine.js"></script>
+
+<!-- 🔥 CORE SYSTEM -->
 <script type="module">
     import "./js/firebase-config.js";
     import "./js/core-engine.js";
 </script>
-
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
 </body>
 </html>
