@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/libphonenumber-js/1.10.44/libphonenumber-js.min.js"></script>
 
     <style>
         body { 
@@ -107,7 +108,13 @@
             border: 1px solid #d1d5db;
             outline: none;
             font-size: 14px;
+            transition: all 0.2s ease;
         }
+
+        /* Validation UI States */
+        .input-valid { border-color: #10b981 !important; ring: 2px solid #10b981; }
+        .input-invalid { border-color: #ef4444 !important; background-color: #fef2f2; }
+        .validation-msg { font-size: 9px; margin-top: 2px; font-weight: 600; display: none; }
 
         /* Feature Extensions: Brand Chips */
         .chip {
@@ -189,25 +196,29 @@
 
         <div class="mt-4">
             <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Owner Contact</p>
-            <input id="ownerPhone" type="tel" placeholder="Phone Number" oninput="validatePhone(this)">
+            <input id="ownerPhone" type="tel" placeholder="Phone Number (e.g. +91 98765 43210)" oninput="validatePhone(this)">
+            <div id="msg-ownerPhone" class="validation-msg text-red-500">Invalid Number</div>
             
             <div class="flex items-center gap-2 mt-2 px-1">
                 <input type="checkbox" id="syncWhatsapp" class="w-4 h-4 accent-orange-500" onchange="syncPhoneToWhatsapp()">
                 <label for="syncWhatsapp" class="text-[10px] font-bold text-slate-500 uppercase">Same as Phone</label>
             </div>
             <input id="ownerWhatsapp" type="tel" placeholder="WhatsApp Number" oninput="validatePhone(this)">
+            <div id="msg-ownerWhatsapp" class="validation-msg text-red-500">Invalid Number</div>
         </div>
 
         <div class="mt-4 pt-4 border-t border-dashed border-slate-200">
             <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Manager Intelligence</p>
             <input id="mgrName" placeholder="Manager Name">
             <input id="mgrPhone" type="tel" placeholder="Manager Contact" oninput="validatePhone(this)">
+            <div id="msg-mgrPhone" class="validation-msg text-red-500">Invalid Number</div>
             
             <div class="flex items-center gap-2 mt-2 px-1">
                 <input type="checkbox" id="syncMgrWhatsapp" class="w-4 h-4 accent-orange-500" onchange="syncMgrToWhatsapp()">
                 <label for="syncMgrWhatsapp" class="text-[10px] font-bold text-slate-500 uppercase">Same as Contact</label>
             </div>
             <input id="mgrWhatsapp" type="tel" placeholder="Manager WhatsApp" oninput="validatePhone(this)">
+            <div id="msg-mgrWhatsapp" class="validation-msg text-red-500">Invalid Number</div>
         </div>
     </div>
 
@@ -309,7 +320,7 @@
 
     <div class="card flex gap-2">
         <button class="btn btn-slate text-xs flex-1" onclick="saveLocally()">💾 SAVE LOCALLY</button>
-        <button id="syncBtn" class="btn btn-green text-xs flex-[2]" onclick="syncCloud()">🚀 SYNC TO CLOUD</button>
+        <button id="syncBtn" class="btn btn-green text-xs flex-[2]" onclick="initiateEnterpriseSync()">🚀 SYNC TO CLOUD</button>
     </div>
 
 </div>
@@ -317,6 +328,112 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+    /**
+     * ENTERPRISE PHONE VALIDATION ENGINE (v2026)
+     */
+    const PHONE_REGEX_PATTERNS = {
+        repetitive: /(.)\1{9,}/,
+        sequential: /1234567890|0123456789|9876543210|0987654321/
+    };
+
+    function validatePhone(input) {
+        const val = input.value.trim();
+        const msgEl = document.getElementById(`msg-${input.id}`);
+        
+        // Basic Cleanup: allow only digits and '+'
+        let cleanVal = val.replace(/[^\d+]/g, '');
+        
+        // Smart Country Logic: If it starts with 6-9 and length is 10, prefix +91
+        if (/^[6-9]/.test(cleanVal) && cleanVal.length === 10) {
+            cleanVal = '+91' + cleanVal;
+        } else if (cleanVal.length > 0 && !cleanVal.startsWith('+')) {
+            cleanVal = '+' + cleanVal;
+        }
+        
+        // Use libphonenumber if available, else fallback to regex
+        let isValid = false;
+        let reason = "Invalid Format";
+
+        try {
+            const phoneNumber = libphonenumber.parsePhoneNumberFromString(cleanVal);
+            if (phoneNumber && phoneNumber.isValid()) {
+                isValid = true;
+                
+                // Secondary check for fake patterns
+                const nationalNumber = phoneNumber.nationalNumber;
+                if (PHONE_REGEX_PATTERNS.repetitive.test(nationalNumber)) {
+                    isValid = false;
+                    reason = "Fake Number Detected";
+                } else if (PHONE_REGEX_PATTERNS.sequential.test(nationalNumber)) {
+                    isValid = false;
+                    reason = "Sequential Number Blocked";
+                }
+            } else {
+                reason = cleanVal.length < 10 ? "Too Short" : "Invalid Country Code/Format";
+            }
+        } catch (e) {
+            isValid = false;
+        }
+
+        // UI Feedback
+        if (val === "") {
+            input.classList.remove('input-valid', 'input-invalid');
+            if(msgEl) msgEl.style.display = 'none';
+        } else if (isValid) {
+            input.classList.add('input-valid');
+            input.classList.remove('input-invalid');
+            if(msgEl) msgEl.style.display = 'none';
+            // Normalize input value to standardized format
+            input.dataset.valid = "true";
+        } else {
+            input.classList.add('input-invalid');
+            input.classList.remove('input-valid');
+            if(msgEl) {
+                msgEl.innerText = reason;
+                msgEl.style.display = 'block';
+            }
+            input.dataset.valid = "false";
+        }
+    }
+
+    /**
+     * PRE-SUBMIT VALIDATION HOOK
+     */
+    function initiateEnterpriseSync() {
+        const phoneFields = ['ownerPhone', 'ownerWhatsapp', 'mgrPhone', 'mgrWhatsapp'];
+        let allValid = true;
+        let firstInvalid = null;
+
+        phoneFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.value.trim() !== "") {
+                if (el.dataset.valid !== "true") {
+                    allValid = false;
+                    if(!firstInvalid) firstInvalid = el;
+                    el.classList.add('input-invalid');
+                }
+            }
+        });
+
+        // Basic requirement: Owner Phone is mandatory
+        const ownerPhone = document.getElementById('ownerPhone');
+        if (!ownerPhone.value.trim()) {
+            allValid = false;
+            ownerPhone.classList.add('input-invalid');
+            alert("❌ Owner Phone Number is required.");
+            return;
+        }
+
+        if (!allValid) {
+            alert("❌ Please fix invalid phone numbers (check red fields). Fake or short numbers are blocked.");
+            if(firstInvalid) firstInvalid.focus();
+            return;
+        }
+
+        // If all valid, trigger the original syncCloud function in core-engine.js
+        if(window.syncCloud) window.syncCloud();
+    }
+
     /**
      * CORE UI DATA & GENERATORS
      */
@@ -331,7 +448,6 @@
 
     const topBrandsList = ["ACC", "UltraTech", "Ambuja", "Tata Tiscon", "JSW Neosteel", "JK Lakshmi", "Birla", "Wonder", "Kamdhenu", "Dalmia"];
 
-    // Build Material Selection UI (Existing Logic)
     function initMaterialsUI(){
         const c = document.getElementById("materialsContainer");
         Object.keys(materialsData).forEach(mat => {
@@ -370,7 +486,6 @@
         });
     }
 
-    // Build Brand Chips (New Logic)
     function initBrandChips() {
         const container = document.getElementById('brandChipsContainer');
         topBrandsList.forEach(brand => {
@@ -385,20 +500,35 @@
         });
     }
 
-    // UI Toggle Helper
     function toggleDiv(id){
         const el = document.getElementById(id);
         if(el) el.style.display = el.style.display === "block" ? "none" : "block";
     }
 
-    // Fleet Counter Helper
     function step(name, val){
         const el = document.querySelector(`.fleet-val[data-name="${name}"]`);
         let v = parseInt(el.innerText) + val;
         if(v >= 0) el.innerText = v;
     }
 
-    // Dom Ready Execution
+    function syncPhoneToWhatsapp() {
+        const phone = document.getElementById('ownerPhone');
+        const wa = document.getElementById('ownerWhatsapp');
+        if(document.getElementById('syncWhatsapp').checked) {
+            wa.value = phone.value;
+            validatePhone(wa);
+        }
+    }
+
+    function syncMgrToWhatsapp() {
+        const phone = document.getElementById('mgrPhone');
+        const wa = document.getElementById('mgrWhatsapp');
+        if(document.getElementById('syncMgrWhatsapp').checked) {
+            wa.value = phone.value;
+            validatePhone(wa);
+        }
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
         initMaterialsUI();
         initBrandChips();
@@ -413,4 +543,4 @@
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
 </body>
-</html>
+</html>```
