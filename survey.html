@@ -112,9 +112,9 @@
         }
 
         /* Validation UI States */
-        .input-valid { border-color: #10b981 !important; ring: 2px solid #10b981; }
-        .input-invalid { border-color: #ef4444 !important; background-color: #fef2f2; }
-        .validation-msg { font-size: 9px; margin-top: 2px; font-weight: 600; display: none; }
+        .input-valid { border-color: #10b981 !important; border-width: 2px !important; }
+        .input-invalid { border-color: #ef4444 !important; background-color: #fef2f2; border-width: 2px !important; }
+        .validation-msg { font-size: 9px; margin-top: 2px; font-weight: 600; display: none; color: #ef4444; }
 
         /* Feature Extensions: Brand Chips */
         .chip {
@@ -195,30 +195,30 @@
         <input id="ownerName" placeholder="Owner Name">
 
         <div class="mt-4">
-            <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Owner Contact</p>
-            <input id="ownerPhone" type="tel" placeholder="Phone Number (e.g. +91 98765 43210)" oninput="validatePhone(this)">
-            <div id="msg-ownerPhone" class="validation-msg text-red-500">Invalid Number</div>
+            <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Owner Contact (+91 Required)</p>
+            <input id="ownerPhone" type="tel" placeholder="Phone Number (e.g. 98765 43210)" oninput="validatePhone(this)" value="+91">
+            <div id="msg-ownerPhone" class="validation-msg">Invalid Indian Number</div>
             
             <div class="flex items-center gap-2 mt-2 px-1">
                 <input type="checkbox" id="syncWhatsapp" class="w-4 h-4 accent-orange-500" onchange="syncPhoneToWhatsapp()">
                 <label for="syncWhatsapp" class="text-[10px] font-bold text-slate-500 uppercase">Same as Phone</label>
             </div>
-            <input id="ownerWhatsapp" type="tel" placeholder="WhatsApp Number" oninput="validatePhone(this)">
-            <div id="msg-ownerWhatsapp" class="validation-msg text-red-500">Invalid Number</div>
+            <input id="ownerWhatsapp" type="tel" placeholder="WhatsApp Number" oninput="validatePhone(this)" value="+91">
+            <div id="msg-ownerWhatsapp" class="validation-msg">Invalid Indian Number</div>
         </div>
 
         <div class="mt-4 pt-4 border-t border-dashed border-slate-200">
             <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Manager Intelligence</p>
             <input id="mgrName" placeholder="Manager Name">
-            <input id="mgrPhone" type="tel" placeholder="Manager Contact" oninput="validatePhone(this)">
-            <div id="msg-mgrPhone" class="validation-msg text-red-500">Invalid Number</div>
+            <input id="mgrPhone" type="tel" placeholder="Manager Contact" oninput="validatePhone(this)" value="+91">
+            <div id="msg-mgrPhone" class="validation-msg">Invalid Indian Number</div>
             
             <div class="flex items-center gap-2 mt-2 px-1">
                 <input type="checkbox" id="syncMgrWhatsapp" class="w-4 h-4 accent-orange-500" onchange="syncMgrToWhatsapp()">
                 <label for="syncMgrWhatsapp" class="text-[10px] font-bold text-slate-500 uppercase">Same as Contact</label>
             </div>
-            <input id="mgrWhatsapp" type="tel" placeholder="Manager WhatsApp" oninput="validatePhone(this)">
-            <div id="msg-mgrWhatsapp" class="validation-msg text-red-500">Invalid Number</div>
+            <input id="mgrWhatsapp" type="tel" placeholder="Manager WhatsApp" oninput="validatePhone(this)" value="+91">
+            <div id="msg-mgrWhatsapp" class="validation-msg">Invalid Indian Number</div>
         </div>
     </div>
 
@@ -329,61 +329,54 @@
 
 <script>
     /**
-     * ENTERPRISE PHONE VALIDATION ENGINE (v2026)
+     * ROBUST INDIAN CONTEXT PHONE VALIDATION (v2.2)
      */
-    const PHONE_REGEX_PATTERNS = {
-        repetitive: /(.)\1{9,}/,
-        sequential: /1234567890|0123456789|9876543210|0987654321/
-    };
-
     function validatePhone(input) {
-        const val = input.value.trim();
+        let val = input.value.trim();
         const msgEl = document.getElementById(`msg-${input.id}`);
         
-        // Basic Cleanup: allow only digits and '+'
-        let cleanVal = val.replace(/[^\d+]/g, '');
-        
-        // Smart Country Logic: If it starts with 6-9 and length is 10, prefix +91
-        if (/^[6-9]/.test(cleanVal) && cleanVal.length === 10) {
-            cleanVal = '+91' + cleanVal;
-        } else if (cleanVal.length > 0 && !cleanVal.startsWith('+')) {
-            cleanVal = '+' + cleanVal;
-        }
-        
-        // Use libphonenumber if available, else fallback to regex
-        let isValid = false;
-        let reason = "Invalid Format";
-
-        try {
-            const phoneNumber = libphonenumber.parsePhoneNumberFromString(cleanVal);
-            if (phoneNumber && phoneNumber.isValid()) {
-                isValid = true;
-                
-                // Secondary check for fake patterns
-                const nationalNumber = phoneNumber.nationalNumber;
-                if (PHONE_REGEX_PATTERNS.repetitive.test(nationalNumber)) {
-                    isValid = false;
-                    reason = "Fake Number Detected";
-                } else if (PHONE_REGEX_PATTERNS.sequential.test(nationalNumber)) {
-                    isValid = false;
-                    reason = "Sequential Number Blocked";
-                }
-            } else {
-                reason = cleanVal.length < 10 ? "Too Short" : "Invalid Country Code/Format";
+        // 1. Force +91 if user deleted it or typed standard start
+        if (!val.startsWith('+91')) {
+            if (val.startsWith('91') && val.length > 2) {
+                val = '+' + val;
+            } else if (val.length > 0 && /^[6-9]/.test(val)) {
+                val = '+91' + val;
+            } else if (val.length === 0) {
+                val = '+91';
             }
-        } catch (e) {
-            isValid = false;
+        }
+        
+        input.value = val;
+        let digits = val.replace(/\D/g, ''); // Get only digits
+        let mobilePart = digits.startsWith('91') ? digits.slice(2) : digits;
+
+        let isValid = false;
+        let reason = "Invalid Number";
+
+        // 2. Pattern Checks (India Mobile: 10 digits starting with 6-9)
+        if (mobilePart.length === 10) {
+            if (!/^[6-9]/.test(mobilePart)) {
+                reason = "Must start with 6-9";
+            } else if (/^(.)\1{9}$/.test(mobilePart)) {
+                reason = "Fake (Repeated Digits)";
+            } else if (/^0123456789|9876543210|1234567890$/.test(mobilePart)) {
+                reason = "Fake (Sequential)";
+            } else {
+                isValid = true;
+            }
+        } else {
+            reason = mobilePart.length < 10 ? "Too Short" : "Too Long";
         }
 
-        // UI Feedback
-        if (val === "") {
+        // 3. UI Updates
+        if (val === "+91" || val === "") {
             input.classList.remove('input-valid', 'input-invalid');
             if(msgEl) msgEl.style.display = 'none';
+            input.dataset.valid = "false";
         } else if (isValid) {
             input.classList.add('input-valid');
             input.classList.remove('input-invalid');
             if(msgEl) msgEl.style.display = 'none';
-            // Normalize input value to standardized format
             input.dataset.valid = "true";
         } else {
             input.classList.add('input-invalid');
@@ -406,7 +399,8 @@
 
         phoneFields.forEach(id => {
             const el = document.getElementById(id);
-            if (el && el.value.trim() !== "") {
+            if (el && el.value !== "+91" && el.value.trim() !== "") {
+                validatePhone(el); // Force check
                 if (el.dataset.valid !== "true") {
                     allValid = false;
                     if(!firstInvalid) firstInvalid = el;
@@ -417,7 +411,7 @@
 
         // Basic requirement: Owner Phone is mandatory
         const ownerPhone = document.getElementById('ownerPhone');
-        if (!ownerPhone.value.trim()) {
+        if (ownerPhone.value === "+91" || !ownerPhone.value.trim()) {
             allValid = false;
             ownerPhone.classList.add('input-invalid');
             alert("❌ Owner Phone Number is required.");
@@ -425,12 +419,12 @@
         }
 
         if (!allValid) {
-            alert("❌ Please fix invalid phone numbers (check red fields). Fake or short numbers are blocked.");
+            alert("❌ Please fix invalid phone numbers (check red fields). Indian numbers must start with 6-9.");
             if(firstInvalid) firstInvalid.focus();
             return;
         }
 
-        // If all valid, trigger the original syncCloud function in core-engine.js
+        // Trigger original syncCloud from core-engine.js
         if(window.syncCloud) window.syncCloud();
     }
 
@@ -532,6 +526,11 @@
     window.addEventListener("DOMContentLoaded", () => {
         initMaterialsUI();
         initBrandChips();
+        // Initialize all phone fields with +91
+        ['ownerPhone', 'ownerWhatsapp', 'mgrPhone', 'mgrWhatsapp'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) validatePhone(el);
+        });
     });
 </script>
 
@@ -543,4 +542,4 @@
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
 </body>
-</html>```
+</html>
