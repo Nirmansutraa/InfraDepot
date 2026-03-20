@@ -329,13 +329,19 @@
 
 <script>
     /**
-     * ROBUST INDIAN CONTEXT PHONE VALIDATION (v2.2)
+     * ROBUST INDIAN CONTEXT PHONE VALIDATION (v2.3)
      */
     function validatePhone(input) {
         let val = input.value.trim();
         const msgEl = document.getElementById(`msg-${input.id}`);
         
-        // 1. Force +91 if user deleted it or typed standard start
+        // 1. AUTO-FIX: If user types 10 digits starting with 6-9, add +91 automatically
+        if (/^[6-9]\d{9}$/.test(val)) {
+            val = "+91" + val;
+            input.value = val;
+        }
+
+        // 2. CLEANUP: Force +91 if user deleted it or typed standard start
         if (!val.startsWith('+91')) {
             if (val.startsWith('91') && val.length > 2) {
                 val = '+' + val;
@@ -353,11 +359,9 @@
         let isValid = false;
         let reason = "Invalid Number";
 
-        // 2. Pattern Checks (India Mobile: 10 digits starting with 6-9)
-        if (mobilePart.length === 10) {
-            if (!/^[6-9]/.test(mobilePart)) {
-                reason = "Must start with 6-9";
-            } else if (/^(.)\1{9}$/.test(mobilePart)) {
+        // 3. INDIAN MOBILE CONTEXT CHECK (10 digits starting with 6-9)
+        if (mobilePart.length === 10 && /^[6-9]/.test(mobilePart)) {
+            if (/^(.)\1{9}$/.test(mobilePart)) {
                 reason = "Fake (Repeated Digits)";
             } else if (/^0123456789|9876543210|1234567890$/.test(mobilePart)) {
                 reason = "Fake (Sequential)";
@@ -368,7 +372,7 @@
             reason = mobilePart.length < 10 ? "Too Short" : "Too Long";
         }
 
-        // 3. UI Updates
+        // 4. UI FEEDBACK AND DATA ATTRIBUTE
         if (val === "+91" || val === "") {
             input.classList.remove('input-valid', 'input-invalid');
             if(msgEl) msgEl.style.display = 'none';
@@ -399,6 +403,7 @@
 
         phoneFields.forEach(id => {
             const el = document.getElementById(id);
+            // Skip validation if field is just the prefix or empty, except ownerPhone
             if (el && el.value !== "+91" && el.value.trim() !== "") {
                 validatePhone(el); // Force check
                 if (el.dataset.valid !== "true") {
