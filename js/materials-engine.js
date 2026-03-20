@@ -1,67 +1,75 @@
 const container = document.getElementById("materialsContainer");
 
-let selectedMaterials = {};
+// 🔒 No conflict with core-engine
+// This system feeds `.data-brand` which cloud sync already uses
 
 Object.keys(MATERIALS).forEach(mat => {
 
+  const safeMat = mat.replace(/\s/g,'');
+
   const div = document.createElement("div");
-  div.className = "material";
 
   div.innerHTML = `
-    <label>
-      <input type="checkbox" onchange="toggleMaterial('${mat}')"> ${mat}
+    <label class="material-btn flex items-center gap-2">
+      <input type="checkbox" onchange="toggleMaterial('${safeMat}')">
+      ${mat}
     </label>
-    <div id="${mat}" class="hidden"></div>
+
+    <div id="mat_${safeMat}" class="hidden pl-2"></div>
   `;
 
   container.appendChild(div);
 });
 
-function toggleMaterial(mat){
+function toggleMaterial(matId){
 
-  const el = document.getElementById(mat);
+  const container = document.getElementById("mat_" + matId);
+  const matName = Object.keys(MATERIALS).find(m => m.replace(/\s/g,'') === matId);
 
-  if(el.classList.contains("hidden")){
+  if(container.innerHTML !== ""){
+    container.innerHTML = "";
+    return;
+  }
 
-    el.classList.remove("hidden");
+  container.innerHTML = MATERIALS[matName].varieties.map((v,i)=>{
 
-    const varieties = MATERIALS[mat].varieties;
+    const vId = `${matId}_v_${i}`;
 
-    el.innerHTML = varieties.map((v,i)=>`
-      <div class="variety-card">
-        <label>
-          <input type="checkbox" onchange="selectVariety('${mat}',${i})">
-          ${v.name}
+    return `
+      <div class="ml-2 mt-2">
+        <label class="flex items-center gap-2 font-bold">
+          <input type="checkbox" onchange="toggleVariety('${matId}',${i})">
+          ${v}
         </label>
 
-        <div class="price">
-          ${formatPrice(v.price,v.unit)}
-          (Avg: ₹${calculateAvgPrice(v.price)})
-        </div>
-
-        <div class="meta">
-          Availability: ${v.availability} |
-          Supplier: ${v.supplier.join(",")}
-        </div>
+        <div id="${vId}" class="hidden ml-4"></div>
       </div>
-    `).join("");
-
-  } else {
-    el.classList.add("hidden");
-    delete selectedMaterials[mat];
-  }
+    `;
+  }).join("");
 }
 
-function selectVariety(mat,index){
+function toggleVariety(matId,index){
 
-  const v = MATERIALS[mat].varieties[index];
+  const matName = Object.keys(MATERIALS).find(m => m.replace(/\s/g,'') === matId);
+  const variety = MATERIALS[matName].varieties[index];
+  const vId = `${matId}_v_${index}`;
 
-  if(!selectedMaterials[mat]) selectedMaterials[mat]=[];
+  const container = document.getElementById(vId);
 
-  selectedMaterials[mat].push({
-    name:v.name,
-    price:v.price,
-    unit:v.unit,
-    supplier:v.supplier
-  });
+  if(container.innerHTML !== ""){
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = MATERIALS[matName].brands.map(b => `
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox"
+             class="data-brand"
+             data-mat="${matName}"
+             data-parent="${variety}"
+             value="${b}"
+             onclick="if(window.refreshTrackingID) window.refreshTrackingID()">
+      ${b}
+    </label>
+  `).join("");
 }
