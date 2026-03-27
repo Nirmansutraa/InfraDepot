@@ -11,16 +11,11 @@
     <style>
         body { background-color: #020617; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; color: #f8fafc; }
         .gateway-card { background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(20px); padding: 50px; border-radius: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 100%; max-width: 500px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; }
-        
-        .auth-option { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 25px; margin-top: 20px; transition: 0.3s; cursor: pointer; }
-        .auth-option:hover { background: rgba(255,255,255,0.07); border-color: #ff7a00; transform: translateY(-3px); }
-        
-        .btn-google { background: white; color: #0f172a; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; font-size: 13px; margin-top: 15px; }
-        .btn-whatsapp { background: #25D366; color: white; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; font-size: 13px; margin-top: 15px; }
-        
-        input { width: 100%; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; color: white; margin-top: 10px; outline: none; }
+        .auth-option { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 25px; margin-top: 20px; transition: 0.3s; }
+        .btn-google { background: white; color: #0f172a; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; font-size: 13px; margin-top: 15px; cursor: pointer; }
+        .btn-whatsapp { background: #25D366; color: white; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; font-size: 13px; margin-top: 15px; cursor: pointer; }
+        input { width: 100%; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; color: white; margin-top: 10px; outline: none; text-align: center; }
         input:focus { border-color: #ff7a00; }
-        
         .status-msg { margin-top: 20px; padding: 12px; border-radius: 12px; font-size: 11px; font-weight: 800; display: none; text-transform: uppercase; }
         .hidden { display: none; }
     </style>
@@ -33,32 +28,32 @@
         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[5px]">Unified Access Terminal</p>
     </div>
 
-    <div id="staffSection" class="auth-option">
-        <p class="text-[10px] text-orange-500 font-black uppercase tracking-widest mb-2">Corporate Staff</p>
-        <p class="text-slate-400 text-xs mb-4">Super Admin / Admin / Field Staff</p>
+    <div class="auth-option">
+        <p class="text-[10px] text-orange-500 font-black uppercase tracking-widest mb-4">Corporate Staff Access</p>
         <button onclick="loginWithGoogle()" class="btn-google">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
-            Login with Gmail
+            Staff Login (Gmail)
         </button>
     </div>
 
-    <div id="supplierSection" class="auth-option">
-        <p class="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-2">Partner Network</p>
-        <p class="text-slate-400 text-xs mb-4">Registered Suppliers Only</p>
+    <div class="auth-option">
+        <p class="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-4">Partner Network (Supplier)</p>
         
         <div id="phoneInputArea">
-            <input type="tel" id="phoneNumber" placeholder="+91 99999 99999">
-            <button onclick="sendOTP()" class="btn-whatsapp">Send WhatsApp OTP</button>
+            <input type="tel" id="phoneNumber" placeholder="+91 98765 43210">
+            <button onclick="sendOTP()" id="sendOtpBtn" class="btn-whatsapp">Verify WhatsApp OTP</button>
         </div>
 
         <div id="otpInputArea" class="hidden">
-            <input type="number" id="otpCode" placeholder="Enter 6-Digit OTP">
-            <button onclick="verifyOTP()" class="btn-whatsapp">Verify & Login</button>
+            <input type="number" id="otpCode" placeholder="Enter 6-Digit Code">
+            <button onclick="verifyOTP()" class="btn-whatsapp">Login to Terminal</button>
         </div>
 
-        <div class="mt-4 pt-4 border-t border-white/5">
-            <a href="onboarding/index.html" class="text-[10px] font-black text-orange-500 uppercase tracking-widest hover:text-white transition">
-                ➜ New Supplier? Register Here
+        <div id="recaptcha-container"></div>
+
+        <div class="mt-6 pt-4 border-t border-white/5">
+            <a href="onboarding/index.html" class="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-orange-500 transition">
+                ➜ New Supplier? Create Account
             </a>
         </div>
     </div>
@@ -82,13 +77,10 @@
     const auth = firebase.auth();
     const rtdb = firebase.database();
 
-    // ROUTING CONFIG
-    const ROLE_ROUTES = {
-        'super_admin': 'admin/dashboard.html',
-        'admin': 'admin/dashboard.html',
-        'field_staff': 'field/survey.html',
-        'supplier': 'field/survey.html' // As per your request: Suppliers land on Survey.html
-    };
+    // 1. Initialize Recaptcha (Required for Phone Auth)
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+        'size': 'invisible'
+    });
 
     function updateUI(text, type) {
         const m = document.getElementById('msg');
@@ -96,49 +88,60 @@
         m.className = `status-msg ${type === 'err' ? 'bg-red-500/20 text-red-400' : 'bg-orange-500/20 text-orange-400 animate-pulse'}`;
     }
 
-    // --- STAFF AUTH (GMAIL) ---
+    // --- GMAIL AUTH FOR STAFF ---
     async function loginWithGoogle() {
         const provider = new firebase.auth.GoogleAuthProvider();
         try {
-            updateUI("Authenticating Gmail...", "warn");
+            updateUI("Checking Staff Credentials...", "warn");
             const result = await auth.signInWithPopup(provider);
-            routeUser(result.user.uid);
+            routeUser(result.user);
         } catch (e) { updateUI(e.message, "err"); }
     }
 
-    // --- SUPPLIER AUTH (WHATSAPP/OTP SIMULATION) ---
-    // Note: True WhatsApp OTP requires a paid API (Twilio/Meta). 
-    // This logic handles the routing once the "OTP" is verified.
-    function sendOTP() {
-        const num = document.getElementById('phoneNumber').value;
-        if(!num) return alert("Enter Phone Number");
-        updateUI("Sending OTP to WhatsApp...", "warn");
-        document.getElementById('phoneInputArea').classList.add('hidden');
-        document.getElementById('otpInputArea').classList.remove('hidden');
+    // --- PHONE AUTH FOR SUPPLIERS ---
+    let confirmationResult = null;
+
+    async function sendOTP() {
+        const phoneNumber = document.getElementById('phoneNumber').value;
+        if (!phoneNumber.startsWith('+')) return alert("Enter number with country code (e.g., +919876543210)");
+        
+        updateUI("Generating OTP...", "warn");
+        try {
+            confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier);
+            document.getElementById('phoneInputArea').classList.add('hidden');
+            document.getElementById('otpInputArea').classList.remove('hidden');
+            updateUI("OTP Sent to WhatsApp/SMS", "success");
+        } catch (e) { updateUI(e.message, "err"); }
     }
 
     async function verifyOTP() {
         const code = document.getElementById('otpCode').value;
-        if(code === "123456") { // Test Bypass
-            updateUI("WhatsApp Verified!", "success");
-            // Here you would normally sign in the user via Firebase Phone Auth
-            // For now, we will check the database for this user's UID or Phone
-            routeUser("TEST_SUPPLIER_UID"); 
-        } else { alert("Invalid OTP"); }
+        try {
+            updateUI("Verifying OTP...", "warn");
+            const result = await confirmationResult.confirm(code);
+            routeUser(result.user);
+        } catch (e) { updateUI("Invalid Code", "err"); }
     }
 
-    // --- UNIFIED ROUTER ---
-    async function routeUser(uid) {
+    // --- UNIFIED ROUTER (RBAC) ---
+    async function routeUser(user) {
         try {
-            const snap = await rtdb.ref(`users/${uid}/role`).once('value');
+            const snap = await rtdb.ref(`users/${user.uid}/role`).once('value');
             const role = snap.val();
 
             if (!role) {
-                updateUI("Account Not Found. Please Register.", "err");
+                updateUI("Access Denied: Unregistered User", "err");
+                setTimeout(() => auth.signOut(), 3000);
                 return;
             }
 
-            const target = ROLE_ROUTES[role.toLowerCase().trim()];
+            const target = {
+                'super_admin': 'admin/dashboard.html',
+                'admin': 'admin/dashboard.html',
+                'field_staff': 'field/survey.html',
+                'supplier': 'field/survey.html'
+            }[role.toLowerCase().trim()];
+
             if (target) {
                 window.location.href = target + "?v=" + Date.now();
             }
