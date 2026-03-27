@@ -2,126 +2,148 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nirmansutra | Enterprise Login</title>
-    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nirmansutra | Unified Access Terminal</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Inter', sans-serif; background: #020617; color: white; overflow: hidden; }
-        .hero-bg { 
-            background: linear-gradient(rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.8)), 
-            url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2070'); 
-            background-size: cover; background-position: center; height: 100vh; display: flex; align-items: center; justify-content: center; 
-        }
-        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 3rem; }
-        .btn-orange { background: #FF5A00; color: white; padding: 18px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
-        .btn-orange:active { transform: scale(0.96); opacity: 0.9; }
-        #status-msg { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin-bottom: 2rem; }
-        .loader { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #FF5A00; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; margin: 0 auto 15px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        body { background-color: #020617; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; color: #f8fafc; }
+        .gateway-card { background: rgba(30, 41, 59, 0.45); backdrop-filter: blur(20px); padding: 50px; border-radius: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 100%; max-width: 500px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; }
+        
+        .auth-option { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 25px; margin-top: 20px; transition: 0.3s; cursor: pointer; }
+        .auth-option:hover { background: rgba(255,255,255,0.07); border-color: #ff7a00; transform: translateY(-3px); }
+        
+        .btn-google { background: white; color: #0f172a; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; font-size: 13px; margin-top: 15px; }
+        .btn-whatsapp { background: #25D366; color: white; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; font-size: 13px; margin-top: 15px; }
+        
+        input { width: 100%; background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; color: white; margin-top: 10px; outline: none; }
+        input:focus { border-color: #ff7a00; }
+        
+        .status-msg { margin-top: 20px; padding: 12px; border-radius: 12px; font-size: 11px; font-weight: 800; display: none; text-transform: uppercase; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="hero-bg px-6">
-        <div class="glass-panel max-w-sm w-full p-10 text-center shadow-2xl">
-            <div class="w-16 h-16 bg-[#FF5A00] rounded-2xl flex items-center justify-center font-black text-2xl mx-auto mb-6 shadow-lg shadow-orange-500/30">N</div>
-            
-            <h1 class="text-3xl font-black italic tracking-tighter mb-2">NIRMANSUTRA</h1>
-            <div id="loader" class="loader"></div>
-            <p id="status-msg">Field Intelligence Terminal</p>
-            
-            <button onclick="login()" id="login-btn" class="btn-orange w-full shadow-xl shadow-orange-500/20">
-                Sign in with Google
-            </button>
+<div class="gateway-card">
+    <div class="mb-10">
+        <h1 class="text-4xl font-black text-white italic tracking-tighter mb-2">NIRMAN<span class="text-orange-500">SUTRA</span></h1>
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[5px]">Unified Access Terminal</p>
+    </div>
 
-            <p class="mt-8 text-[9px] text-gray-500 font-bold uppercase tracking-widest">© 2026 Nirmansutra Infrastructure</p>
+    <div id="staffSection" class="auth-option">
+        <p class="text-[10px] text-orange-500 font-black uppercase tracking-widest mb-2">Corporate Staff</p>
+        <p class="text-slate-400 text-xs mb-4">Super Admin / Admin / Field Staff</p>
+        <button onclick="loginWithGoogle()" class="btn-google">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+            Login with Gmail
+        </button>
+    </div>
+
+    <div id="supplierSection" class="auth-option">
+        <p class="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-2">Partner Network</p>
+        <p class="text-slate-400 text-xs mb-4">Registered Suppliers Only</p>
+        
+        <div id="phoneInputArea">
+            <input type="tel" id="phoneNumber" placeholder="+91 99999 99999">
+            <button onclick="sendOTP()" class="btn-whatsapp">Send WhatsApp OTP</button>
+        </div>
+
+        <div id="otpInputArea" class="hidden">
+            <input type="number" id="otpCode" placeholder="Enter 6-Digit OTP">
+            <button onclick="verifyOTP()" class="btn-whatsapp">Verify & Login</button>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-white/5">
+            <a href="onboarding/index.html" class="text-[10px] font-black text-orange-500 uppercase tracking-widest hover:text-white transition">
+                ➜ New Supplier? Register Here
+            </a>
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <div id="msg" class="status-msg"></div>
+</div>
 
-    <script>
-        // 1. CONFIGURATION
-        const firebaseConfig = {
-            apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
-            authDomain: "infradepo.firebaseapp.com",
-            projectId: "infradepo",
-            storageBucket: "infradepo.firebasestorage.app",
-            messagingSenderId: "733942710671",
-            appId: "1:733942710671:web:1a2fdd540032ea73b2cbfa"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
 
-        // 2. LOGIN ENGINE
-        function login() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            // Using popup, but fallback to redirect if blocked
-            auth.signInWithPopup(provider).catch(err => {
-                console.warn("Popup blocked, trying redirect...");
-                auth.signInWithRedirect(provider);
-            });
-        }
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDi2TQAvaqnz0D3eK6KZLYYhxsHUBG10A8",
+        authDomain: "infradepo.firebaseapp.com",
+        projectId: "infradepo",
+        databaseURL: "https://infradepo-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const rtdb = firebase.database();
 
-        // 3. AUTH & RBAC ROUTER
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                const statusLabel = document.getElementById('status-msg');
-                const loginBtn = document.getElementById('login-btn');
-                const loader = document.getElementById('loader');
+    // ROUTING CONFIG
+    const ROLE_ROUTES = {
+        'super_admin': 'admin/dashboard.html',
+        'admin': 'admin/dashboard.html',
+        'field_staff': 'field/survey.html',
+        'supplier': 'field/survey.html' // As per your request: Suppliers land on Survey.html
+    };
 
-                loginBtn.style.display = 'none';
-                loader.style.display = 'block';
-                statusLabel.innerText = "Authenticating " + user.email;
+    function updateUI(text, type) {
+        const m = document.getElementById('msg');
+        m.innerText = text; m.style.display = 'block';
+        m.className = `status-msg ${type === 'err' ? 'bg-red-500/20 text-red-400' : 'bg-orange-500/20 text-orange-400 animate-pulse'}`;
+    }
 
-                try {
-                    // --- MASTER BYPASS FOR VIJAY ---
-                    if (user.uid === "T9LAq9SbOWPp7Db9UvaYkW3OfKw1" || user.email === "nirmansutraa@gmail.com") {
-                        statusLabel.innerText = "Master Access Granted";
-                        
-                        // Force update Admin Profile
-                        await db.collection("users").doc(user.uid).set({
-                            email: user.email,
-                            role: 'admin',
-                            status: 'active',
-                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true });
+    // --- STAFF AUTH (GMAIL) ---
+    async function loginWithGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            updateUI("Authenticating Gmail...", "warn");
+            const result = await auth.signInWithPopup(provider);
+            routeUser(result.user.uid);
+        } catch (e) { updateUI(e.message, "err"); }
+    }
 
-                        window.location.href = "admin.html";
-                        return;
-                    }
+    // --- SUPPLIER AUTH (WHATSAPP/OTP SIMULATION) ---
+    // Note: True WhatsApp OTP requires a paid API (Twilio/Meta). 
+    // This logic handles the routing once the "OTP" is verified.
+    function sendOTP() {
+        const num = document.getElementById('phoneNumber').value;
+        if(!num) return alert("Enter Phone Number");
+        updateUI("Sending OTP to WhatsApp...", "warn");
+        document.getElementById('phoneInputArea').classList.add('hidden');
+        document.getElementById('otpInputArea').classList.remove('hidden');
+    }
 
-                    // --- STANDARD STAFF LOGIC ---
-                    const doc = await db.collection("users").doc(user.uid).get();
-                    
-                    if (doc.exists) {
-                        const role = doc.data().role;
-                        // Send to Admin if permitted, otherwise Survey
-                        window.location.href = (role === 'admin' || role === 'super_admin') ? "admin.html" : "survey.html";
-                    } else {
-                        // Auto-Register New User as Staff
-                        statusLabel.innerText = "Creating Staff Profile...";
-                        await db.collection("users").doc(user.uid).set({
-                            email: user.email,
-                            role: 'field_staff',
-                            status: 'active',
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                        window.location.href = "survey.html";
-                    }
-                } catch (error) {
-                    console.error("RBAC Critical Failure:", error);
-                    statusLabel.innerText = "Permission Error: Contact Vijay";
-                    statusLabel.style.color = "#FF5A00";
-                    loader.style.display = 'none';
-                }
+    async function verifyOTP() {
+        const code = document.getElementById('otpCode').value;
+        if(code === "123456") { // Test Bypass
+            updateUI("WhatsApp Verified!", "success");
+            // Here you would normally sign in the user via Firebase Phone Auth
+            // For now, we will check the database for this user's UID or Phone
+            routeUser("TEST_SUPPLIER_UID"); 
+        } else { alert("Invalid OTP"); }
+    }
+
+    // --- UNIFIED ROUTER ---
+    async function routeUser(uid) {
+        try {
+            const snap = await rtdb.ref(`users/${uid}/role`).once('value');
+            const role = snap.val();
+
+            if (!role) {
+                updateUI("Account Not Found. Please Register.", "err");
+                return;
             }
-        });
-    </script>
+
+            const target = ROLE_ROUTES[role.toLowerCase().trim()];
+            if (target) {
+                window.location.href = target + "?v=" + Date.now();
+            }
+        } catch (e) { updateUI(e.message, "err"); }
+    }
+</script>
 </body>
 </html>
